@@ -204,53 +204,37 @@
     <main class="shell">
         <section class="hero" aria-labelledby="page-title">
             <div class="hero-content">
-                <div class="eyebrow">LOBBY PERTANDINGAN</div>
+                <div class="eyebrow">LOMBA SOAL PILIHAN GANDA</div>
                 <h1 id="page-title">Quran Battle Arena</h1>
-                <p>Latihan sendiri atau tantang teman dalam duel Al-Qur'an yang seru dan sportif.</p>
+                <p>Jawab soal pilihan ganda secepat mungkin. Jawaban benar yang lebih cepat mendapat poin lebih tinggi.</p>
             </div>
         </section>
 
         <section class="panel" id="lobby" aria-labelledby="lobby-title">
             <div class="panel-heading">
-                <div><span class="kicker">SIAPKAN PERTANDINGAN</span><h2 id="lobby-title">Lobby &amp; Matchmaking</h2></div>
-                <p>Pilih format dan mode sebelum masuk arena.</p>
+                <div><span class="kicker">PERTANDINGAN SOLO</span><h2 id="lobby-title">Pilih Tantangan</h2></div>
+                <p>Semua soal menggunakan pilihan ganda.</p>
             </div>
             <div class="lobby-grid">
                 <div class="setup-box">
                     <label class="field-label" for="player-name">Nama pemain</label>
                     <input class="text-input" id="player-name" maxlength="24" value="Pemain Ustad" autocomplete="nickname">
-                    <span class="field-label" style="margin-top:15px">Format pertandingan</span>
-                    <div class="format-list" role="group" aria-label="Format pertandingan">
-                        <button class="format-card" data-format="solo" type="button" aria-pressed="false"><strong>Solo</strong><span>Latihan mandiri</span></button>
-                        <button class="format-card selected" data-format="duo" type="button" aria-pressed="true"><strong>Duo · 1 vs 1</strong><span>Matchmaking dua pemain</span></button>
-                        <button class="format-card" data-format="trio" type="button" aria-pressed="false"><strong>Trio</strong><span>Tiga pemain, semua bersaing</span></button>
-                        <button class="format-card" data-format="custom" type="button" aria-pressed="false"><strong>Custom Room</strong><span>Room privat dengan kode</span></button>
-                    </div>
-                    <div class="custom-capacity" id="capacity-field" hidden>
-                        <label class="field-label" for="room-capacity">Jumlah pemain di room</label>
-                        <select class="select-input" id="room-capacity">
-                            <option value="2">2 pemain</option><option value="3">3 pemain</option><option value="4">4 pemain</option><option value="5">5 pemain</option><option value="6">6 pemain</option>
-                        </select>
-                    </div>
-                    <div class="notice"><strong>Solo</strong> dimulai langsung. Matchmaking Duo/Trio mempertemukan pengguna yang memilih mode sama. Custom Room dapat dibagikan dengan kode.</div>
+                    <div class="notice"><strong>Skor kecepatan:</strong> jawaban benar tercepat dapat 100 poin, lalu nilai berkurang sesuai waktu hingga minimal 50 poin.</div>
                 </div>
                 <div class="setup-box">
                     <span class="field-label">Pilih mode kompetisi</span>
                     <div class="mode-grid" role="group" aria-label="Mode kompetisi">
                         <button class="mode-card selected" data-mode-card="tajwid-battle" type="button" aria-pressed="true"><strong>Tajwid Battle</strong><span>Tebak hukum bacaan</span></button>
-                        <button class="mode-card" data-mode-card="sambung-ayat" type="button" aria-pressed="false"><strong>Sambung Ayat</strong><span>Setoran lisan</span></button>
-                        <button class="mode-card" data-mode-card="hafalan-battle" type="button" aria-pressed="false"><strong>Hafalan Battle</strong><span>Uji hafalan dengan suara</span></button>
-                        <button class="mode-card" data-mode-card="team-battle" type="button" aria-pressed="false"><strong>Team Battle</strong><span>Skor tim A melawan tim B</span></button>
+                        <button class="mode-card" data-mode-card="sambung-surat" type="button" aria-pressed="false"><strong>Sambung Surat</strong><span>Tebak urutan surat</span></button>
+                        <button class="mode-card" data-mode-card="nama-surat" type="button" aria-pressed="false"><strong>Tebak Nama Surat</strong><span>Kenali nama surat</span></button>
+                        <button class="mode-card" data-mode-card="juz-halaman" type="button" aria-pressed="false"><strong>Juz &amp; Halaman</strong><span>Uji pengetahuan mushaf</span></button>
+                        <button class="mode-card" data-mode-card="puzzle" type="button" aria-pressed="false"><strong>Puzzle Ayat</strong><span>Susun pilihan ayat</span></button>
+                        <button class="mode-card" data-mode-card="asbabun-nuzul" type="button" aria-pressed="false"><strong>Asbabun Nuzul</strong><span>Tebak konteks turunnya ayat</span></button>
                     </div>
                 </div>
             </div>
             <div class="action-row">
-                <button class="button-primary" id="find-match" type="button">⌕ Cari Lawan Otomatis</button>
-                <button class="button-emerald" id="create-room" type="button">＋ Buat Room</button>
-            </div>
-            <div class="join-box">
-                <div><label class="field-label" for="join-code">Gabung dengan kode room</label><input class="text-input room-code-input" id="join-code" maxlength="6" placeholder="CONTOH: A1B2C3" autocomplete="off"></div>
-                <button class="button-secondary" id="join-room" type="button">Gabung Room</button>
+                <button class="button-primary" id="find-match" type="button">▶ Mulai Lomba Solo</button>
             </div>
             <p class="status-message" id="lobby-status" role="status" aria-live="polite"></p>
             <div class="waiting-card" id="waiting-room" hidden>
@@ -299,7 +283,7 @@
                 </div>
                 <p class="status-message" id="answer-status" role="status" aria-live="polite"></p>
             </article>
-            <p class="arena-note">Jawaban pilihan ganda dinilai otomatis. Esai dan rekaman memperoleh EXP partisipasi; penilaiannya tidak otomatis. Audio rekaman disimpan sementara di memori server, dapat didengar peserta room, maksimal 3 MB, dan dihapus setelah kedaluwarsa (1 jam) atau server dimulai ulang.</p>
+            <p class="arena-note">Jawaban pilihan ganda dinilai otomatis. Jawaban benar lebih cepat memperoleh poin lebih besar.</p>
             <div class="action-row"><button class="button-danger" id="leave-arena" type="button">Keluar dari Pertandingan</button></div>
         </section>
 
@@ -317,11 +301,13 @@
         const battleSocket = typeof window.io === 'function' ? window.io() : null;
         const modeNames = {
             'tajwid-battle': 'Tajwid Battle',
-            'sambung-ayat': 'Sambung Ayat',
-            'hafalan-battle': 'Hafalan Battle',
-            'team-battle': 'Team Battle'
+            'sambung-surat': 'Sambung Surat',
+            'nama-surat': 'Tebak Nama Surat',
+            'juz-halaman': 'Tebak Juz & Halaman',
+            'puzzle': 'Puzzle Ayat',
+            'asbabun-nuzul': 'Asbabun Nuzul'
         };
-        let selectedFormat = 'duo';
+        let selectedFormat = 'solo';
         let selectedMode = 'tajwid-battle';
         let currentRoom = null;
         let pollTimer = null;
@@ -407,28 +393,9 @@
             pollTimer = null;
         }
 
-        function setFormat(format) {
-            if (selectedMode === 'team-battle' && format === 'solo') {
-                setStatus(lobbyStatus, 'Team Battle memerlukan minimal dua pemain.', 'error');
-                return;
-            }
-            selectedFormat = format;
-            document.querySelectorAll('[data-format]').forEach((button) => {
-                const active = button.dataset.format === format;
-                button.classList.toggle('selected', active);
-                button.setAttribute('aria-pressed', String(active));
-            });
-            document.getElementById('capacity-field').hidden = format !== 'custom';
-            const findMatch = document.getElementById('find-match');
-            findMatch.disabled = format === 'custom';
-            findMatch.textContent = format === 'solo' ? '▶ Mulai Latihan Solo' : (format === 'custom' ? 'Gunakan Buat Room' : '⌕ Cari Lawan Otomatis');
-        }
-
-        document.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => setFormat(button.dataset.format)));
         document.querySelectorAll('[data-mode-card]').forEach((button) => {
             button.addEventListener('click', () => {
                 selectedMode = button.dataset.modeCard;
-                if (selectedMode === 'team-battle' && selectedFormat === 'solo') setFormat('duo');
                 document.querySelectorAll('[data-mode-card]').forEach((card) => {
                     const active = card === button;
                     card.classList.toggle('selected', active);
@@ -441,36 +408,6 @@
             setStatus(lobbyStatus, '', '');
             try {
                 const room = await api('/matchmaking', jsonOptions({ name: selectedName(), format: selectedFormat, mode: selectedMode }));
-                await enterRoom(room);
-            } catch (error) {
-                setStatus(lobbyStatus, error.message, 'error');
-            }
-        }
-
-        async function createRoom() {
-            setStatus(lobbyStatus, '', '');
-            const capacity = selectedFormat === 'custom'
-                ? Number(document.getElementById('room-capacity').value)
-                : (selectedFormat === 'solo' ? 1 : (selectedFormat === 'duo' ? 2 : 3));
-            try {
-                const room = await api('/rooms', jsonOptions({
-                    name: selectedName(), format: selectedFormat, capacity, mode: selectedMode
-                }));
-                await enterRoom(room);
-            } catch (error) {
-                setStatus(lobbyStatus, error.message, 'error');
-            }
-        }
-
-        async function joinRoom() {
-            setStatus(lobbyStatus, '', '');
-            const code = document.getElementById('join-code').value.trim().toUpperCase();
-            if (!/^[A-F0-9]{6}$/.test(code)) {
-                setStatus(lobbyStatus, 'Masukkan kode room 6 karakter yang valid.', 'error');
-                return;
-            }
-            try {
-                const room = await api(`/rooms/${encodeURIComponent(code)}/join`, jsonOptions({ name: selectedName() }));
                 await enterRoom(room);
             } catch (error) {
                 setStatus(lobbyStatus, error.message, 'error');
@@ -716,7 +653,7 @@
             } else if (room.mode.kind === 'buzzer' && room.buzzer_player_id === room.player_id && !alreadySent) {
                 answerStatus.textContent = 'Buzzer milikmu! Pilih jawaban sekarang.';
             } else if (alreadySent && !answerStatus.textContent) {
-                answerStatus.textContent = 'Jawabanmu sudah terkirim. Menunggu pemain lain...';
+                answerStatus.textContent = 'Jawabanmu sudah terkirim. Memuat soal berikutnya...';
             }
         }
 
@@ -931,17 +868,6 @@
         }
 
         document.getElementById('find-match').addEventListener('click', startMatchmaking);
-        document.getElementById('create-room').addEventListener('click', createRoom);
-        document.getElementById('join-room').addEventListener('click', joinRoom);
-        document.getElementById('join-code').addEventListener('input', (event) => { event.target.value = event.target.value.toUpperCase().replace(/[^A-F0-9]/g, ''); });
-        document.getElementById('copy-code').addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(document.getElementById('invite-code').textContent);
-                document.getElementById('copy-code').textContent = 'Tersalin';
-            } catch (error) {
-                setStatus(lobbyStatus, 'Salin kode room secara manual.', 'error');
-            }
-        });
         document.getElementById('cancel-match').addEventListener('click', leaveCurrentRoom);
         document.getElementById('buzzer').addEventListener('click', pressBuzzer);
         document.getElementById('send-essay').addEventListener('click', sendEssay);

@@ -225,7 +225,11 @@ MODES = {
     },
 }
 
-_format_sizes = {"solo": 1, "duo": 2, "trio": 3}
+_format_sizes = {"solo": 1}
+CHOICE_MODE_KEYS = {
+    key for key, mode in MODES.items()
+    if mode["kind"] == "choice" and key != "team-battle"
+}
 
 
 @quran_battle_api.app_errorhandler(RequestEntityTooLarge)
@@ -426,7 +430,12 @@ def _score_submission(code, data):
             if not isinstance(answer, int) or isinstance(answer, bool) or not 0 <= answer < len(question["options"]):
                 return {"error": "Pilihan jawaban tidak valid."}, 400
             correct = answer == question["answer"]
-            points = 100 if correct else 0
+            if correct:
+                elapsed = max(0.0, time.monotonic() - room["round_started_at"])
+                remaining_ratio = max(0.0, min(1.0, 1.0 - elapsed / _round_seconds))
+                points = 50 + int(round(50 * remaining_ratio))
+            else:
+                points = 0
             player["status"] = "Jawaban tepat" if correct else "Sudah menjawab"
         elif question_kind == "essay":
             answer = data.get("answer")
@@ -476,34 +485,17 @@ def matchmaking():
     mode_key = data.get("mode")
     if not name:
         return _error("Nama harus berisi 2–24 karakter.", 400)
-    if not isinstance(game_format, str) or game_format not in _format_sizes:
-        return _error("Pilih format Solo, Duo, atau Trio.", 400)
+    if game_format != "solo":
+        return _error("Quran Battle hanya tersedia dalam format Solo.", 400)
     if not isinstance(mode_key, str) or mode_key not in MODES:
         return _error("Mode permainan tidak dikenali.", 400)
-    if mode_key == "team-battle" and game_format == "solo":
-        return _error("Team Battle memerlukan format Duo atau Trio.", 400)
+    if mode_key not in CHOICE_MODE_KEYS:
+        return _error("Lomba harus berupa soal pilihan ganda.", 400)
     with _rooms_lock:
         _expire_rooms()
-        if game_format == "solo":
-            player_id = _new_player_id()
-            room = _new_room(name, player_id, mode_key, "solo", 1)
-        else:
-            capacity = _format_sizes[game_format]
-            room = next((
-                item for item in _rooms.values()
-                if item["status"] == "waiting"
-                and item["format"] == game_format
-                and item["mode_key"] == mode_key
-                and item["capacity"] == capacity
-            ), None)
-            if room:
-                result_player_id = _join_room(room, name)
-            else:
-                player_id = _new_player_id()
-                room = _new_room(name, player_id, mode_key, game_format, capacity)
-                result_player_id = player_id
-        if game_format == "solo":
-            result_player_id = player_id
+        player_id = _new_player_id()
+        room = _new_room(name, player_id, mode_key, "solo", 1)
+        result_player_id = player_id
         response = _room_response(room, result_player_id)
         _notify_room_update(room["code"])
         return jsonify(response), 201
@@ -514,20 +506,16 @@ def create_room():
     data = _json_body()
     name = _validate_name(data.get("name"))
     mode_key = data.get("mode")
-    game_format = data.get("format", "custom")
+    game_format = data.get("format", "solo")
     if not name:
         return _error("Nama harus berisi 2–24 karakter.", 400)
     if not isinstance(mode_key, str) or mode_key not in MODES:
         return _error("Mode permainan tidak dikenali.", 400)
-    if not isinstance(game_format, str) or game_format not in ("custom", *_format_sizes.keys()):
-        return _error("Format room tidak dikenali.", 400)
-    capacity = _format_sizes.get(game_format, data.get("capacity"))
-    if not isinstance(capacity, int) or isinstance(capacity, bool) or not 1 <= capacity <= 6:
-        return _error("Kapasitas room harus 1–6 pemain.", 400)
-    if game_format == "solo" and capacity != 1:
-        return _error("Format Solo hanya memiliki satu pemain.", 400)
-    if mode_key == "team-battle" and capacity < 2:
-        return _error("Team Battle memerlukan minimal dua pemain.", 400)
+    if game_format != "solo":
+        return _error("Quran Battle hanya tersedia dalam format Solo.", 400)
+    if mode_key not in CHOICE_MODE_KEYS:
+        return _error("Lomba harus berupa soal pilihan ganda.", 400)
+    capacity = 1
     player_id = _new_player_id()
     with _rooms_lock:
         _expire_rooms()
@@ -548,6 +536,8 @@ def join_room(code):
         room = _rooms.get(code.upper())
         if not room:
             return _error("Kode room tidak ditemukan atau sudah kedaluwarsa.", 404)
+        if room["format"] == "solo":
+            return _error("Pertandingan solo tidak menerima pemain lain.", 409)
         if room["status"] != "waiting":
             return _error("Pertandingan sudah dimulai atau selesai.", 409)
         if len(room["players"]) >= room["capacity"]:
@@ -682,4 +672,5 @@ def list_modes():
     return jsonify([
         {"key": key, "name": mode["name"], "kind": mode["kind"]}
         for key, mode in MODES.items()
+        if mode["kind"] == "choice" and key != "team-battle"
     ])

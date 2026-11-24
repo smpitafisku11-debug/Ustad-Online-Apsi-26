@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verifikasi Ustad | Ustad Online</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; background: #f3f5ef; color: #23352c; font: 15px/1.6 "Segoe UI",sans-serif; }
+        main { width: min(820px,calc(100% - 32px)); margin: 56px auto; }
+        .eyebrow { color: #60806c; font-size: .72rem; font-weight: 800; letter-spacing: .16em; }
+        h1,h2 { color: #1c332d; line-height: 1.2; }
+        h1 { margin: 7px 0 8px; font-size: clamp(1.7rem,5vw,2.4rem); }
+        h2 { margin: 0 0 5px; font-size: 1.15rem; }
+        p { color: #68786d; }
+        .card { margin-top: 22px; border: 1px solid #e1e7dc; border-radius: 18px; background: #fff; padding: 22px; box-shadow: 0 12px 32px rgba(32,54,43,.07); }
+        label { display: block; margin: 12px 0 6px; font-size: .8rem; font-weight: 700; }
+        input { width: 100%; min-height: 45px; border: 1px solid #dce5dc; border-radius: 10px; padding: 10px 12px; font: inherit; }
+        button { min-height: 42px; border: 0; border-radius: 10px; background: #17684d; padding: 0 16px; color: #fff; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+        .primary { margin-top: 15px; }
+        .notice { border-left: 3px solid #bd9e58; background: #fbf8ed; padding: 12px 15px; color: #625638; }
+        .application { margin-top: 14px; border: 1px solid #e4e9e1; border-radius: 14px; background: #fff; padding: 18px; }
+        .meta { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 8px 18px; margin: 14px 0; }
+        .meta strong { display: block; color: #738176; font-size: .67rem; letter-spacing: .09em; text-transform: uppercase; }
+        .meta span,.meta a { color: #273c30; overflow-wrap: anywhere; }
+        .decision { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+        .reject { border: 1px solid #ead8d5; background: #fff7f6; color: #9d5148; }
+        .empty { border: 1px dashed #cfd9cc; border-radius: 12px; background: #fafbf8; padding: 22px; text-align: center; }
+        .error { color: #a33838; }
+        .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        .topbar form { margin-top: 10px; }
+        @media(max-width:500px) { main { margin-top: 30px; } .card,.application { padding: 17px; } .topbar { flex-direction: column; } }
+    </style>
+</head>
+<body>
+<main>
+    <p class="eyebrow">USTAD ONLINE · ADMIN</p>
+    <h1>Verifikasi pengajuan ustad</h1>
+    {% if setup_required %}
+        <section class="card">
+            <h2>Admin belum dikonfigurasi</h2>
+            <p>Untuk melindungi persetujuan akun, atur kata sandi admin di environment sebelum menjalankan aplikasi.</p>
+            <p class="notice">PowerShell: <code>$env:USTAD_ADMIN_PASSWORD = "kata-sandi-kuat"</code>, lalu jalankan <code>py app.py</code> di terminal yang sama.</p>
+        </section>
+    {% elif not authenticated %}
+        <section class="card">
+            <h2>Masuk sebagai admin</h2>
+            <p>Gunakan kata sandi admin dari konfigurasi server. Kata sandi ini tidak sama dengan akun siswa atau ustad.</p>
+            {% if login_error %}<p class="error" role="alert">{{ login_error }}</p>{% endif %}
+            <form method="post" action="{{ url_for('auth_api.review_login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label for="admin-password">Kata sandi admin</label>
+                <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+                <button class="primary" type="submit">Masuk ke panel</button>
+            </form>
+        </section>
+    {% else %}
+        <div class="topbar">
+            <p>Periksa kontak email/WhatsApp dan pengalaman sebelum memilih keputusan.</p>
+            <form method="post" action="{{ url_for('auth_api.review_logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="reject" type="submit">Keluar dari panel</button>
+            </form>
+        </div>
+        {% if pending %}
+            {% for application in pending %}
+                <article class="application">
+                    <p class="eyebrow">PENGAJUAN MENUNGGU · {{ application.created_at }}</p>
+                    <h2>{{ application.name }}</h2>
+                    <div class="meta">
+                        <div><strong>Email</strong><a href="mailto:{{ application.email }}">{{ application.email }}</a></div>
+                        <div><strong>WhatsApp</strong><a href="https://wa.me/{{ application.whatsapp_number }}" target="_blank" rel="noopener noreferrer">{{ application.phone }}</a></div>
+                    </div>
+                    <p><strong>Pengalaman mengajar</strong><br>{{ application.experience }}</p>
+                    <div class="decision">
+                        <form method="post" action="{{ url_for('auth_api.decide_teacher', user_id=application.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="decision" value="approved">
+                            <button type="submit">Setujui sebagai Ustad</button>
+                        </form>
+                        <form method="post" action="{{ url_for('auth_api.decide_teacher', user_id=application.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="decision" value="rejected">
+                            <button class="reject" type="submit">Tolak pengajuan</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        {% else %}
+            <div class="empty">Belum ada pengajuan ustad yang menunggu verifikasi.</div>
+        {% endif %}
+    {% endif %}
+</main>
+</body>
+</html>

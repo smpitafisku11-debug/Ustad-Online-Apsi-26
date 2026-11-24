@@ -1,0 +1,121 @@
+<dialog class="profile-dialog" id="account-login-dialog" aria-labelledby="account-login-title">
+    <div class="profile-login-layout">
+        <div class="profile-login-brand">
+            <div class="profile-brand-top">
+                <span class="profile-brand-icon" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" fill="none"><path d="M7 25V10.5C7 8.57 8.57 7 10.5 7h11C23.43 7 25 8.57 25 10.5V25M12 25V13l8 12V13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 25h22" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                </span>
+                <span class="profile-brand-wordmark">USTAD <b>ONLINE</b></span>
+            </div>
+            <div class="profile-orbit-art" aria-hidden="true">
+                <span class="profile-orbit profile-orbit-one"></span>
+                <span class="profile-orbit profile-orbit-two"></span>
+                <span class="profile-orbit-star">✦</span>
+                <span class="profile-orbit-dot"></span>
+                <span class="profile-orbit-caption">ILMU · ADAB · AMAL</span>
+            </div>
+            <div class="profile-brand-copy">
+                <p class="profile-kicker">RUANG BELAJAR PERSONAL</p>
+                <h2 id="account-login-title">Dekat dengan Qur'an, tumbuh setiap hari.</h2>
+                <p>Ruang kecilmu untuk membaca, menghafal, dan memperbaiki tilawah—dimulai dari sini.</p>
+                <span class="profile-brand-tag"><span aria-hidden="true">✦</span> Belajar dengan hati</span>
+            </div>
+        </div>
+        <div class="profile-form">
+            <div class="profile-form-topline"><span>LANGKAH 01 <i></i> PROFIL BELAJAR</span><span class="profile-form-sparkle" aria-hidden="true">✳</span></div>
+            <div class="profile-form-heading">
+                <span class="profile-welcome-mark" aria-hidden="true">السلام عليكم</span>
+                <h3>Selamat datang.</h3>
+                <p id="auth-intro">Masuk atau buat akun untuk mulai belajar.</p>
+            </div>
+            <div class="auth-role-switch" role="tablist" aria-label="Pilih jenis akun">
+                <button class="auth-role-option" type="button" role="tab" data-account-role="student" aria-selected="true"><span aria-hidden="true">◉</span><span><strong>Siswa</strong><small>Belajar &amp; berkembang</small></span></button>
+                <button class="auth-role-option" type="button" role="tab" data-account-role="teacher" aria-selected="false"><span aria-hidden="true">✦</span><span><strong>Ustad</strong><small>Ajukan sebagai pengajar</small></span></button>
+            </div>
+            <div class="auth-mode-switch" role="group" aria-label="Pilih proses akun">
+                <button type="button" data-auth-mode="login" aria-pressed="true">Masuk</button>
+                <button type="button" data-auth-mode="register" aria-pressed="false">Daftar</button>
+            </div>
+            <p class="auth-review-note" id="auth-review-note" hidden>Pengajuan ustad akan ditinjau admin melalui email dan WhatsApp. Akun belum bisa digunakan sebagai ustad sebelum disetujui.</p>
+            <form id="account-auth-form" class="auth-fields" novalidate>
+                <div data-register-only>
+                    <label for="login-name">Nama lengkap</label>
+                    <div class="profile-input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.3"/><path d="M5.5 20c.5-3.1 2.8-5 6.5-5s6 1.9 6.5 5"/></svg>
+                        <input id="login-name" name="name" type="text" minlength="2" maxlength="60" autocomplete="name" placeholder="Nama lengkap">
+                    </div>
+                </div>
+                <label for="login-email">Email</label>
+                <div class="profile-input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="m5 7 7 5.5L19 7"/></svg>
+                    <input id="login-email" name="email" type="email" maxlength="120" autocomplete="email" placeholder="nama@email.com" required>
+                </div>
+                <div data-register-only data-teacher-only>
+                    <label for="login-phone">Nomor WhatsApp aktif</label>
+                    <div class="profile-input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L5 19l.8-3.7A7.5 7.5 0 1 1 20 11.5Z"/><path d="M9 8.5c.3 2 1.5 3.2 3.5 4"/></svg>
+                        <input id="login-phone" name="phone" type="tel" minlength="8" maxlength="24" autocomplete="tel" placeholder="08xxxxxxxxxx">
+                    </div>
+                </div>
+                <div data-register-only data-teacher-only>
+                    <label for="login-experience">Pengalaman mengajar</label>
+                    <textarea id="login-experience" name="experience" minlength="20" maxlength="1000" rows="2" placeholder="Ceritakan pengalaman dan bidang yang diajarkan"></textarea>
+                </div>
+                <label for="login-password">Kata sandi</label>
+                <div class="profile-input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10m-4 4v2"/></svg>
+                    <input id="login-password" name="password" type="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Minimal 8 karakter" required>
+                </div>
+                <p class="profile-status" id="login-status" role="status" aria-live="polite"></p>
+                <button class="profile-primary-button" id="auth-submit" type="submit">Masuk sebagai Siswa <span aria-hidden="true">↗</span></button>
+            </form>
+            <p class="profile-local-note"><span aria-hidden="true">⌑</span> Siswa langsung aktif. Akun ustad perlu verifikasi admin.</p>
+            <button class="profile-install-button" id="profile-install-button" type="button" hidden>Pasang aplikasi Ustad Online</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog class="profile-dialog profile-edit-dialog" id="profile-dialog" aria-labelledby="profile-title">
+    <header class="profile-dialog-header">
+        <div>
+            <p class="profile-kicker">AKUN BELAJAR</p>
+            <h2 id="profile-title">Profil Saya</h2>
+        </div>
+        <button class="profile-close-button" type="button" data-profile-close aria-label="Tutup profil">✕</button>
+    </header>
+    <form id="profile-form" class="profile-edit-form" novalidate>
+        <div class="profile-photo-row">
+            <div class="profile-photo-preview" id="profile-photo-preview"><span data-profile-avatar>U</span></div>
+            <div>
+                <label class="profile-photo-label" for="profile-photo">Ganti foto profil</label>
+                <input id="profile-photo" type="file" accept="image/png,image/jpeg,image/webp">
+                <p>PNG, JPG, atau WebP. Maksimal 2 MB.</p>
+            </div>
+        </div>
+        <div class="profile-fields">
+            <div>
+                <label for="profile-name">Nama lengkap</label>
+                <input id="profile-name" name="name" type="text" minlength="2" maxlength="60" autocomplete="name" required>
+            </div>
+            <div>
+                <label for="profile-username">Nama pengguna</label>
+                <input id="profile-username" name="username" type="text" maxlength="30" autocomplete="username" placeholder="@pengguna">
+            </div>
+            <div>
+                <label for="profile-email">Email</label>
+                <input id="profile-email" name="email" type="email" readonly>
+            </div>
+            <div>
+                <label for="profile-role">Peran belajar</label>
+                <input id="profile-role" type="text" readonly>
+            </div>
+        </div>
+        <label for="profile-bio">Tentang saya</label>
+        <textarea id="profile-bio" name="bio" maxlength="160" rows="3" placeholder="Ceritakan tujuan belajarmu..."></textarea>
+        <p class="profile-status" id="profile-status" role="status" aria-live="polite"></p>
+        <div class="profile-dialog-actions">
+            <button class="profile-danger-button" id="profile-logout" type="button">Keluar</button>
+            <button class="profile-primary-button" type="submit">Simpan profil</button>
+        </div>
+    </form>
+</dialog>

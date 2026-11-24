@@ -5,14 +5,27 @@ import eventlet
 eventlet.monkey_patch()
 
 from flask import Flask, render_template
+from auth import auth_api, init_auth_db
 from extensions import socketio
 from quran_battle import quran_battle_api
+from community import community_api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(32)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024 + 64 * 1024
+app.config['AUTH_DATABASE'] = os.environ.get(
+    'AUTH_DATABASE',
+    os.path.join(app.instance_path, 'ustad_online.sqlite3'),
+)
+app.config['USTAD_ADMIN_PASSWORD'] = os.environ.get('USTAD_ADMIN_PASSWORD')
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE') == '1'
 socketio.init_app(app, async_mode='eventlet')
+app.register_blueprint(auth_api)
 app.register_blueprint(quran_battle_api)
+app.register_blueprint(community_api)
+init_auth_db(app.config['AUTH_DATABASE'])
 
 @app.route('/')
 def home():

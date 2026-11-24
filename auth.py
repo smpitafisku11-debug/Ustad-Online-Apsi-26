@@ -269,6 +269,15 @@ def review_teachers():
             ORDER BY created_at ASC
             """
         ).fetchall()
+        unverified = connection.execute(
+            """
+            SELECT u.id, u.name, u.email, u.phone, u.experience, u.created_at
+            FROM users u
+            LEFT JOIN connect_teacher_verifications v ON v.teacher_id = u.id
+            WHERE u.role = 'teacher' AND u.status = 'approved' AND v.teacher_id IS NULL
+            ORDER BY u.created_at ASC
+            """
+        ).fetchall()
     finally:
         connection.close()
     applications = []
@@ -284,6 +293,7 @@ def review_teachers():
         setup_required=False,
         authenticated=True,
         pending=applications,
+        unverified=[dict(row) for row in unverified],
         csrf_token=_csrf_token(),
     )
 
@@ -325,17 +335,46 @@ def decide_teacher(user_id):
     if not _valid_csrf():
         return _csrf_error()
     decision = request.form.get("decision")
-    if decision not in ("approved", "rejected"):
+    if decision not in ("approved", "rejected", "reverify"):
         return jsonify(error="Keputusan tidak valid."), 400
+    if decision in ("approved", "reverify") and (
+        request.form.get("identity_verified") != "1"
+        or request.form.get("competence_verified") != "1"
+    ):
+        return jsonify(error="Verifikasi identitas dan kompetensi wajib dilakukan sebelum persetujuan."), 400
     connection = _database()
     try:
-        cursor = connection.execute(
-            """
-            UPDATE users SET status = ?
-            WHERE id = ? AND role = 'teacher' AND status = 'pending'
-            """,
-            (decision, user_id),
-        )
+        if decision == "reverify":
+            cursor = connection.execute(
+                """
+                INSERT OR IGNORE INTO connect_teacher_verifications (
+                    teacher_id, identity_checked, competence_checked, verified_by
+                )
+                SELECT id, 1, 1, 'admin' FROM users
+                WHERE id = ? AND role = 'teacher' AND status = 'approved'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM connect_teacher_verifications WHERE teacher_id = users.id
+                  )
+                """,
+                (user_id,),
+            )
+        else:
+            cursor = connection.execute(
+                """
+                UPDATE users SET status = ?
+                WHERE id = ? AND role = 'teacher' AND status = 'pending'
+                """,
+                (decision, user_id),
+            )
+        if cursor.rowcount == 1 and decision == "approved":
+            connection.execute(
+                """
+                INSERT INTO connect_teacher_verifications (
+                    teacher_id, identity_checked, competence_checked, verified_by
+                ) VALUES (?, 1, 1, 'admin')
+                """,
+                (user_id,),
+            )
         connection.commit()
     finally:
         connection.close()

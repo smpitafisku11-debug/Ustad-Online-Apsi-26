@@ -9,6 +9,7 @@ from auth import auth_api, init_auth_db
 from extensions import socketio
 from quran_battle import quran_battle_api
 from community import community_api
+from connect import connect_api, init_connect_db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(32)
@@ -25,7 +26,9 @@ socketio.init_app(app, async_mode='eventlet')
 app.register_blueprint(auth_api)
 app.register_blueprint(quran_battle_api)
 app.register_blueprint(community_api)
+app.register_blueprint(connect_api)
 init_auth_db(app.config['AUTH_DATABASE'])
+init_connect_db(app.config['AUTH_DATABASE'])
 
 @app.route('/')
 def home():
@@ -75,6 +78,16 @@ def komunitas():
 @app.route('/tahfidz')
 def tahfidz():
     return render_template('tahfidz.html')
+
+@app.route('/fitur')
+@app.route('/fitur-tambahan')
+@app.route('/pengaturan')
+def fitur_tambahan():
+    return render_template('fitur_tambahan.html')
+
+@app.route('/pusat-bantuan')
+def pusat_bantuan():
+    return render_template('fitur_tambahan.html', open_help=True)
 
 @app.route('/ustad-connect')
 def ustad_connect():

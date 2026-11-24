@@ -1,0 +1,125 @@
+.page-transition-overlay {
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    background:
+        radial-gradient(ellipse at 50% 45%, rgba(114, 151, 110, .2), transparent 28rem),
+        linear-gradient(145deg, #102e2a, #174536 62%, #1c503b);
+    color: #f3ead0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(102%);
+    transform-origin: center bottom;
+    will-change: transform, opacity;
+}
+
+.page-transition-overlay::before,
+.page-transition-overlay::after {
+    position: absolute;
+    width: min(56vw, 430px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(233, 215, 169, .2);
+    border-radius: 50%;
+    content: "";
+}
+
+.page-transition-overlay::before {
+    box-shadow: 0 0 0 18px rgba(233, 215, 169, .035), 0 0 0 42px rgba(233, 215, 169, .025);
+}
+
+.page-transition-overlay::after {
+    width: min(38vw, 290px);
+    border-color: rgba(233, 215, 169, .32);
+}
+
+.page-transition-emblem {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 76px;
+    height: 76px;
+    place-items: center;
+    border: 1px solid rgba(233, 215, 169, .5);
+    border-radius: 24px;
+    background: linear-gradient(145deg, rgba(233, 215, 169, .15), rgba(255, 255, 255, .035));
+    box-shadow: 0 0 42px rgba(233, 215, 169, .12), inset 0 1px rgba(255, 255, 255, .16);
+    color: #ead9aa;
+    font: 600 2.2rem/1 'Noto Naskh Arabic', serif;
+}
+
+.page-transition-label {
+    position: absolute;
+    top: calc(50% + 63px);
+    color: rgba(241, 231, 205, .84);
+    font: 700 .61rem/1.5 'DM Sans', sans-serif;
+    letter-spacing: .22em;
+    text-align: center;
+}
+
+.page-transition-label::after {
+    display: block;
+    width: 30px;
+    height: 1px;
+    margin: 11px auto 0;
+    background: #d7c58e;
+    content: "";
+    transform-origin: left;
+    animation: page-transition-rule .42s .13s ease-out both;
+}
+
+@keyframes page-enter {
+    from { opacity: 0; transform: translate3d(0, 9px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes page-cover {
+    0% { opacity: 0; transform: translateY(102%); }
+    12% { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes page-transition-rule {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+body.page-transition-ready {
+    animation: page-enter .42s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+body.page-transition-ready .page-transition-overlay {
+    animation: page-cover .4s cubic-bezier(.75, 0, .2, 1) reverse forwards;
+}
+
+body.page-transition-ready.page-transition-leaving {
+    overflow: hidden;
+}
+
+body.page-transition-ready.page-transition-leaving .page-transition-overlay {
+    animation: page-cover .42s cubic-bezier(.72, 0, .2, 1) forwards;
+}
+
+body[data-page-motion="off"],
+body[data-effects="off"] {
+    animation: none !important;
+}
+
+body[data-page-motion="off"] .page-transition-overlay,
+body[data-page-motion="off"].page-transition-ready .page-transition-overlay,
+body[data-effects="off"] .page-transition-overlay,
+body.page-transition-reduced,
+body.page-transition-reduced .page-transition-overlay {
+    animation: none !important;
+    transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body,
+    body .page-transition-overlay {
+        animation: none !important;
+        transition: none !important;
+    }
+}

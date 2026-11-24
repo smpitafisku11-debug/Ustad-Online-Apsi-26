@@ -2,60 +2,174 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0A192F">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#153d32">
     <title>Ustad Connect | Ustad Online</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; }
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; color: #233149; background: var(--ink); font-family: 'DM Sans', sans-serif; }
-        h1, h2, .brand { font-family: 'Space Grotesk', sans-serif; }
-        a { color: inherit; text-decoration: none; }
-        .shell { width: min(920px, calc(100% - 2rem)); margin: 0 auto; }
-        .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.92); }
-        .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .brand { color: var(--navy); font-size: 1rem; font-weight: 700; }
-        .back-link, .button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 0 .95rem; color: var(--navy); font-size: .82rem; font-weight: 700; }
-        .button-primary { border-color: var(--navy); background: var(--navy); color: #fff; }
-        main { padding: 30px 0 56px; }
-        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 20px; background: #fff; padding: clamp(20px, 4vw, 32px); box-shadow: 0 8px 26px rgba(15,35,66,.05); }
-        .hero { background: linear-gradient(120deg, #fff, #f3f8ff 60%, #effbf5); }
-        .eyebrow { color: var(--emerald); font-size: .68rem; font-weight: 700; letter-spacing: .15em; }
-        h1 { margin: 8px 0; color: #142b54; font-size: clamp(1.8rem, 5vw, 2.5rem); }
-        .hero p, .panel p { color: #637087; line-height: 1.65; }
-        .panel { margin-top: 18px; }
-        .panel h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
-        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-        .note { margin-top: 18px; border-radius: 12px; background: #f3f7fc; padding: 13px 15px; color: #52627a; font-size: .8rem; line-height: 1.55; }
-        .back-link:focus-visible, .button:focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
-        @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 920px); } .topbar { height: 60px; } .actions > * { flex: 1 1 100%; } }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='connect.css') }}">
+    {% include "partials/page_transitions.html" %}
 </head>
 <body>
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}">Ustad Online · Ustad Connect</a>
-            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true">ت</span> Ustad Online <span class="brand-separator">/</span> Connect</a>
+            <div class="topbar-actions">
+                <a class="quiet-link" href="{{ url_for('home') }}">← Beranda</a>
+                <a class="button button-small" href="{{ url_for('home') }}" data-connect-login>Masuk / Daftar</a>
+            </div>
         </div>
     </header>
     <main class="shell">
         <section class="hero" aria-labelledby="page-title">
-            <span class="eyebrow">BIMBINGAN BELAJAR</span>
-            <h1 id="page-title">Ustad Connect</h1>
-            <p>Ajukan pertanyaan seputar bacaan Al-Qur'an dan lanjutkan belajar bersama komunitas.</p>
-        </section>
-        <section class="panel" aria-labelledby="guidance-title">
-            <h2 id="guidance-title">Mulai dengan diskusi materi</h2>
-            <p>Untuk demo ini, bimbingan tersedia melalui diskusi materi di Komunitas. Konsultasi langsung dengan ustaz/ustazah belum tersedia.</p>
-            <div class="actions">
-                <a class="button button-primary" href="{{ url_for('komunitas', _anchor='discussion-form') }}">Tanya di Komunitas</a>
-                <a class="button" href="{{ url_for('ai_tahsin') }}">Latihan di AI Tahsin</a>
+            <div class="hero-copy">
+                <span class="eyebrow">BIMBINGAN YANG LEBIH PERSONAL</span>
+                <h1 id="page-title">Temukan ustad yang tepat untuk perjalanan tilawahmu.</h1>
+                <p>Cari pengajar yang telah disetujui admin, bandingkan bidang, metode, jadwal, dan biaya. Permintaan sesi baru berjalan setelah dikonfirmasi pengajar.</p>
+                <a class="button button-primary" href="#cari-pengajar">Jelajahi pengajar <span aria-hidden="true">↓</span></a>
             </div>
-            <div class="note">Hindari membagikan nomor telepon, alamat, atau informasi pribadi di diskusi.</div>
+            <div class="hero-note">
+                <span class="hero-note-icon" aria-hidden="true">۞</span>
+                <strong>Belajar dengan aman</strong>
+                <span>Biaya ditampilkan sebelum pemesanan. Untuk siswa di bawah 18 tahun, wali harus memberi persetujuan dan mendampingi sesi.</span>
+            </div>
         </section>
+
+        <section class="safety-strip" aria-label="Informasi keamanan">
+            <span aria-hidden="true">✦</span>
+            <p><strong>Privasi, biaya & keamanan:</strong> kontak pribadi tidak ditampilkan. Aplikasi belum menyediakan panggilan audio/video, pemrosesan pembayaran, atau rekaman. Biaya yang tercantum adalah biaya per sesi; sepakati ketentuan pembatalan sebelum sesi dan jangan mengirim uang melalui aplikasi ini. Siswa di bawah 18 tahun harus didampingi wali. Admin memeriksa identitas dan kompetensi pengajar sebelum profil ditampilkan.</p>
+        </section>
+
+        <section id="cari-pengajar" class="section-block" aria-labelledby="search-title">
+            <div class="section-heading">
+                <div><span class="eyebrow">PILIH DENGAN TENANG</span><h2 id="search-title">Cari pengajar</h2></div>
+                <span class="result-count" data-result-count>Memuat pengajar…</span>
+            </div>
+            <form class="search-panel" data-search-form>
+                <label class="search-query">Keahlian atau nama
+                    <input name="q" type="search" maxlength="80" placeholder="Contoh: tahsin, makharijul huruf">
+                </label>
+                <label>Bidang
+                    <select name="method">
+                        <option value="">Semua bidang</option>
+                        <option value="tahsin">Tahsin</option>
+                        <option value="tajwid">Tajwid</option>
+                        <option value="tahfidz">Tahfidz</option>
+                        <option value="tilawah">Tilawah</option>
+                        <option value="dasar">Dasar Al-Qur'an</option>
+                    </select>
+                </label>
+                <label>Metode sesi
+                    <select name="mode">
+                        <option value="">Semua metode</option>
+                        <option value="audio">Audio</option><option value="video">Video</option><option value="chat">Chat</option>
+                    </select>
+                </label>
+                <label>Batas biaya / sesi
+                    <input name="max_fee" type="number" min="0" max="10000000" step="5000" placeholder="Tidak dibatasi">
+                </label>
+                <label class="availability-filter"><input name="available" type="checkbox" value="1"> Hanya jadwal tersedia</label>
+                <button class="button button-primary" type="submit">Cari pengajar</button>
+            </form>
+            <div class="teacher-grid" data-teacher-list aria-live="polite"></div>
+            <div class="empty-state" data-empty-state hidden>
+                <span aria-hidden="true">☼</span><h3>Belum ada pengajar yang cocok</h3>
+                <p>Coba ubah bidang atau batas biaya. Pengajar yang tampil sudah disetujui admin.</p>
+            </div>
+        </section>
+
+        <section class="section-block booking-section" aria-labelledby="booking-title" data-bookings-section hidden>
+            <div class="section-heading"><div><span class="eyebrow">LANGKAH BERIKUTNYA</span><h2 id="booking-title">Sesi dan pembelajaran</h2></div></div>
+            <div class="booking-list" data-booking-list></div>
+        </section>
+
+        <section class="teacher-dashboard section-block" aria-labelledby="teacher-dashboard-title" data-teacher-dashboard hidden>
+            <div class="section-heading">
+                <div><span class="eyebrow">RUANG PENGAJAR</span><h2 id="teacher-dashboard-title">Atur profil & jadwal</h2></div>
+                <span class="verified-badge">Akun disetujui admin</span>
+            </div>
+            <p class="section-intro">Profil akan ditemukan siswa setelah tersimpan. Jangan masukkan nomor telepon atau informasi pribadi di deskripsi.</p>
+            <form class="profile-form" data-teacher-profile-form>
+                <label>Bidang utama
+                    <select name="method" required>
+                        <option value="tahsin">Tahsin</option><option value="tajwid">Tajwid</option>
+                        <option value="tahfidz">Tahfidz</option><option value="tilawah">Tilawah</option>
+                        <option value="dasar">Dasar Al-Qur'an</option>
+                    </select>
+                </label>
+                <label>Keahlian & pengalaman relevan
+                    <textarea name="expertise" rows="3" minlength="5" maxlength="300" required placeholder="Contoh: Makharijul huruf pemula, metode talaqqi, pengalaman 4 tahun"></textarea>
+                </label>
+                <fieldset class="mode-options"><legend>Metode sesi yang dapat disepakati</legend>
+                    <label><input type="checkbox" name="modes" value="audio"> Audio</label>
+                    <label><input type="checkbox" name="modes" value="video"> Video</label>
+                    <label><input type="checkbox" name="modes" value="chat"> Chat</label>
+                </fieldset>
+                <div class="form-pair">
+                    <label>Biaya per sesi (Rp)
+                        <input name="fee" type="number" min="0" max="10000000" step="1000" required value="0">
+                    </label>
+                    <label>Durasi sesi
+                        <select name="duration"><option value="30">30 menit</option><option value="45">45 menit</option><option value="60">60 menit</option></select>
+                    </label>
+                </div>
+                <button class="button button-primary" type="submit">Simpan profil pengajar</button>
+            </form>
+            <form class="availability-form" data-availability-form>
+                <h3>Tambahkan jadwal tersedia</h3>
+                <p>Pilih waktu lokal perangkat. Jadwal yang bertumpang tindih atau sudah dipesan tidak dapat ditambahkan.</p>
+                <label>Mulai sesi <input name="starts_at" type="datetime-local" required></label>
+                <button class="button" type="submit">Tambahkan jadwal</button>
+            </form>
+            <div class="availability-list" data-availability-list></div>
+        </section>
+        <section class="safety-strip teacher-verification-note" data-teacher-unverified hidden>
+            <span aria-hidden="true">⌛</span><p>Akun ustad Anda belum dapat menerima sesi Ustad Connect. Admin harus meninjau identitas dan kompetensi terlebih dahulu; hubungi admin melalui kontak yang tersedia.</p>
+        </section>
+
+        <section class="steps-panel" aria-label="Alur Ustad Connect">
+            <div><span>01</span><strong>Cari & lihat profil</strong></div><i aria-hidden="true">→</i>
+            <div><span>02</span><strong>Pilih jadwal & konfirmasi</strong></div><i aria-hidden="true">→</i>
+            <div><span>03</span><strong>Ikuti sesi & terima evaluasi</strong></div>
+        </section>
+
+        <footer class="page-footer">
+            <span>Ustad Online · Ilmu · Adab · Amal</span>
+            <button type="button" class="report-button" data-open-general-report>Laporkan masalah keamanan</button>
+        </footer>
     </main>
+
+    <dialog class="connect-dialog" data-teacher-dialog aria-labelledby="teacher-dialog-title">
+        <form method="dialog" class="dialog-close-row"><button class="dialog-close" aria-label="Tutup">×</button></form>
+        <div data-teacher-detail></div>
+        <form class="booking-form" data-booking-form>
+            <h3>Ajukan sesi belajar</h3>
+            <label>Jadwal tersedia<select name="slot_id" required></select></label>
+            <label>Metode yang disepakati<select name="mode" required></select></label>
+            <label class="guardian-check"><input name="guardian_acknowledged" type="checkbox" required>
+                <span>Saya telah membaca biaya dan ketentuan sesi. Jika siswa berusia di bawah 18 tahun, orang tua/wali telah menyetujui dan akan mendampingi sesi.</span>
+            </label>
+            <p class="form-hint">Pemesanan berstatus permintaan hingga dikonfirmasi pengajar. Komunikasi audio/video belum tersedia langsung di aplikasi.</p>
+            <button class="button button-primary" type="submit">Kirim permintaan sesi</button>
+        </form>
+    </dialog>
+
+    <dialog class="connect-dialog report-dialog" data-report-dialog aria-labelledby="report-title">
+        <form method="dialog" class="dialog-close-row"><button class="dialog-close" aria-label="Tutup">×</button></form>
+        <h2 id="report-title">Laporkan masalah</h2>
+        <p>Laporan dikirim secara privat ke admin. Jika ada bahaya langsung, hubungi orang dewasa tepercaya atau layanan darurat setempat.</p>
+        <form class="report-form" data-report-form>
+            <label>Alasan
+                <select name="reason" required><option value="safety">Keamanan pengguna</option><option value="conduct">Perilaku tidak pantas</option><option value="payment">Biaya atau pembayaran</option><option value="other">Lainnya</option></select>
+            </label>
+            <label>Detail (jangan tulis kata sandi atau data sensitif)
+                <textarea name="details" rows="4" maxlength="1000" placeholder="Jelaskan masalahnya secara singkat"></textarea>
+            </label>
+            <button class="button button-primary" type="submit">Kirim laporan</button>
+        </form>
+    </dialog>
+    <div class="connect-toast" data-connect-toast role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='connect.js') }}" defer></script>
 </body>
 </html>

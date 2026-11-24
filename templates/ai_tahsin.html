@@ -7,16 +7,16 @@
     <title>AI Tahsin | Ustad Online</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; --muted: #718096; }
         * { box-sizing: border-box; }
         [hidden] { display: none !important; }
         body { margin: 0; min-height: 100vh; color: #233149; background: var(--ink); font-family: 'DM Sans', sans-serif; }
         h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
-        button, a { font: inherit; }
+        button, a, select, textarea { font: inherit; }
         a { color: inherit; text-decoration: none; }
-        .shell { width: min(920px, calc(100% - 2rem)); margin: 0 auto; }
+        .shell { width: min(660px, calc(100% - 2rem)); margin: 0 auto; }
         .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.92); }
         .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; }
         .brand { color: var(--navy); font-size: 1rem; font-weight: 700; }
@@ -25,25 +25,40 @@
         .button-primary:hover:not(:disabled) { background: #10254d; }
         button:disabled { cursor: not-allowed; opacity: .48; }
         main { padding: 30px 0 56px; }
-        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 20px; background: #fff; padding: clamp(20px, 4vw, 32px); box-shadow: 0 8px 26px rgba(15,35,66,.05); }
-        .hero { background: linear-gradient(120deg, #fff, #f3f8ff 60%, #effbf5); }
+        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 16px; background: #fff; padding: 24px 26px; box-shadow: 0 8px 26px rgba(15,35,66,.05); }
+        .hero { min-height: 160px; background: linear-gradient(120deg, #fff, #f3f8ff 60%, #effbf5); }
         .eyebrow { color: var(--emerald); font-size: .68rem; font-weight: 700; letter-spacing: .15em; }
-        h1 { margin: 8px 0; color: #142b54; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+        h1 { margin: 6px 0 10px; color: #142b54; font-size: 28px; line-height: 1.15; }
         .hero p, .panel p { color: #637087; line-height: 1.65; }
         .panel { margin-top: 18px; }
         .panel h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
-        .record-controls { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+        label { display: block; margin-top: 14px; color: #46566e; font-size: .8rem; font-weight: 700; }
+        select, textarea { width: 100%; margin-top: 6px; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 10px 12px; color: #233149; }
+        textarea { min-height: 84px; direction: rtl; font-family: 'Amiri', serif; font-size: 1.3rem; }
+        .arabic { direction: rtl; margin-top: 14px; border-radius: 12px; background: #f8fafc; padding: 14px 16px; font-family: 'Amiri', serif; font-size: 1.7rem; line-height: 2.2; color: #142b54; }
+        .record-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 18px; }
+        .timer { margin-left: auto; color: #64748b; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .timer.live { color: #a33838; }
         .status { min-height: 24px; margin: 13px 0 0; color: #64748b; font-size: .82rem; }
         .status.error { color: #a33838; }
         .status.success { color: var(--emerald); font-weight: 700; }
+        .transcript { margin-top: 12px; min-height: 48px; direction: rtl; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 10px 14px; font-family: 'Amiri', serif; font-size: 1.3rem; color: #52627a; }
         audio { width: 100%; margin-top: 15px; }
         .notice { margin-top: 15px; border-radius: 12px; background: #f3f7fc; padding: 13px 15px; color: #52627a; font-size: .78rem; line-height: 1.55; }
         .result-card { margin-top: 18px; border: 1px solid #cfe7da; border-radius: 16px; background: #f5fcf8; padding: 18px; }
         .result-card h3 { margin: 0; color: #126343; }
+        .score { margin: 8px 0 0; color: var(--navy); font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 700; }
+        .words { direction: rtl; margin-top: 10px; font-family: 'Amiri', serif; font-size: 1.6rem; line-height: 2.3; }
+        .w-ok { color: #126343; background: #e2f5ec; border-radius: 6px; padding: 0 4px; }
+        .w-miss { color: #a33838; background: #fdeaea; border-radius: 6px; padding: 0 4px; }
+        .legend { margin: 6px 0 0; font-size: .75rem; color: #64748b; }
         .result-card ul { margin: 12px 0 0; padding-left: 1.2rem; color: #46566e; line-height: 1.7; }
         .result-card .button { margin-top: 15px; }
-        @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 920px); } .topbar { height: 60px; } .record-controls .button { flex: 1 1 100%; } }
+        .history { margin: 12px 0 0; padding: 0; list-style: none; color: #46566e; font-size: .86rem; line-height: 1.9; }
+        .history li { border-bottom: 1px solid #eef2f7; }
+        @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 920px); } .topbar { height: 60px; } .record-controls .button { flex: 1 1 100%; } .timer { margin-left: 0; } }
     </style>
+    {% include "partials/page_transitions.html" %}
 </head>
 <body>
     <header class="topbar">
@@ -56,121 +71,308 @@
         <section class="hero" aria-labelledby="page-title">
             <span class="eyebrow">LATIHAN PELAFALAN</span>
             <h1 id="page-title">AI Tahsin</h1>
-            <p>Rekam latihan singkat, dengarkan kembali, lalu gunakan panduan awal sebagai bahan murajaah.</p>
+            <p>Pilih bacaan, rekam, lalu cek kata demi kata apakah bacaanmu sudah sesuai teks. Hasilnya bahan murajaah, bukan pengganti guru.</p>
         </section>
+
+        <section class="panel" aria-labelledby="text-title">
+            <h2 id="text-title">1. Pilih bacaan</h2>
+            <label for="text-select">Surah latihan</label>
+            <select id="text-select">
+                <option value="fatihah">Al-Fatihah</option>
+                <option value="ikhlas">Al-Ikhlas</option>
+                <option value="nas">An-Nas</option>
+                <option value="kautsar">Al-Kautsar</option>
+                <option value="custom">Teks sendiri…</option>
+            </select>
+            <div id="custom-wrap" hidden>
+                <label for="custom-text">Tempel teks Arab yang akan dibaca</label>
+                <textarea id="custom-text" placeholder="الصق النص هنا"></textarea>
+            </div>
+            <div class="arabic" id="target-text" lang="ar"></div>
+            <p class="legend">Periksa kembali teks dengan mushaf sebelum dipakai sebagai acuan.</p>
+        </section>
+
         <section class="panel" aria-labelledby="record-title">
-            <h2 id="record-title">Rekaman latihan</h2>
-            <p>Rekaman diproses di browser untuk demo ini dan tidak diunggah ke server.</p>
+            <h2 id="record-title">2. Rekam bacaanmu</h2>
             <div class="record-controls">
                 <button class="button button-primary" id="start-recording" type="button">● Mulai Merekam</button>
-                <button class="button" id="stop-recording" type="button" disabled>Hentikan Rekaman</button>
-                <button class="button" id="analyze-recording" type="button" disabled>Proses Evaluasi Awal</button>
+                <button class="button" id="stop-recording" type="button" disabled>Hentikan</button>
+                <button class="button" id="analyze-recording" type="button" disabled>Periksa Bacaan</button>
+                <span class="timer" id="timer" aria-hidden="true">00:00</span>
             </div>
             <p class="status" id="recording-status" role="status" aria-live="polite">Izinkan akses mikrofon untuk memulai latihan.</p>
+            <div class="transcript" id="transcript" lang="ar" aria-label="Teks yang terdengar" hidden></div>
             <audio id="audio-preview" controls hidden aria-label="Pratinjau rekaman latihan"></audio>
-            <div class="notice">Evaluasi pada halaman ini adalah <strong>simulasi antarmuka</strong>, bukan analisis AI atau penilaian tajwid yang sesungguhnya. Untuk koreksi makhraj dan hukum bacaan, konfirmasikan bacaan kepada ustaz/ustazah.</div>
+            <div class="notice" id="privacy-note"></div>
+
             <section class="result-card" id="analysis-result" aria-labelledby="analysis-title" hidden>
-                <h3 id="analysis-title">Audio berhasil diproses · simulasi</h3>
+                <h3 id="analysis-title">Hasil pemeriksaan kata</h3>
+                <p class="score" id="score" hidden></p>
                 <p id="analysis-summary"></p>
-                <ul>
-                    <li>Latih makhraj huruf secara perlahan dan pastikan posisi lidah serta aliran napas stabil.</li>
-                    <li>Ulangi potongan bacaan pendek, lalu cocokkan panjang-pendek harakat dengan contoh guru.</li>
-                    <li>Minta ustaz/ustazah menyimak rekaman untuk konfirmasi hukum tajwid dan pelafalan.</li>
-                </ul>
+                <div class="words" id="word-result" lang="ar"></div>
+                <p class="legend"><span class="w-ok">hijau</span> terbaca sesuai · <span class="w-miss">merah</span> tidak terdengar atau berbeda</p>
+                <ul id="tips"></ul>
                 <a class="button button-primary" href="{{ url_for('komunitas') }}#discussion-form">Konfirmasi ke ustaz/ustazah</a>
             </section>
+        </section>
+
+        <section class="panel" aria-labelledby="history-title">
+            <h2 id="history-title">Riwayat latihan</h2>
+            <p id="history-empty">Belum ada latihan tersimpan di perangkat ini.</p>
+            <ul class="history" id="history"></ul>
+            <button class="button" id="clear-history" type="button" hidden>Hapus riwayat</button>
         </section>
     </main>
     <script>
         (() => {
-            const startButton = document.getElementById('start-recording');
-            const stopButton = document.getElementById('stop-recording');
-            const analyzeButton = document.getElementById('analyze-recording');
-            const status = document.getElementById('recording-status');
-            const preview = document.getElementById('audio-preview');
-            const result = document.getElementById('analysis-result');
-            const summary = document.getElementById('analysis-summary');
-            let recorder = null;
-            let stream = null;
-            let chunks = [];
-            let recordingBlob = null;
-            let audioUrl = null;
+            const $ = (id) => document.getElementById(id);
+            const PRESETS = {
+                fatihah: { name: 'Al-Fatihah', text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ الرَّحْمَٰنِ الرَّحِيمِ مَالِكِ يَوْمِ الدِّينِ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ' },
+                ikhlas: { name: 'Al-Ikhlas', text: 'قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ' },
+                nas: { name: 'An-Nas', text: 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ مَلِكِ النَّاسِ إِلَٰهِ النَّاسِ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ مِنَ الْجِنَّةِ وَالنَّاسِ' },
+                kautsar: { name: 'Al-Kautsar', text: 'إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ فَصَلِّ لِرَبِّكَ وَانْحَرْ إِنَّ شَانِئَكَ هُوَ الْأَبْتَرُ' }
+            };
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const sel = $('text-select'), custom = $('custom-text'), target = $('target-text');
+            const startB = $('start-recording'), stopB = $('stop-recording'), checkB = $('analyze-recording');
+            const status = $('recording-status'), timerEl = $('timer'), preview = $('audio-preview'), live = $('transcript');
+            const result = $('analysis-result'), scoreEl = $('score'), wordsEl = $('word-result'), summary = $('analysis-summary'), tipsEl = $('tips');
+            const histEl = $('history'), histEmpty = $('history-empty'), clearB = $('clear-history');
+            let recorder = null, stream = null, chunks = [], audioUrl = null;
+            let rec = null, recording = false, committed = '', curFinal = '', curInterim = '';
+            let tick = null, t0 = 0;
+
+            $('privacy-note').textContent = SR
+                ? 'Rekaman audio hanya tersimpan di browser-mu dan tidak diunggah oleh situs ini. Pengenalan suara memakai layanan bawaan browser (di Chrome/Edge, audio dikirim ke penyedia browser untuk diubah menjadi teks). Pemeriksaan ini hanya mencocokkan kata, bukan menilai makhraj atau hukum tajwid.'
+                : 'Browser ini belum mendukung pengenalan suara, jadi pemeriksaan otomatis tidak tersedia. Kamu tetap bisa merekam, memutar ulang, dan menilai sendiri. Untuk pemeriksaan kata, gunakan Chrome atau Edge.';
 
             function setStatus(message, kind) {
                 status.textContent = message;
-                status.className = `status${kind ? ` ${kind}` : ''}`;
+                status.className = 'status' + (kind ? ' ' + kind : '');
             }
-
-            function stopMicrophone() {
-                if (stream) {
-                    stream.getTracks().forEach((track) => track.stop());
-                    stream = null;
+            function getTarget() {
+                return sel.value === 'custom' ? custom.value.trim() : PRESETS[sel.value].text;
+            }
+            function targetName() {
+                return sel.value === 'custom' ? 'Teks sendiri' : PRESETS[sel.value].name;
+            }
+            function renderTarget() {
+                target.textContent = getTarget() || 'Tempel teks Arab di kolom di atas.';
+            }
+            function norm(s) {
+                return s.replace(/[\u0640\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+                    .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+                    .replace(/[^\u0621-\u064A\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+            function lev(a, b) {
+                const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+                for (let j = 1; j <= b.length; j++) d[0][j] = j;
+                for (let i = 1; i <= a.length; i++) {
+                    for (let j = 1; j <= b.length; j++) {
+                        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+                    }
                 }
+                return d[a.length][b.length];
+            }
+            function same(a, b) {
+                return a === b || lev(a, b) <= (Math.min(a.length, b.length) > 4 ? 1 : 0);
+            }
+            function fullText() {
+                return (committed + ' ' + curFinal + ' ' + curInterim).replace(/\s+/g, ' ').trim();
+            }
+            function fmt(sec) {
+                return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
             }
 
-            startButton.addEventListener('click', async () => {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-                    setStatus('Perekaman tidak didukung. Buka halaman melalui HTTPS atau browser yang mendukung MediaRecorder.', 'error');
+            function startRecognition() {
+                rec = new SR();
+                rec.lang = 'ar-SA';
+                rec.continuous = true;
+                rec.interimResults = true;
+                rec.onresult = (event) => {
+                    let f = '', i = '';
+                    for (let k = 0; k < event.results.length; k++) {
+                        if (event.results[k].isFinal) f += event.results[k][0].transcript + ' ';
+                        else i += event.results[k][0].transcript + ' ';
+                    }
+                    curFinal = f.trim();
+                    curInterim = i.trim();
+                    live.textContent = fullText() || '…';
+                };
+                rec.onerror = (event) => {
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        recording = false;
+                        setStatus('Izin pengenalan suara ditolak. Aktifkan izin mikrofon lalu coba lagi.', 'error');
+                    } else if (event.error === 'network') {
+                        setStatus('Pengenalan suara membutuhkan koneksi internet.', 'error');
+                    } else if (event.error === 'language-not-supported') {
+                        setStatus('Browser ini tidak mendukung pengenalan suara bahasa Arab.', 'error');
+                    }
+                };
+                rec.onend = () => {
+                    committed = (committed + ' ' + curFinal + ' ' + curInterim).trim();
+                    curFinal = '';
+                    curInterim = '';
+                    if (recording) { try { rec.start(); } catch (e) { /* sudah berjalan */ } }
+                };
+                try { rec.start(); } catch (e) { rec = null; }
+            }
+
+            function finishRecording() {
+                recording = false;
+                clearInterval(tick);
+                timerEl.classList.remove('live');
+                if (rec) { try { rec.stop(); } catch (e) { /* abaikan */ } }
+                if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+                startB.disabled = false;
+                stopB.disabled = true;
+                sel.disabled = false;
+                custom.disabled = false;
+            }
+
+            startB.addEventListener('click', async () => {
+                if (!getTarget()) { setStatus('Pilih atau tempel teks bacaan terlebih dahulu.', 'error'); return; }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    setStatus('Perekaman tidak didukung. Buka halaman melalui HTTPS atau gunakan browser yang lebih baru.', 'error');
                     return;
                 }
-                startButton.disabled = true;
-                analyzeButton.disabled = true;
+                startB.disabled = true;
+                checkB.disabled = true;
                 result.hidden = true;
+                committed = ''; curFinal = ''; curInterim = '';
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    chunks = [];
-                    recorder = new MediaRecorder(stream);
-                    recorder.addEventListener('dataavailable', (event) => {
-                        if (event.data.size) chunks.push(event.data);
-                    });
-                    recorder.addEventListener('stop', () => {
-                        recordingBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-                        stopMicrophone();
-                        startButton.disabled = false;
-                        if (!recordingBlob.size) {
-                            setStatus('Rekaman kosong. Silakan coba lagi.', 'error');
-                            return;
-                        }
-                        if (audioUrl) URL.revokeObjectURL(audioUrl);
-                        audioUrl = URL.createObjectURL(recordingBlob);
-                        preview.src = audioUrl;
-                        preview.hidden = false;
-                        analyzeButton.disabled = false;
-                        setStatus('Rekaman siap diputar dan diproses.', 'success');
-                    }, { once: true });
-                    recorder.start();
-                    stopButton.disabled = false;
-                    setStatus('Sedang merekam. Bacakan satu potongan ayat dengan jelas.');
                 } catch (error) {
-                    stopMicrophone();
-                    startButton.disabled = false;
-                    stopButton.disabled = true;
+                    startB.disabled = false;
                     setStatus(error.name === 'NotAllowedError'
                         ? 'Izin mikrofon ditolak. Aktifkan izin mikrofon untuk merekam.'
                         : 'Mikrofon tidak dapat digunakan. Periksa perangkat lalu coba lagi.', 'error');
-                }
-            });
-
-            stopButton.addEventListener('click', () => {
-                if (!recorder || recorder.state !== 'recording') return;
-                stopButton.disabled = true;
-                recorder.stop();
-            });
-
-            analyzeButton.addEventListener('click', () => {
-                if (!recordingBlob) {
-                    setStatus('Buat rekaman terlebih dahulu sebelum menjalankan evaluasi.', 'error');
                     return;
                 }
-                summary.textContent = `Rekaman ${Math.ceil(recordingBlob.size / 1024)} KB diproses secara lokal. Saran di bawah adalah panduan latihan umum, bukan hasil pengenalan suara.`;
-                result.hidden = false;
-                setStatus('Simulasi evaluasi selesai. Tidak ada model AI yang menganalisis audio ini.', 'success');
+                chunks = [];
+                if (window.MediaRecorder) {
+                    recorder = new MediaRecorder(stream);
+                    recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
+                    recorder.addEventListener('stop', () => {
+                        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+                        if (!blob.size) return;
+                        if (audioUrl) URL.revokeObjectURL(audioUrl);
+                        audioUrl = URL.createObjectURL(blob);
+                        preview.src = audioUrl;
+                        preview.hidden = false;
+                    }, { once: true });
+                    recorder.start();
+                } else {
+                    recorder = null;
+                }
+                recording = true;
+                if (SR) { live.hidden = false; live.textContent = '…'; startRecognition(); }
+                sel.disabled = true;
+                custom.disabled = true;
+                stopB.disabled = false;
+                t0 = Date.now();
+                timerEl.textContent = '00:00';
+                timerEl.classList.add('live');
+                tick = setInterval(() => { timerEl.textContent = fmt(Math.floor((Date.now() - t0) / 1000)); }, 500);
+                setStatus('Sedang merekam. Bacalah dengan jelas dan perlahan.');
             });
 
+            stopB.addEventListener('click', () => {
+                if (!recording) return;
+                if (recorder && recorder.state === 'recording') recorder.stop();
+                finishRecording();
+                checkB.disabled = false;
+                setStatus('Rekaman selesai. Tekan "Periksa Bacaan" untuk melihat hasilnya.', 'success');
+            });
+
+            checkB.addEventListener('click', () => {
+                const items = getTarget().split(/\s+/).map((raw) => ({ raw, n: norm(raw) })).filter((w) => w.n);
+                tipsEl.textContent = '';
+                wordsEl.textContent = '';
+                result.hidden = false;
+                if (!SR) {
+                    scoreEl.hidden = true;
+                    summary.textContent = 'Pemeriksaan otomatis tidak tersedia di browser ini. Putar ulang rekamanmu sambil melihat teks, lalu minta ustaz/ustazah menyimaknya.';
+                    items.forEach((w) => wordsEl.append(w.raw + ' '));
+                    return;
+                }
+                const spoken = norm(fullText()).split(' ').filter(Boolean);
+                if (!spoken.length) {
+                    scoreEl.hidden = true;
+                    summary.textContent = 'Tidak ada suara yang terdeteksi. Dekatkan mikrofon, bacalah lebih jelas, lalu rekam ulang.';
+                    return;
+                }
+                const n = items.length, m = spoken.length;
+                const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+                for (let i = 1; i <= n; i++) {
+                    for (let j = 1; j <= m; j++) {
+                        dp[i][j] = same(items[i - 1].n, spoken[j - 1]) ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+                const ok = new Array(n).fill(false);
+                for (let i = n, j = m; i > 0 && j > 0;) {
+                    if (same(items[i - 1].n, spoken[j - 1])) { ok[i - 1] = true; i--; j--; }
+                    else if (dp[i - 1][j] >= dp[i][j - 1]) i--;
+                    else j--;
+                }
+                const matched = dp[n][m];
+                const score = Math.round((matched / n) * 100);
+                items.forEach((w, i) => {
+                    const span = document.createElement('span');
+                    span.className = ok[i] ? 'w-ok' : 'w-miss';
+                    span.textContent = w.raw;
+                    wordsEl.append(span, ' ');
+                });
+                scoreEl.hidden = false;
+                scoreEl.textContent = score + '%';
+                summary.textContent = matched + ' dari ' + n + ' kata terbaca sesuai teks. Ini mencocokkan kata, bukan menilai makhraj atau tajwid.';
+                const tips = [];
+                if (score >= 90) tips.push('Bagus. Ulangi sekali lagi, lalu minta ustaz/ustazah menyimak makhraj dan tajwidnya.');
+                else if (score >= 60) tips.push('Cukup baik. Ulangi bagian yang merah secara perlahan, satu potongan pendek demi satu potongan.');
+                else tips.push('Coba ulang dengan tempo lebih pelan, di ruangan tenang, dan mikrofon lebih dekat.');
+                if (m > n * 1.3) tips.push('Terdeteksi banyak kata tambahan. Pastikan hanya bacaan yang dipilih yang dibaca.');
+                tips.push('Kata merah bisa berarti salah baca atau suara tidak tertangkap. Dengarkan rekamanmu untuk memastikan.');
+                tips.push('Konfirmasikan hukum tajwid dan makhraj kepada ustaz/ustazah.');
+                tips.forEach((t) => { const li = document.createElement('li'); li.textContent = t; tipsEl.append(li); });
+                setStatus('Pemeriksaan selesai.', 'success');
+                saveHistory(score);
+            });
+
+            function loadHistory() {
+                try { return JSON.parse(localStorage.getItem('tahsin_history') || '[]'); } catch (e) { return []; }
+            }
+            function saveHistory(score) {
+                const list = loadHistory();
+                list.unshift({ t: Date.now(), name: targetName(), score });
+                try { localStorage.setItem('tahsin_history', JSON.stringify(list.slice(0, 10))); } catch (e) { /* penyimpanan tidak tersedia */ }
+                renderHistory();
+            }
+            function renderHistory() {
+                const list = loadHistory();
+                histEl.textContent = '';
+                list.forEach((h) => {
+                    const li = document.createElement('li');
+                    li.textContent = new Date(h.t).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' · ' + h.name + ' · ' + h.score + '%';
+                    histEl.append(li);
+                });
+                histEmpty.hidden = list.length > 0;
+                clearB.hidden = list.length === 0;
+            }
+            clearB.addEventListener('click', () => {
+                try { localStorage.removeItem('tahsin_history'); } catch (e) { /* abaikan */ }
+                renderHistory();
+            });
+
+            sel.addEventListener('change', () => { $('custom-wrap').hidden = sel.value !== 'custom'; renderTarget(); });
+            custom.addEventListener('input', renderTarget);
             window.addEventListener('pagehide', () => {
-                stopMicrophone();
+                recording = false;
+                if (rec) { try { rec.abort(); } catch (e) { /* abaikan */ } }
+                if (stream) stream.getTracks().forEach((t) => t.stop());
                 if (audioUrl) URL.revokeObjectURL(audioUrl);
             });
+            renderTarget();
+            renderHistory();
         })();
     </script>
 </body>

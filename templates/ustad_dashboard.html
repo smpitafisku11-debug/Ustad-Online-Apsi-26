@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#153d32">
+    <title>Panel Ustad | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='connect.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ustad_dashboard.css') }}">
+    {% include "partials/page_transitions.html" %}
+</head>
+<body class="teacher-dashboard-page">
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true">ت</span> Ustad Online <span class="brand-separator">/</span> Panel Ustad</a>
+            <div class="topbar-actions">
+                <a class="quiet-link" href="{{ url_for('connect') }}">Ustad Connect</a>
+                <a class="button button-small" href="{{ url_for('home') }}">Beranda</a>
+            </div>
+        </div>
+    </header>
+    <main class="shell dashboard-shell">
+        <section class="dashboard-welcome" aria-labelledby="dashboard-title">
+            <div>
+                <span class="eyebrow">KHUSUS AKUN USTAD</span>
+                <h1 id="dashboard-title">Assalamu'alaikum, <span data-dashboard-name>Ustad</span></h1>
+                <p>Pusat pengajaran untuk mengelola profil, jadwal, permintaan siswa, dan evaluasi belajar.</p>
+            </div>
+            <div class="teacher-status" data-verification-status>
+                {% if teacher_verified %}
+                    <span class="status-dot is-approved"></span><strong>Pengajar terverifikasi</strong><small>Identitas & kompetensi telah diperiksa admin</small>
+                {% else %}
+                    <span class="status-dot"></span><strong>Verifikasi belum selesai</strong><small>Profil belum dapat menerima pemesanan</small>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="dashboard-stats" aria-label="Ringkasan pengajaran">
+            <article><span>Permintaan baru</span><strong data-stat-requested>0</strong><small>Menunggu konfirmasi</small></article>
+            <article><span>Sesi mendatang</span><strong data-stat-upcoming>0</strong><small>Sudah dikonfirmasi</small></article>
+            <article><span>Sesi selesai</span><strong data-stat-completed>0</strong><small>Evaluasi telah diberikan</small></article>
+            <article><span>Jadwal tersedia</span><strong data-stat-slots>0</strong><small>Dapat dipilih siswa</small></article>
+        </section>
+
+        <div class="dashboard-grid">
+            <aside class="dashboard-nav" aria-label="Menu panel Ustad">
+                <button type="button" class="is-active" data-dashboard-tab="requests">Permintaan siswa <span data-nav-requested>0</span></button>
+                <button type="button" data-dashboard-tab="schedule">Jadwal mengajar</button>
+                <button type="button" data-dashboard-tab="profile">Profil pengajar</button>
+                <button type="button" data-dashboard-tab="evaluations">Evaluasi selesai</button>
+            </aside>
+
+            <div class="dashboard-content">
+                <section class="dashboard-panel is-active" data-dashboard-panel="requests" aria-labelledby="requests-title">
+                    <div class="panel-heading"><div><span class="eyebrow">MANAJEMEN SESI</span><h2 id="requests-title">Permintaan siswa</h2></div></div>
+                    <div class="request-list" data-request-list><div class="dashboard-empty">Memuat permintaan…</div></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="schedule" aria-labelledby="schedule-title">
+                    <div class="panel-heading"><div><span class="eyebrow">JADWAL BERSAMA SISWA</span><h2 id="schedule-title">Kelola jadwal mengajar</h2></div></div>
+                    <form class="availability-form dashboard-availability" data-dashboard-availability>
+                        <h3>Tambahkan jadwal tersedia</h3>
+                        <label>Mulai sesi <input name="starts_at" type="datetime-local" required></label>
+                        <button class="button button-primary" type="submit">Tambah jadwal</button>
+                    </form>
+                    <div class="schedule-list" data-schedule-list></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="profile" aria-labelledby="profile-title">
+                    <div class="panel-heading"><div><span class="eyebrow">PROFIL PUBLIK PENGAJAR</span><h2 id="profile-title">Kelola profil Ustad Connect</h2></div></div>
+                    <form class="profile-form dashboard-profile-form" data-dashboard-profile-form>
+                        <label>Bidang utama
+                            <select name="method" required>
+                                <option value="tahsin">Tahsin</option><option value="tajwid">Tajwid</option>
+                                <option value="tahfidz">Tahfidz</option><option value="tilawah">Tilawah</option>
+                                <option value="dasar">Dasar Al-Qur'an</option>
+                            </select>
+                        </label>
+                        <label>Keahlian & pengalaman relevan
+                            <textarea name="expertise" minlength="5" maxlength="300" rows="4" required></textarea>
+                        </label>
+                        <fieldset class="mode-options"><legend>Metode sesi</legend>
+                            <label><input type="checkbox" name="modes" value="audio"> Audio</label>
+                            <label><input type="checkbox" name="modes" value="video"> Video</label>
+                            <label><input type="checkbox" name="modes" value="chat"> Chat</label>
+                        </fieldset>
+                        <div class="form-pair">
+                            <label>Biaya per sesi (Rp)<input name="fee" type="number" min="0" max="10000000" step="1000" required></label>
+                            <label>Durasi<select name="duration"><option value="30">30 menit</option><option value="45">45 menit</option><option value="60">60 menit</option></select></label>
+                        </div>
+                        <button class="button button-primary" type="submit">Simpan profil</button>
+                    </form>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="evaluations" aria-labelledby="evaluations-title">
+                    <div class="panel-heading"><div><span class="eyebrow">CATATAN PEMBELAJARAN</span><h2 id="evaluations-title">Evaluasi selesai</h2></div></div>
+                    <div class="evaluation-list" data-evaluation-list><div class="dashboard-empty">Memuat evaluasi…</div></div>
+                </section>
+            </div>
+        </div>
+    </main>
+    <dialog class="connect-dialog evaluation-dialog" data-evaluation-dialog aria-labelledby="evaluation-dialog-title">
+        <form method="dialog" class="dialog-close-row"><button class="dialog-close" aria-label="Tutup">×</button></form>
+        <h2 id="evaluation-dialog-title">Selesaikan sesi</h2>
+        <form class="report-form" data-evaluation-form>
+            <label>Catatan materi & rekomendasi latihan (10–1000 karakter)
+                <textarea name="evaluation" minlength="10" maxlength="1000" rows="5" required></textarea>
+            </label>
+            <button class="button button-primary" type="submit">Simpan evaluasi</button>
+        </form>
+    </dialog>
+    <div class="connect-toast" data-dashboard-toast role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='ustad_dashboard.js') }}" defer></script>
+</body>
+</html>

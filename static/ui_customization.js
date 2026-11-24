@@ -36,6 +36,7 @@
     function applyPreferences() {
         document.body.dataset.arabicSize = preferences.arabicSize;
         document.body.dataset.effects = preferences.animations ? 'on' : 'off';
+        document.body.dataset.pageMotion = preferences.animations ? 'on' : 'off';
         document.querySelectorAll('[data-arabic-option]').forEach((button) => {
             button.setAttribute('aria-pressed', String(button.dataset.arabicOption === preferences.arabicSize));
         });

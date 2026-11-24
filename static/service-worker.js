@@ -1,4 +1,4 @@
-const cacheName = 'ustad-online-v1';
+const cacheName = 'ustad-online-v3';
 const appShell = [
     '/',
     '/static/manifest.json',
@@ -7,7 +7,17 @@ const appShell = [
     '/static/ui_customization.css',
     '/static/ui_customization.js',
     '/static/profile.css',
-    '/static/profile.js'
+    '/static/profile.js',
+    '/static/page_transitions.css',
+    '/static/page_transitions.js',
+    '/connect',
+    '/ustad-dashboard',
+    '/static/ustad_dashboard.css',
+    '/static/ustad_dashboard.js',
+    '/static/connect.css',
+    '/static/connect.js',
+    '/fitur',
+    '/static/fitur_tambahan.js'
 ];
 
 self.addEventListener('install', (event) => {

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0A192F">
+    <title>Fitur Tambahan | Ustad Online</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='page_transitions.css') }}">
+    {% include "partials/page_transitions.html" %}
+    <style>
+        :root { color-scheme: light; --navy:#17345f; --green:#08785a; --ink:#edf3f1; --line:#dde7e2; }
+        * { box-sizing:border-box; }
+        body { margin:0; min-height:100vh; color:#26364d; background:linear-gradient(145deg,#f7faf8,#eef4f1); font-family:"DM Sans",Arial,sans-serif; }
+        a,button,input,select,textarea { font:inherit; }
+        a { color:inherit; text-decoration:none; }
+        .topbar { position:sticky; top:0; z-index:20; height:68px; border-bottom:1px solid rgba(221,231,226,.9); background:rgba(255,255,255,.94); backdrop-filter:blur(12px); }
+        .shell { width:min(1120px,calc(100% - 32px)); margin:auto; }
+        .topbar-inner { height:100%; display:flex; align-items:center; justify-content:space-between; }
+        .brand { color:var(--navy); font-family:"Space Grotesk",Arial,sans-serif; font-weight:700; }
+        .back-link { min-height:42px; display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:11px; background:#fff; padding:0 14px; color:var(--navy); font-size:.82rem; font-weight:700; }
+        main { padding:32px 0 64px; }
+        .hero { border:1px solid #cfddd6; border-radius:22px; background:linear-gradient(120deg,#153a30,#1d5745); padding:clamp(22px,5vw,38px); color:#fff; box-shadow:0 14px 35px rgba(21,58,48,.12); }
+        .eyebrow { color:#d8c58d; font-size:.68rem; font-weight:800; letter-spacing:.16em; }
+        h1,h2,h3 { font-family:"Space Grotesk",Arial,sans-serif; }
+        h1 { margin:8px 0; font-size:clamp(1.8rem,5vw,2.7rem); }
+        .hero p { max-width:680px; margin:8px 0 20px; color:#d1dfd7; line-height:1.65; }
+        .search { width:min(560px,100%); height:48px; border:1px solid rgba(255,255,255,.22); border-radius:13px; background:rgba(255,255,255,.11); padding:0 16px; color:#fff; outline:none; }
+        .search::placeholder { color:#d3dfd8; }
+        .search:focus { border-color:#e2cf91; box-shadow:0 0 0 3px rgba(226,207,145,.16); }
+        .feature-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:22px; }
+        .feature-card { border:1px solid #dde6e1; border-radius:18px; background:#fff; padding:20px; box-shadow:0 8px 24px rgba(28,67,53,.045); }
+        .feature-card.wide { grid-column:1/-1; }
+        .feature-head { display:flex; align-items:center; gap:12px; }
+        .feature-icon { width:42px; height:42px; display:grid; flex:none; place-items:center; border:1px solid #dce7e0; border-radius:12px; background:#edf5f1; color:var(--green); font-size:1.1rem; }
+        .feature-head h2 { margin:0; color:var(--navy); font-size:1rem; }
+        .feature-head p { margin:3px 0 0; color:#738178; font-size:.76rem; }
+        .feature-body { margin-top:16px; }
+        .field-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .field { display:grid; gap:6px; color:#55665e; font-size:.75rem; font-weight:700; }
+        input,select,textarea { width:100%; border:1px solid #dce5e0; border-radius:10px; background:#fff; padding:10px 12px; color:#26364d; outline:none; }
+        textarea { min-height:74px; resize:vertical; }
+        input:focus,select:focus,textarea:focus { border-color:#54a887; box-shadow:0 0 0 3px #e7f4ee; }
+        .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+        .button { min-height:40px; border:1px solid #d7e2dc; border-radius:10px; background:#fff; padding:0 12px; color:var(--navy); cursor:pointer; font-size:.78rem; font-weight:800; }
+        .button.primary { border-color:var(--green); background:var(--green); color:#fff; }
+        .switch-row { display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid #edf2ef; padding-top:12px; }
+        .switch-row:first-child { border-top:0; padding-top:0; }
+        .switch-row strong { display:block; color:#405547; font-size:.82rem; }
+        .switch-row span { display:block; margin-top:3px; color:#7a8880; font-size:.72rem; }
+        .switch { position:relative; width:46px; height:26px; flex:none; border:0; border-radius:99px; background:#cbd7d1; cursor:pointer; }
+        .switch::after { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(21,44,34,.18); content:""; transition:.18s ease; }
+        .switch[aria-checked="true"] { background:#08785a; }
+        .switch[aria-checked="true"]::after { transform:translateX(20px); }
+        .status { min-height:18px; margin:10px 0 0; color:#65766d; font-size:.75rem; }
+        .status.error { color:#a33a3a; }
+        .status.success { color:#08785a; }
+        .saved-list { display:grid; gap:8px; margin-top:10px; }
+        .saved-item { display:flex; justify-content:space-between; gap:10px; border:1px solid #e2e9e5; border-radius:10px; background:#fbfdfc; padding:10px; font-size:.76rem; }
+        details { border-top:1px solid #edf2ef; padding:12px 0; }
+        details:first-child { border-top:0; }
+        summary { cursor:pointer; color:#405547; font-size:.82rem; font-weight:800; }
+        details p { color:#758279; font-size:.76rem; line-height:1.55; }
+        .certificate { border:1px solid #d5dfb6; border-radius:14px; background:linear-gradient(145deg,#fffdf5,#f5f8e8); padding:18px; text-align:center; }
+        .certificate strong { display:block; color:#52602c; font-family:"Space Grotesk",Arial,sans-serif; }
+        .certificate span { display:block; margin-top:5px; color:#78805d; font-size:.72rem; }
+        body[data-accessibility="on"] { letter-spacing:.02em; line-height:1.55; }
+        body[data-accessibility="on"] .feature-card,body[data-accessibility="on"] .hero { border-width:2px; }
+        body[data-high-contrast="on"] { background:#fff; }
+        body[data-high-contrast="on"] .feature-card { border-color:#1f2937; }
+        body[data-high-contrast="on"] .feature-head h2,body[data-high-contrast="on"] .field { color:#111827; }
+        @media(max-width:760px){ .shell{width:min(100% - 24px,1120px)} .feature-grid{grid-template-columns:1fr} .feature-card.wide{grid-column:auto} .field-row{grid-template-columns:1fr} main{padding-top:20px} }
+        button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible { outline:3px solid #15966f; outline-offset:3px; }
+    </style>
+</head>
+<body data-open-help="{{ 'true' if open_help|default(false) else 'false' }}">
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}">Ustad Online · Fitur</a>
+            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+        </div>
+    </header>
+    <main class="shell">
+        <section class="hero">
+            <span class="eyebrow">PENGALAMAN BELAJAR LEBIH FLEKSIBEL</span>
+            <h1>Fitur Tambahan</h1>
+            <p>Atur pengingat, kebutuhan perangkat, penyimpanan materi, pendampingan, dan aksesibilitas sesuai rutinitas Anda.</p>
+            <input class="search" id="feature-search" type="search" placeholder="Cari tajwid, hijaiyah, hafalan, sertifikat, bantuan..." aria-label="Cari fitur dan materi">
+        </section>
+
+        <section class="feature-grid" id="feature-grid" aria-label="Daftar fitur tambahan">
+            <article class="feature-card" data-feature-search="pengingat waktu belajar notifikasi rutinitas reminder">
+                <div class="feature-head"><span class="feature-icon">◷</span><div><h2>Pengingat Waktu Belajar</h2><p>Jaga rutinitas harian.</p></div></div>
+                <div class="feature-body">
+                    <div class="field-row"><label class="field">Waktu<input id="reminder-time" type="time" value="16:00"></label><label class="field">Aktivitas<select id="reminder-activity"><option>Belajar Al-Qur'an</option><option>Setoran hafalan</option><option>Murajaah Juz 30</option></select></label></div>
+                    <div class="actions"><button class="button primary" id="save-reminder" type="button">Aktifkan Pengingat</button></div>
+                    <p class="status" id="reminder-status" role="status"></p>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="mode hemat data internet kuota offline">
+                <div class="feature-head"><span class="feature-icon">◉</span><div><h2>Hemat Data &amp; Materi Offline</h2><p>Kurangi penggunaan internet.</p></div></div>
+                <div class="feature-body">
+                    <div class="switch-row"><div><strong>Mode hemat data</strong><span>Matikan media berat saat memuat materi.</span></div><button class="switch" type="button" role="switch" aria-label="Mode hemat data" aria-checked="false" data-preference="dataSaver"></button></div>
+                    <div class="actions"><button class="button" id="save-offline" type="button">Unduh materi yang tersedia offline</button></div>
+                    <p class="status" id="offline-status" role="status"></p>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="bookmark catatan ayat materi simpan">
+                <div class="feature-head"><span class="feature-icon">♡</span><div><h2>Bookmark &amp; Catatan</h2><p>Simpan ayat atau materi penting.</p></div></div>
+                <div class="feature-body">
+                    <div class="field-row"><label class="field">Judul/ayat<input id="bookmark-title" placeholder="Contoh: Al-Mulk 1"></label><label class="field">Catatan<textarea id="bookmark-note" placeholder="Catatan belajar"></textarea></label></div>
+                    <div class="actions"><button class="button primary" id="save-bookmark" type="button">Simpan</button></div>
+                    <div class="saved-list" id="bookmark-list"></div>
+                    <p class="status" id="bookmark-status" role="status"></p>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="ukuran teks arab aksesibilitas tampilan">
+                <div class="feature-head"><span class="feature-icon">Aa</span><div><h2>Teks &amp; Aksesibilitas</h2><p>Sesuaikan kenyamanan membaca.</p></div></div>
+                <div class="feature-body">
+                    <div class="field"><label for="text-size">Ukuran teks</label><select id="text-size"><option value="normal">Normal</option><option value="large">Besar</option><option value="xlarge">Ekstra Besar</option></select></div>
+                    <div class="switch-row" style="margin-top:12px"><div><strong>Mode keterbacaan tinggi</strong><span>Kontras dan garis tepi lebih jelas.</span></div><button class="switch" type="button" role="switch" aria-label="Mode keterbacaan tinggi" aria-checked="false" data-preference="accessibility"></button></div>
+                    <div class="switch-row"><div><strong>Kontras tinggi</strong><span>Meningkatkan pembeda warna pada antarmuka.</span></div><button class="switch" type="button" role="switch" aria-label="Kontras tinggi" aria-checked="false" data-preference="highContrast"></button></div>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="jadwal kelas notifikasi kegiatan program">
+                <div class="feature-head"><span class="feature-icon">▦</span><div><h2>Pengingat Jadwal Kelas</h2><p>Catat kegiatan yang akan diikuti.</p></div></div>
+                <div class="feature-body">
+                    <div class="field-row"><label class="field">Nama kegiatan<input id="class-name" placeholder="Kelas Tahsin Pekanan"></label><label class="field">Waktu<input id="class-time" type="datetime-local"></label></div>
+                    <div class="actions"><button class="button primary" id="save-class" type="button">Simpan Jadwal</button></div>
+                    <div class="saved-list" id="class-list"></div>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="sertifikat kegiatan program kompetisi penyelesaian">
+                <div class="feature-head"><span class="feature-icon">★</span><div><h2>Sertifikat Kegiatan</h2><p>Kelompokkan pencapaian program.</p></div></div>
+                <div class="feature-body">
+                    <div class="certificate"><strong>Sertifikat Siap Diraih</strong><span>Sertifikat akan muncul setelah persyaratan program atau kompetisi terpenuhi.</span></div>
+                    <p class="status" id="certificate-status" role="status">Belum ada sertifikat yang diterbitkan.</p>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="lapor konten kesalahan perilaku tidak pantas report">
+                <div class="feature-head"><span class="feature-icon">!</span><div><h2>Pelaporan Konten</h2><p>Kirim laporan kesalahan atau pelanggaran.</p></div></div>
+                <div class="feature-body">
+                    <div class="field-row"><label class="field">Jenis laporan<select id="report-type"><option>Kesalahan materi</option><option>Konten tidak pantas</option><option>Perilaku pengguna</option><option>Masalah teknis</option></select></label><label class="field">Detail<textarea id="report-detail" placeholder="Tulis informasi yang dapat ditinjau"></textarea></label></div>
+                    <div class="actions"><button class="button primary" id="send-report" type="button">Buat Laporan</button></div>
+                    <p class="status" id="report-status" role="status"></p>
+                </div>
+            </article>
+
+            <article class="feature-card" data-feature-search="dukungan orang tua pendampingan anak pengawasan">
+                <div class="feature-head"><span class="feature-icon">◎</span><div><h2>Dukungan Orang Tua</h2><p>Pengaturan pendampingan pengguna anak.</p></div></div>
+                <div class="feature-body">
+                    <div class="switch-row"><div><strong>Aktifkan pendampingan</strong><span>Batasi perubahan dan pantau aktivitas belajar.</span></div><button class="switch" type="button" role="switch" aria-label="Aktifkan pendampingan" aria-checked="false" data-preference="parentMode"></button></div>
+                    <label class="field" style="margin-top:12px">Batas belajar harian<select id="parent-limit"><option value="30">30 menit</option><option value="60">60 menit</option><option value="120">120 menit</option></select></label>
+                </div>
+            </article>
+
+            <article class="feature-card wide" data-feature-search="hafalan planner jadwal target harian mingguan bulanan hafalan surah">
+                <div class="feature-head"><span class="feature-icon">✓</span><div><h2>Hafalan Planner</h2><p>Susun target harian, mingguan, dan bulanan sesuai kemampuan.</p></div></div>
+                <div class="feature-body">
+                    <div class="field-row"><label class="field">Periode<select id="planner-period"><option value="harian">Harian</option><option value="mingguan">Mingguan</option><option value="bulanan">Bulanan</option></select></label><label class="field">Target hafalan<input id="planner-target" placeholder="Contoh: 5 ayat atau Surah Al-Mulk"></label></div>
+                    <div class="actions"><button class="button primary" id="save-planner" type="button">Simpan Target</button></div>
+                    <div class="saved-list" id="planner-list"></div>
+                </div>
+            </article>
+
+            <article class="feature-card wide" id="help-center" data-feature-search="pusat bantuan pertanyaan umum faq bantuan penggunaan tajwid hijaiyah">
+                <div class="feature-head"><span class="feature-icon">?</span><div><h2>Pusat Bantuan</h2><p>Panduan penggunaan dan pertanyaan umum.</p></div></div>
+                <div class="feature-body">
+                    <details><summary>Bagaimana cara mencari materi tajwid atau huruf hijaiyah?</summary><p>Buka Akademi Tilawah, pilih modul yang diinginkan, lalu gunakan fitur pencarian pada halaman ini atau pada daftar modul.</p></details>
+                    <details><summary>Apakah materi offline dapat digunakan tanpa internet?</summary><p>Materi yang telah diunduh dapat dibuka tanpa internet sesuai lisensi, ketersediaan aplikasi, dan kebijakan penyimpanan perangkat.</p></details>
+                    <details><summary>Bagaimana cara menambahkan target hafalan?</summary><p>Gunakan Hafalan Planner untuk memasukkan target harian, mingguan, atau bulanan. Target tersimpan di browser perangkat Anda.</p></details>
+                </div>
+            </article>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='fitur_tambahan.js') }}" defer></script>
+</body>
+</html>

@@ -487,6 +487,13 @@
 
     function applyProfile() {
         const name = user ? user.name : 'Pengguna';
+        const isTeacher = Boolean(user && user.role === 'teacher');
+        document.querySelectorAll('[data-teacher-feature]').forEach((element) => {
+            element.hidden = !isTeacher;
+        });
+        document.querySelectorAll('[data-feature-count]').forEach((element) => {
+            element.textContent = `${isTeacher ? 9 : 8} fitur tersedia`;
+        });
         document.querySelectorAll('[data-profile-name]').forEach((element) => {
             element.textContent = name;
         });

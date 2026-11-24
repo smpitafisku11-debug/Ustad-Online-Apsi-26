@@ -3,92 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akademi Tilawah - Ustad Online</title>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        body { background-color: #f4f7f6; color: #333; padding: 20px 10px; }
-        
-        .app-container { max-width: 800px; margin: 0 auto; background-color: #ffffff; min-height: 90vh; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-
-        .header-akademi { background-color: #11432b; color: white; padding: 30px 25px; }
-        .back-btn { color: white; text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 15px; font-weight: 600; }
-        .header-akademi h1 { font-size: 1.5rem; font-weight: 700; }
-        .header-akademi p { font-size: 0.9rem; opacity: 0.8; margin-top: 2px; }
-
-        .progress-section { padding: 20px 25px; background-color: #f8faf9; border-bottom: 1px solid #eef2f0; }
-        .progress-info { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
-        .progress-bar-bg { background-color: #e0e0e0; height: 10px; border-radius: 5px; width: 100%; overflow: hidden; }
-        .progress-bar-fill { background-color: #27ae60; height: 100%; width: 60%; }
-
-        .materi-list { padding: 30px 25px; display: flex; flex-direction: column; gap: 15px; }
-        .materi-card { display: flex; align-items: center; background: white; border: 1px solid #eef2f0; padding: 18px; border-radius: 14px; color: inherit; }
-        
-        .materi-icon { font-size: 1.6rem; margin-right: 15px; background-color: #e8f5e9; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
-        .materi-info { flex: 1; }
-        .materi-title { font-size: 1rem; font-weight: 600; color: #2c3e50; }
-        .materi-desc { font-size: 0.85rem; color: #7f8c8d; margin-top: 2px; }
-        .arrow { color: #bdc3c7; font-weight: bold; }
-        .header-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
-        .back-btn { margin-bottom: 0; }
-    </style>
+    <meta name="theme-color" content="#123c31">
+    <title>Akademi Tilawah | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tilawah.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
     <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='tilawah.js') }}" defer></script>
+    {% include "partials/page_transitions.html" %}
 </head>
 <body class="academy-view">
-
-    <div class="app-container">
-        <div class="header-akademi">
-            <div class="header-actions">
-                <a href="{{ url_for('home') }}" class="back-btn">⬅ Kembali ke Beranda</a>
+    <header class="academy-topbar">
+        <div class="academy-topbar-inner">
+            <a class="academy-brand" href="{{ url_for('home') }}" aria-label="Kembali ke Ustad Online">
+                <span class="academy-brand-mark" aria-hidden="true">ت</span>
+                <span>USTAD <b>ONLINE</b></span>
+            </a>
+            <div class="academy-top-actions">
+                <a class="academy-back-link" href="{{ url_for('home') }}"><span aria-hidden="true">←</span> Beranda</a>
                 <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>
                 </button>
             </div>
-            <h1>Akademi Tilawah</h1>
-            <p>Belajar Membaca Al-Qur'an dari Dasar</p>
         </div>
+    </header>
 
-        <div class="progress-section">
-            <div class="progress-info">
-                <span>Progres materi</span>
-                <span>60%</span>
+    <main class="academy-shell">
+        <section class="academy-hero" aria-labelledby="academy-title">
+            <div class="academy-hero-copy">
+                <p class="academy-eyebrow"><span></span> AKADEMI TILAWAH</p>
+                <h1 id="academy-title">Baca dengan yakin.<br><em>Belajar setahap demi setahap.</em></h1>
+                <p class="academy-hero-description">Dari mengenal huruf hingga memahami tajwid. Pilih tingkatmu, dengarkan contoh, lalu berlatih dengan ritmemu sendiri.</p>
+                <a href="#pilih-materi" class="academy-hero-cta">Lihat jalur belajarku <span aria-hidden="true">↓</span></a>
             </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill"></div>
+            <div class="academy-hero-art" aria-hidden="true">
+                <div class="academy-arch"><span>اقْرَأْ</span></div>
+                <span class="academy-art-star academy-star-one">✦</span>
+                <span class="academy-art-star academy-star-two">✧</span>
+                <span class="academy-art-caption">ILMU YANG DIBACA,<br>HATI YANG BERTUMBUH</span>
+            </div>
+        </section>
+
+        <section class="academy-progress-card progress-section" aria-label="Progres belajar">
+            <div class="academy-progress-heading">
+                <div>
+                    <p class="academy-eyebrow">PERJALANANMU</p>
+                    <h2>Pelan-pelan, yang penting berlanjut.</h2>
+                </div>
+                <div class="academy-progress-count"><strong data-progress-percent>0%</strong><span data-progress-count>0 dari 7 bagian</span></div>
+            </div>
+            <div class="academy-progress-track progress-bar-bg" role="progressbar" aria-label="Progres Akademi Tilawah" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span class="academy-progress-fill progress-bar-fill" data-progress-fill></span>
+            </div>
+            <p class="academy-progress-note" data-progress-note>Mulai dari materi yang paling dasar. Progres tersimpan di perangkat ini.</p>
+        </section>
+
+        <section class="academy-learning" id="pilih-materi" aria-labelledby="level-title">
+            <div class="academy-section-heading">
+                <div>
+                    <p class="academy-eyebrow">JALUR BELAJAR</p>
+                    <h2 id="level-title">Kamu ingin mulai dari mana?</h2>
+                    <p>Pilih tingkat yang paling nyaman. Kamu tetap bisa membuka semua materi.</p>
+                </div>
+            </div>
+            <div class="academy-level-picker" role="group" aria-label="Pilih tingkat belajar">
+                <button class="academy-level-option" type="button" data-learning-level="pemula" aria-pressed="true">
+                    <span class="level-number">01</span><span class="level-copy"><strong>Pemula</strong><small>Mulai dari huruf dan bunyi</small></span><span class="level-check" aria-hidden="true">✓</span>
+                </button>
+                <button class="academy-level-option" type="button" data-learning-level="menengah" aria-pressed="false">
+                    <span class="level-number">02</span><span class="level-copy"><strong>Menengah</strong><small>Perkuat bacaan dan tajwid</small></span><span class="level-check" aria-hidden="true">✓</span>
+                </button>
+                <button class="academy-level-option" type="button" data-learning-level="lanjutan" aria-pressed="false">
+                    <span class="level-number">03</span><span class="level-copy"><strong>Lanjutan</strong><small>Latihan lebih teliti dan terarah</small></span><span class="level-check" aria-hidden="true">✓</span>
+                </button>
+            </div>
+            <div class="academy-level-intro" data-level-intro aria-live="polite">
+                <span class="academy-level-icon" aria-hidden="true">✦</span>
+                <div><strong data-level-heading>Jalur Pemula</strong><p data-level-description>Kenali bentuk dan bunyi, lalu bangun fondasi bacaanmu dengan tenang.</p></div>
+            </div>
+
+            <div class="academy-course-layout">
+                <div class="academy-course-main">
+                    <div class="academy-course-heading">
+                        <div><p class="academy-eyebrow">KURIKULUM</p><h3>7 langkah menuju tilawah</h3></div>
+                        <span class="academy-course-duration">Belajar sesuai waktumu</span>
+                    </div>
+                    <div class="academy-lesson-grid" id="lesson-grid">
+                        <button class="materi-card academy-lesson-card" type="button" data-lesson-id="hijaiyah">
+                            <span class="lesson-index">01</span><span class="materi-icon">ا</span><span class="materi-info"><strong class="materi-title">Huruf Hijaiyah</strong><span class="materi-desc">Bentuk, nama, bunyi, dan contoh pelafalan.</span></span><span class="lesson-state" data-lesson-state="hijaiyah">Mulai <b>↗</b></span>
+                        </button>
+                        <button class="materi-card academy-lesson-card" type="button" data-lesson-id="harakat">
+                            <span class="lesson-index">02</span><span class="materi-icon">بَ</span><span class="materi-info"><strong class="materi-title">Harakat &amp; Tanda Baca</strong><span class="materi-desc">Fathah, kasrah, dammah, sukun, dan lainnya.</span></span><span class="lesson-state" data-lesson-state="harakat">Mulai <b>↗</b></span>
+                        </button>
+                        <button class="materi-card academy-lesson-card" type="button" data-lesson-id="makharij">
+                            <span class="lesson-index">03</span><span class="materi-icon">◉</span><span class="materi-info"><strong class="materi-title">Makharijul Huruf</strong><span class="materi-desc">Tempat keluarnya huruf: rongga, tenggorokan, lidah, dan bibir.</span></span><span class="lesson-state" data-lesson-state="makharij">Mulai <b>↗</b></span>
+                        </button>
+                        <button class="materi-card academy-lesson-card" type="button" data-lesson-id="sifat">
+                            <span class="lesson-index">04</span><span class="materi-icon">〰</span><span class="materi-info"><strong class="materi-title">Sifat Huruf</strong><span class="materi-desc">Karakter bunyi yang membedakan satu huruf dari lainnya.</span></span><span class="lesson-state" data-lesson-state="sifat">Mulai <b>↗</b></span>
+                        </button>
+                        <button class="materi-card academy-lesson-card" type="button" data-lesson-id="tajwid">
+                            <span class="lesson-index">05</span><span class="materi-icon">۞</span><span class="materi-info"><strong class="materi-title">Hukum Tajwid</strong><span class="materi-desc">Nun sukun, mim sukun, mad, qalqalah, dan lainnya.</span></span><span class="lesson-state" data-lesson-state="tajwid">Mulai <b>↗</b></span>
+                        </button>
+                        <button class="materi-card academy-lesson-card" type="button" data-lesson-id="waqaf">
+                            <span class="lesson-index">06</span><span class="materi-icon">۝</span><span class="materi-info"><strong class="materi-title">Waqaf &amp; Ibtida</strong><span class="materi-desc">Memahami kapan berhenti dan memulai kembali bacaan.</span></span><span class="lesson-state" data-lesson-state="waqaf">Mulai <b>↗</b></span>
+                        </button>
+                        <button class="materi-card academy-lesson-card academy-evaluation-card" type="button" data-lesson-id="evaluasi">
+                            <span class="lesson-index">07</span><span class="materi-icon">✧</span><span class="materi-info"><strong class="materi-title">Latihan &amp; Evaluasi</strong><span class="materi-desc">Ukur pemahaman dan dapatkan saran materi berikutnya.</span></span><span class="lesson-state">Latihan <b>↗</b></span>
+                        </button>
+                    </div>
+                </div>
+                <aside class="academy-side-note">
+                    <span class="side-note-mark" aria-hidden="true">بِسْمِ</span>
+                    <p class="academy-eyebrow">CATATAN BELAJAR</p>
+                    <h3>Tak perlu terburu-buru.</h3>
+                    <p>Dengarkan contoh, tirukan perlahan, lalu tandai materi setelah selesai. Mengulang adalah bagian dari belajar.</p>
+                    <div class="side-note-divider"></div>
+                    <p class="audio-note"><span aria-hidden="true">♫</span> Audio contoh memakai suara Arab perangkat, bukan pengganti koreksi guru untuk makhraj dan tajwid.</p>
+                </aside>
+            </div>
+        </section>
+        <footer class="academy-footer">Ustad Online <span>·</span> Belajar Al-Qur'an, setahap demi setahap.</footer>
+    </main>
+
+    <dialog class="academy-dialog lesson-dialog" id="lesson-dialog" aria-labelledby="lesson-title">
+        <header class="academy-dialog-header">
+            <div><p class="academy-eyebrow" data-lesson-kicker>LANGKAH 01 · PEMULA</p><h2 id="lesson-title">Materi</h2></div>
+            <button type="button" class="academy-dialog-close" data-close-lesson aria-label="Tutup materi">×</button>
+        </header>
+        <div class="academy-dialog-content">
+            <p class="lesson-intro" id="lesson-summary"></p>
+            <div class="lesson-level-tip" data-lesson-tip></div>
+            <div class="lesson-sections" id="lesson-sections"></div>
+            <div class="lesson-audio-status" id="audio-status" role="status" aria-live="polite"></div>
+            <div class="academy-dialog-actions">
+                <button type="button" class="academy-secondary-button" data-close-lesson>Kembali ke materi</button>
+                <button type="button" class="academy-primary-button" id="lesson-complete">Tandai selesai <span aria-hidden="true">✓</span></button>
             </div>
         </div>
+    </dialog>
 
-        <div class="materi-list">
-            <article class="materi-card">
-                <div class="materi-icon">🟢</div>
-                <div class="materi-info">
-                    <div class="materi-title">Huruf Hijaiyah</div>
-                    <div class="materi-desc">Mengenal bentuk huruf dan bunyinya</div>
-                </div>
-                <div class="arrow">❯</div>
-            </article>
+    <dialog class="academy-dialog quiz-dialog" id="quiz-dialog" aria-labelledby="quiz-title">
+        <header class="academy-dialog-header">
+            <div><p class="academy-eyebrow">LANGKAH 07 · EVALUASI</p><h2 id="quiz-title">Coba pahami bacaan</h2></div>
+            <button type="button" class="academy-dialog-close" data-close-quiz aria-label="Tutup evaluasi">×</button>
+        </header>
+        <form class="academy-dialog-content" id="quiz-form">
+            <p class="lesson-intro" data-quiz-intro>Jawab lima pertanyaan singkat. Hasilnya membantu memilih materi untuk diulang.</p>
+            <div class="quiz-questions" id="quiz-questions"></div>
+            <p class="profile-status" id="quiz-status" role="status" aria-live="polite"></p>
+            <button type="submit" class="academy-primary-button quiz-submit">Lihat hasil evaluasi <span aria-hidden="true">→</span></button>
+            <section class="quiz-result" id="quiz-result" aria-live="polite" hidden>
+                <div class="quiz-score"><strong data-quiz-score>0%</strong><span data-quiz-score-copy>Hasil evaluasi</span></div>
+                <h3 data-quiz-recommendation-title>Rekomendasi belajar</h3>
+                <p data-quiz-recommendation></p>
+                <button type="button" class="academy-secondary-button" id="quiz-recommendation-action">Buka materi rekomendasi</button>
+            </section>
+        </form>
+    </dialog>
 
-            <article class="materi-card">
-                <div class="materi-icon">🔸</div>
-                <div class="materi-info">
-                    <div class="materi-title">Harakat & Tanda Baca</div>
-                    <div class="materi-desc">Belajar fathah, kasrah, dammah, dan sukun</div>
-                </div>
-                <div class="arrow">❯</div>
-            </article>
-
-            <article class="materi-card">
-                <div class="materi-icon">📖</div>
-                <div class="materi-info">
-                    <div class="materi-title">Hukum Tajwid</div>
-                    <div class="materi-desc">Nun sukun, mim sukun, mad, dan qalqalah</div>
-                </div>
-                <div class="arrow">❯</div>
-            </article>
-        </div>
-    </div>
     {% include "partials/ui_customization.html" %}
-
 </body>
 </html>

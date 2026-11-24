@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0A192F">
+    <title>Komunitas &amp; Kelas Digital | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; --muted: #718096; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: #233149; background: var(--ink); font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+        button, input, select, textarea { font: inherit; }
+        button, select { cursor: pointer; }
+        a { color: inherit; text-decoration: none; }
+        .shell { width: min(1020px, calc(100% - 2rem)); margin: 0 auto; }
+        .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.92); }
+        .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+        .brand { color: var(--navy); font-size: 1rem; font-weight: 700; }
+        .back-link, .button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: .5rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 0 .85rem; color: var(--navy); font-size: .78rem; font-weight: 700; }
+        .button-primary { border-color: var(--navy); background: var(--navy); color: #fff; }
+        main { padding: 28px 0 55px; }
+        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 19px; background: #fff; padding: clamp(18px, 3vw, 26px); box-shadow: 0 8px 24px rgba(15,35,66,.045); }
+        .hero { background: linear-gradient(120deg, #fff, #f3f8ff 58%, #effbf5); }
+        .eyebrow { color: var(--emerald); font-size: .67rem; font-weight: 700; letter-spacing: .15em; }
+        h1 { margin: 7px 0; color: #142b54; font-size: clamp(1.8rem, 4vw, 2.4rem); }
+        .hero p { margin: 7px 0 0; color: #64748b; line-height: 1.6; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 17px; margin-top: 17px; }
+        .panel h2 { margin: 0 0 14px; color: var(--navy); font-size: 1.2rem; }
+        .class-card, .discussion-card { border: 1px solid #e1e8f0; border-radius: 13px; background: #fff; padding: 14px; }
+        .class-card + .class-card, .discussion-card + .discussion-card { margin-top: 10px; }
+        .class-card h3, .discussion-card h3 { margin: 0; color: #233b61; font-size: .92rem; }
+        .class-card p, .discussion-card p { margin: 6px 0 11px; color: #65748b; font-size: .77rem; line-height: 1.55; }
+        .schedule { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #edf1f5; padding-top: 10px; color: #52647e; font-size: .75rem; }
+        .rsvp[aria-pressed="true"] { border-color: #b7dfcb; background: #effbf5; color: #126343; }
+        .field { display: block; margin: 0 0 10px; color: #354660; font-size: .76rem; font-weight: 700; }
+        .field select, .field textarea, .field input { display: block; width: 100%; margin-top: 5px; border: 1px solid #dce3ed; border-radius: 9px; outline: none; background: #fff; padding: 10px 11px; color: #263650; font-size: .82rem; }
+        .field textarea { min-height: 92px; resize: vertical; }
+        .field select:focus, .field textarea:focus, .field input:focus { border-color: #48b68b; box-shadow: 0 0 0 3px #e6f8ef; }
+        .post-meta { display: flex; justify-content: space-between; gap: 8px; color: #738198; font-size: .68rem; }
+        .post-state { color: #9a5d16; font-weight: 700; }
+        .notice, .status { margin: 12px 0 0; color: #64748b; font-size: .75rem; line-height: 1.5; }
+        .status.error { color: #a33838; }
+        @media (max-width: 760px) { .shell { width: min(100% - 1.25rem, 1020px); } .layout { grid-template-columns: 1fr; } .topbar { height: 60px; } }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}">Ustad Online · Komunitas</a>
+            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+        </div>
+    </header>
+    <main class="shell">
+        <section class="hero">
+            <span class="eyebrow">BELAJAR BERSAMA</span>
+            <h1>Komunitas &amp; Kelas Digital</h1>
+            <p>Pilih jadwal belajar, ikuti materi, dan ajukan pertanyaan terarah dengan etika diskusi yang baik.</p>
+        </section>
+        <div class="layout">
+            <section class="panel" aria-labelledby="classes-title">
+                <h2 id="classes-title">Kelas &amp; Jadwal Belajar</h2>
+                <article class="class-card">
+                    <h3>Kelas Tajwid Dasar</h3>
+                    <p>Makharijul huruf, sifat huruf, dan hukum nun sukun/tanwin.</p>
+                    <div class="schedule"><span>Rabu · 19.30 WIB</span><button class="button rsvp" type="button" data-schedule="tajwid" aria-pressed="false">Ikuti jadwal</button></div>
+                </article>
+                <article class="class-card">
+                    <h3>Kelas Tahsin &amp; Makhraj</h3>
+                    <p>Latihan pelafalan huruf melalui setoran pendek dan murajaah.</p>
+                    <div class="schedule"><span>Sabtu · 09.00 WIB</span><button class="button rsvp" type="button" data-schedule="tahsin" aria-pressed="false">Ikuti jadwal</button></div>
+                </article>
+                <p class="status" id="schedule-status" role="status" aria-live="polite">Jadwal pilihan tersimpan pada browser ini.</p>
+            </section>
+            <section class="panel" aria-labelledby="discussion-title">
+                <h2 id="discussion-title">Diskusi Materi</h2>
+                <form id="discussion-form">
+                    <label class="field" for="discussion-topic">Topik materi
+                        <select id="discussion-topic" required>
+                            <option value="Tajwid Dasar">Tajwid Dasar</option>
+                            <option value="Makharijul Huruf">Makharijul Huruf</option>
+                            <option value="Hafalan & Murajaah">Hafalan &amp; Murajaah</option>
+                        </select>
+                    </label>
+                    <label class="field" for="discussion-message">Pertanyaan atau tanggapan
+                        <textarea id="discussion-message" maxlength="500" required placeholder="Tuliskan pertanyaan yang berkaitan dengan materi (maks. 500 karakter)."></textarea>
+                    </label>
+                    <button class="button button-primary" type="submit">Kirim untuk Moderasi</button>
+                </form>
+                <p class="notice">Posting baru disimpan sebagai antrean lokal dan menunggu pemeriksaan moderator. Jangan sertakan data pribadi. Demo ini belum menyinkronkan diskusi antarperangkat.</p>
+                <p class="status" id="discussion-status" role="status" aria-live="polite"></p>
+                <div id="discussion-list" aria-live="polite">
+                    <article class="discussion-card">
+                        <h3>Bagaimana membedakan ikhfa dan idgham?</h3>
+                        <p><strong>Tajwid Dasar · Admin Kelas</strong><br>Perhatikan huruf setelah nun sukun/tanwin dan praktikkan bersama contoh bacaan dari pengajar.</p>
+                        <div class="post-meta"><span>Materi pekan ini</span><span class="post-state" style="color:#13734e">Terbit</span></div>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script>
+        (() => {
+            const scheduleKey = 'ustadOnline.community.schedule.v1';
+            const discussionKey = 'ustadOnline.community.pending.v1';
+            const scheduleStatus = document.getElementById('schedule-status');
+            const discussionStatus = document.getElementById('discussion-status');
+            const discussionList = document.getElementById('discussion-list');
+            let selectedSchedules = {};
+            let pendingPosts = [];
+
+            function readStorage(key, fallback) {
+                try {
+                    const value = localStorage.getItem(key);
+                    return value ? JSON.parse(value) : fallback;
+                } catch (error) {
+                    console.error('Data komunitas lokal tidak dapat dibaca:', error);
+                    return fallback;
+                }
+            }
+
+            function writeStorage(key, value, statusElement) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (error) {
+                    console.error('Data komunitas lokal tidak dapat disimpan:', error);
+                    statusElement.textContent = 'Penyimpanan browser tidak tersedia; perubahan hanya berlaku selama halaman terbuka.';
+                    return false;
+                }
+            }
+
+            function renderPendingPosts() {
+                discussionList.querySelectorAll('[data-pending-post]').forEach((post) => post.remove());
+                pendingPosts.forEach((post) => {
+                    const card = document.createElement('article');
+                    card.className = 'discussion-card';
+                    card.dataset.pendingPost = 'true';
+                    const title = document.createElement('h3');
+                    title.textContent = post.topic;
+                    const body = document.createElement('p');
+                    body.textContent = post.message;
+                    const meta = document.createElement('div');
+                    meta.className = 'post-meta';
+                    const time = document.createElement('span');
+                    time.textContent = new Date(post.createdAt).toLocaleString('id-ID');
+                    const state = document.createElement('span');
+                    state.className = 'post-state';
+                    state.textContent = post.needsReview ? 'Ditahan untuk pemeriksaan' : 'Menunggu moderasi';
+                    meta.append(time, state);
+                    card.append(title, body, meta);
+                    discussionList.prepend(card);
+                });
+            }
+
+            selectedSchedules = readStorage(scheduleKey, {});
+            document.querySelectorAll('[data-schedule]').forEach((button) => {
+                const id = button.dataset.schedule;
+                button.setAttribute('aria-pressed', String(Boolean(selectedSchedules[id])));
+                button.textContent = selectedSchedules[id] ? 'Batalkan jadwal' : 'Ikuti jadwal';
+                button.addEventListener('click', () => {
+                    selectedSchedules[id] = !selectedSchedules[id];
+                    button.setAttribute('aria-pressed', String(selectedSchedules[id]));
+                    button.textContent = selectedSchedules[id] ? 'Batalkan jadwal' : 'Ikuti jadwal';
+                    const saved = writeStorage(scheduleKey, selectedSchedules, scheduleStatus);
+                    if (saved) scheduleStatus.textContent = selectedSchedules[id]
+                        ? 'Jadwal berhasil ditambahkan pada browser ini.'
+                        : 'Pendaftaran jadwal dibatalkan.';
+                });
+            });
+
+            pendingPosts = readStorage(discussionKey, []);
+            if (!Array.isArray(pendingPosts)) pendingPosts = [];
+            renderPendingPosts();
+
+            document.getElementById('discussion-form').addEventListener('submit', (event) => {
+                event.preventDefault();
+                const topic = document.getElementById('discussion-topic').value;
+                const message = document.getElementById('discussion-message').value.trim();
+                if (message.length < 8 || message.length > 500) {
+                    discussionStatus.textContent = 'Pertanyaan harus berisi 8–500 karakter.';
+                    discussionStatus.className = 'status error';
+                    return;
+                }
+                const links = message.match(/https?:\/\/\S+/gi) || [];
+                const repeatedText = /(.)\1{8,}/.test(message);
+                pendingPosts.unshift({
+                    topic,
+                    message,
+                    createdAt: new Date().toISOString(),
+                    needsReview: links.length > 1 || repeatedText
+                });
+                if (pendingPosts.length > 30) pendingPosts = pendingPosts.slice(0, 30);
+                const saved = writeStorage(discussionKey, pendingPosts, discussionStatus);
+                renderPendingPosts();
+                document.getElementById('discussion-message').value = '';
+                discussionStatus.className = 'status';
+                discussionStatus.textContent = saved
+                    ? (pendingPosts[0].needsReview
+                        ? 'Posting ditahan untuk pemeriksaan lebih lanjut karena terdeteksi pola spam.'
+                        : 'Posting masuk antrean moderasi dan belum ditampilkan sebagai materi terbit.')
+                    : 'Posting tampil sementara di halaman ini, tetapi tidak berhasil disimpan.';
+            });
+        })();
+    </script>
+</body>
+</html>

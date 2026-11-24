@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f6f9fc">
+    <title>Quran Battle Arena | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; --muted: #718096; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; min-height: 100vh; color: #233149; background: radial-gradient(ellipse at 92% 3%, #e8f8f1 0, transparent 26rem), radial-gradient(ellipse at 3% 18%, #eaf1ff 0, transparent 25rem), var(--ink); font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+        button, input, select, textarea { font: inherit; }
+        button, select { cursor: pointer; }
+        a { color: inherit; text-decoration: none; }
+        .shell { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }
+        .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.86); backdrop-filter: blur(16px); }
+        .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+        .brand { display: flex; align-items: center; gap: .7rem; color: var(--navy); font-size: 1rem; font-weight: 700; }
+        .brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #cfe0fb; border-radius: 12px; background: #eff6ff; font-size: 1.15rem; }
+        .back-link, .button-secondary { display: inline-flex; min-height: 41px; align-items: center; justify-content: center; gap: .5rem; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 0 .9rem; color: var(--navy); font-size: .82rem; font-weight: 700; transition: .2s ease; }
+        .back-link:hover, .button-secondary:hover { border-color: #9de4c8; background: #f0fdf7; }
+        main { padding: 30px 0 64px; }
+        .hero { position: relative; overflow: hidden; border: 1px solid #dce8f8; border-radius: 23px; background: linear-gradient(118deg, #fff 0%, #f5f8ff 55%, #effbf5 100%); padding: clamp(22px, 4vw, 36px); box-shadow: 0 15px 40px rgba(27,56,103,.07); }
+        .hero::after { position: absolute; right: -80px; top: -155px; width: 300px; height: 300px; border: 1px solid #d9e7fa; border-radius: 50%; box-shadow: 0 0 0 34px rgba(255,255,255,.36), 0 0 0 74px rgba(255,255,255,.25); content: ""; pointer-events: none; }
+        .hero-content { position: relative; z-index: 1; }
+        .eyebrow, .kicker { color: var(--emerald); font-size: .67rem; font-weight: 700; letter-spacing: .16em; }
+        h1 { margin: 9px 0 0; color: #142b54; font-size: clamp(1.9rem, 4vw, 2.8rem); letter-spacing: -.05em; }
+        .hero p { margin: 9px 0 0; color: #5b687d; font-size: .94rem; line-height: 1.6; }
+        .panel { margin-top: 20px; border: 1px solid #e0e7f0; border-radius: 19px; background: rgba(255,255,255,.94); padding: clamp(17px, 3vw, 25px); box-shadow: 0 7px 22px rgba(15,35,66,.045); }
+        .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 16px; }
+        .panel-heading h2 { margin: 4px 0 0; color: var(--navy); font-size: 1.33rem; }
+        .panel-heading p { margin: 0; color: var(--muted); font-size: .75rem; }
+        .lobby-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); gap: 18px; }
+        .setup-box { border: 1px solid #e5eaf1; border-radius: 15px; background: #fbfcfe; padding: 16px; }
+        .field-label { display: block; margin-bottom: 7px; color: #30425f; font-size: .76rem; font-weight: 700; }
+        .text-input, .select-input, .essay-input { width: 100%; min-height: 43px; border: 1px solid #dce3ed; border-radius: 10px; outline: none; background: #fff; padding: 10px 12px; color: #263650; font-size: .85rem; transition: border-color .2s, box-shadow .2s; }
+        .text-input:focus, .select-input:focus, .essay-input:focus { border-color: #48b68b; box-shadow: 0 0 0 3px #e6f8ef; }
+        .format-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
+        .format-card { min-height: 67px; border: 1px solid #e1e7ef; border-radius: 11px; background: white; padding: 9px 10px; color: #263650; text-align: left; transition: .2s ease; }
+        .format-card strong { display: block; font-size: .79rem; }
+        .format-card span { display: block; margin-top: 3px; color: #77849a; font-size: .66rem; }
+        .format-card:hover, .format-card.selected { border-color: #76cfa7; background: #f0fbf5; box-shadow: 0 0 0 2px #e1f6eb; }
+        .custom-capacity { margin-top: 10px; }
+        .mode-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+        .mode-card { min-height: 80px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 11px; color: #2a3d5d; text-align: left; transition: .2s ease; }
+        .mode-card strong { display: block; font-size: .76rem; }
+        .mode-card span { display: block; margin-top: 4px; color: #7a8799; font-size: .65rem; line-height: 1.4; }
+        .mode-card:hover { border-color: #98d7bb; transform: translateY(-2px); }
+        .mode-card.selected { border-color: #35a878; background: linear-gradient(145deg, #eff6ff, #effbf5); box-shadow: inset 0 0 0 1px #8cd8b5; }
+        .action-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 15px; }
+        .button-primary, .button-emerald, .button-danger { display: inline-flex; min-height: 43px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; padding: 0 15px; color: #fff; font-size: .8rem; font-weight: 700; transition: transform .18s ease, background .18s ease; }
+        .button-primary { background: var(--navy); }
+        .button-primary:hover { background: #10254d; transform: translateY(-1px); }
+        .button-emerald { background: var(--emerald); }
+        .button-emerald:hover { background: #066747; transform: translateY(-1px); }
+        .button-danger { background: #fff; border: 1px solid #f1cdcd; color: #a13d3d; }
+        .button-danger:hover { background: #fff5f5; }
+        button:disabled { cursor: not-allowed; opacity: .48; transform: none !important; }
+        .join-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-top: 15px; border-top: 1px solid #e8edf3; padding-top: 14px; }
+        .room-code-input { text-transform: uppercase; letter-spacing: .14em; }
+        .helper { margin: 12px 0 0; color: #748197; font-size: .69rem; line-height: 1.55; }
+        .helper strong { color: var(--navy); }
+        .notice { margin-top: 13px; border-radius: 10px; background: #f2f7ff; padding: 11px 12px; color: #566984; font-size: .73rem; line-height: 1.5; }
+        .status-message { min-height: 22px; margin: 12px 0 0; color: #66748a; font-size: .78rem; }
+        .status-message.error { color: #a33838; font-weight: 600; }
+        .status-message.success { color: var(--emerald); font-weight: 700; }
+        .waiting-card { margin-top: 17px; border: 1px solid #cfe5db; border-radius: 15px; background: linear-gradient(120deg, #f3fbf7, #f5f8ff); padding: 16px; }
+        .waiting-title { display: flex; align-items: center; gap: 9px; color: var(--navy); font-size: .96rem; font-weight: 700; }
+        .pulse { width: 9px; height: 9px; border-radius: 50%; background: #10a66d; box-shadow: 0 0 0 0 rgba(16,166,109,.45); animation: pulse 1.4s infinite; }
+        @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(16,166,109,0); } 100% { box-shadow: 0 0 0 0 rgba(16,166,109,0); } }
+        .waiting-copy { margin: 7px 0 0; color: #627087; font-size: .76rem; line-height: 1.5; }
+        .invite-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+        .invite-code { border: 1px dashed #7ebd9f; border-radius: 9px; background: white; padding: 8px 11px; color: var(--navy); font-family: 'Space Grotesk', sans-serif; font-size: .92rem; font-weight: 700; letter-spacing: .18em; }
+        .small-button { min-height: 35px; border: 1px solid #dce4ee; border-radius: 9px; background: #fff; padding: 0 10px; color: var(--navy); font-size: .72rem; font-weight: 700; }
+        .arena-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .85fr); gap: 13px; }
+        .team-scoreboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-bottom: 13px; }
+        .team-score-card { display: flex; align-items: center; justify-content: space-between; border: 1px solid #dce6f1; border-radius: 12px; background: #fff; padding: 11px 14px; color: var(--navy); font-size: .78rem; font-weight: 700; }
+        .team-score-card strong { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; }
+        .duel-card { min-width: 0; border: 1px solid #dbe6f5; border-radius: 15px; background: linear-gradient(135deg, #f3f7ff, #fff); padding: 15px; }
+        .duel-card.opponents { border-color: #d3ebdf; background: linear-gradient(135deg, #effbf5, #fff); }
+        .duel-label { color: #64758e; font-size: .63rem; font-weight: 700; letter-spacing: .12em; }
+        .duel-player { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .avatar { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border: 1px solid #cbdcf5; border-radius: 13px; background: #fff; color: var(--navy); font-size: .9rem; font-weight: 700; }
+        .opponents .avatar { border-color: #cce8d9; color: var(--emerald); }
+        .player-meta { min-width: 0; flex: 1; }
+        .player-name { overflow: hidden; color: #1c3155; font-size: .84rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .player-status { margin-top: 3px; color: #758197; font-size: .67rem; }
+        .player-score { color: var(--navy); font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; }
+        .opponents .player-score { color: var(--emerald); }
+        .opponent-list { display: grid; gap: 9px; }
+        .timer-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+        .round-meta { color: #68768b; font-size: .75rem; }
+        .timer-pill { border: 1px solid #d8e6f4; border-radius: 99px; background: #fff; padding: 7px 12px; color: var(--navy); font-size: .78rem; font-weight: 700; }
+        .timer-pill.low { border-color: #f1c8b7; background: #fff7f2; color: #a14d29; }
+        .progress-track { height: 6px; margin-top: 9px; overflow: hidden; border-radius: 99px; background: #edf1f6; }
+        .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1e3a8a, #10b981); transition: width .3s ease; }
+        .question-box { margin-top: 15px; border: 1px solid #e1e7ef; border-radius: 16px; background: #fff; padding: clamp(15px, 3vw, 21px); }
+        .question-box h3 { margin: 7px 0 0; color: #1a3055; font-size: 1.06rem; line-height: 1.55; }
+        .question-arabic { margin-top: 12px; border-radius: 11px; background: #f5f8ff; padding: 13px; color: #142b54; font-family: serif; font-size: 1.55rem; line-height: 1.8; text-align: right; }
+        .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+        .option-button { min-height: 44px; border: 1px solid #e0e7ef; border-radius: 10px; background: #fff; padding: 9px 11px; color: #394b67; font-size: .8rem; text-align: left; transition: .18s ease; }
+        .option-button:hover:not(:disabled) { border-color: #8bd8b8; background: #f1fbf6; }
+        .answer-form { margin-top: 13px; }
+        .essay-input { min-height: 94px; resize: vertical; }
+        .voice-box { margin-top: 13px; border: 1px solid #dce8f4; border-radius: 12px; background: #f8fbff; padding: 13px; }
+        .voice-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+        .voice-status { margin: 9px 0 0; color: #68768b; font-size: .72rem; line-height: 1.5; }
+        .audio-preview { width: 100%; margin-top: 10px; }
+        .buzzer-button { min-height: 48px; margin-top: 14px; border: 0; border-radius: 12px; background: linear-gradient(110deg, #1d3c76, #07805b); padding: 0 20px; color: #fff; font-size: .9rem; font-weight: 700; box-shadow: 0 8px 18px rgba(14,79,79,.16); transition: transform .18s ease; }
+        .buzzer-button:hover:not(:disabled) { transform: translateY(-2px); }
+        .arena-note { margin: 13px 0 0; color: #728096; font-size: .68rem; line-height: 1.55; }
+        .result-card { margin-top: 20px; border: 1px solid #d9e8e1; border-radius: 20px; background: linear-gradient(135deg, #fff, #effbf5); padding: clamp(22px, 4vw, 36px); text-align: center; }
+        .result-icon { font-size: 2.3rem; }
+        .result-card h2 { margin: 9px 0 0; color: var(--navy); font-size: 1.6rem; }
+        .result-card p { color: #66748a; font-size: .86rem; line-height: 1.6; }
+        .result-scores { display: flex; justify-content: center; gap: 20px; margin: 19px 0; }
+        .result-score { min-width: 110px; border: 1px solid #dce6f1; border-radius: 13px; background: white; padding: 12px; }
+        .result-score span { display: block; color: #718096; font-size: .67rem; }
+        .result-score strong { display: block; margin-top: 4px; color: var(--navy); font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; }
+        .result-exp { color: var(--emerald) !important; font-weight: 700; }
+        .topbar-actions { display: flex; align-items: center; gap: 8px; }
+        body[data-theme="mushaf"] { --navy: #172f5f; --emerald: #07805b; --ink: #f6f0e2; --line: #e4d9c4; --muted: #84745c; color: #4b4030; background: radial-gradient(ellipse at 92% 3%, #e9ead8 0, transparent 26rem), radial-gradient(ellipse at 3% 18%, #fbf3df 0, transparent 25rem), var(--ink); }
+        body[data-theme="mushaf"] .topbar { border-color: #e4d9c4; background: rgba(255,251,241,.92); }
+        body[data-theme="mushaf"] .brand-mark, body[data-theme="mushaf"] .settings-button { border-color: #e4d9c4; background: #fffaf0; }
+        body[data-theme="mushaf"] .hero { border-color: #e6d9bb; background: linear-gradient(118deg,#fffdf7,#f8f1df 58%,#f0f3e5); }
+        body[data-theme="mushaf"] .hero::after { border-color: #e6d9bb; }
+        body[data-theme="mushaf"] .panel, body[data-theme="mushaf"] .question-box, body[data-theme="mushaf"] .result-card { border-color: #e4d9c4; background: rgba(255,252,244,.95); }
+        body[data-theme="mushaf"] .setup-box, body[data-theme="mushaf"] .format-card, body[data-theme="mushaf"] .mode-card, body[data-theme="mushaf"] .result-score { border-color: #e8ddc8; background: #fffaf0; }
+        body[data-theme="mushaf"] .format-card:hover, body[data-theme="mushaf"] .format-card.selected, body[data-theme="mushaf"] .mode-card.selected { border-color: #a4ad7e; background: #f5f0df; }
+        body[data-theme="mushaf"] .duel-card { border-color: #e1d7c2; background: linear-gradient(135deg,#f6efdd,#fffaf0); }
+        body[data-theme="mushaf"] .duel-card.opponents { border-color: #dce2c9; background: linear-gradient(135deg,#f0f2df,#fffaf0); }
+        body[data-theme="mushaf"] .question-arabic { border: 1px solid #eadfc8; background: #f8f1df; color: #4e402b; }
+        body[data-theme="mushaf"] .voice-box, body[data-theme="mushaf"] .notice { border-color: #e7dcc6; background: #faf4e5; }
+        body[data-theme="mushaf"] .text-input, body[data-theme="mushaf"] .select-input, body[data-theme="mushaf"] .essay-input, body[data-theme="mushaf"] .option-button, body[data-theme="mushaf"] .timer-pill, body[data-theme="mushaf"] .invite-code { border-color: #e4d9c4; background: #fffdf7; color: #4b4030; }
+        body[data-theme="mushaf"] .field-label, body[data-theme="mushaf"] .setting-title, body[data-theme="mushaf"] .switch-copy strong, body[data-theme="mushaf"] .question-box h3, body[data-theme="mushaf"] .player-name, body[data-theme="mushaf"] .settings-header h2 { color: #56452c; }
+        body[data-theme="mushaf"] .settings-dialog { border-color: #e4d9c4; background: #fffaf0; color: #4b4030; }
+        body[data-theme="mushaf"] .settings-header, body[data-theme="mushaf"] .setting-section + .setting-section { border-color: #e7dcc6; }
+        body[data-theme="mushaf"] .theme-option, body[data-theme="mushaf"] .size-option, body[data-theme="mushaf"] .reset-settings { border-color: #e4d9c4; background: #fffdf7; color: #56452c; }
+        body[data-theme="mushaf"] .theme-option[aria-pressed="true"], body[data-theme="mushaf"] .size-option[aria-pressed="true"] { border-color: #8c9a65; background: #f0f2df; }
+        body[data-theme="mushaf"] .waiting-card { border-color: #dce2c9; background: linear-gradient(120deg,#f0f2df,#fffaf0); }
+        body[data-theme="midnight"] { color-scheme: dark; --navy: #c7d7f4; --emerald: #65d6a5; --ink: #0c1423; --line: #29364b; --muted: #a3b0c4; color: #d6e0ef; background: radial-gradient(ellipse at 92% 3%, #122a2a 0, transparent 26rem), radial-gradient(ellipse at 3% 18%, #15213a 0, transparent 25rem), var(--ink); }
+        body[data-theme="midnight"] .topbar { border-color: #26344a; background: rgba(14,23,39,.94); }
+        body[data-theme="midnight"] .brand-mark, body[data-theme="midnight"] .settings-button { border-color: #2b3c58; background: #16233a; color: #d6e0ef; }
+        body[data-theme="midnight"] .hero { border-color: #2b3e5e; background: linear-gradient(118deg,#121f34,#17223a 55%,#142a29); box-shadow: 0 15px 40px rgba(0,0,0,.24); }
+        body[data-theme="midnight"] .hero::after { border-color: #32425c; }
+        body[data-theme="midnight"] .hero p, body[data-theme="midnight"] .panel-heading p, body[data-theme="midnight"] .section-note { color: #a4b1c5; }
+        body[data-theme="midnight"] .panel, body[data-theme="midnight"] .question-box, body[data-theme="midnight"] .result-card { border-color: #29364b; background: rgba(17,27,45,.96); }
+        body[data-theme="midnight"] .setup-box, body[data-theme="midnight"] .format-card, body[data-theme="midnight"] .mode-card, body[data-theme="midnight"] .result-score { border-color: #2b394f; background: #131f33; color: #d6e0ef; }
+        body[data-theme="midnight"] .format-card span, body[data-theme="midnight"] .mode-card span, body[data-theme="midnight"] .switch-copy span { color: #9baac0; }
+        body[data-theme="midnight"] .format-card:hover, body[data-theme="midnight"] .format-card.selected, body[data-theme="midnight"] .mode-card.selected { border-color: #348e70; background: #142b2b; }
+        body[data-theme="midnight"] .duel-card { border-color: #2b3b57; background: linear-gradient(135deg,#17253d,#121d30); }
+        body[data-theme="midnight"] .duel-card.opponents { border-color: #245442; background: linear-gradient(135deg,#142c2b,#121e2e); }
+        body[data-theme="midnight"] .avatar { border-color: #344967; background: #101a2b; color: #c7d7f4; }
+        body[data-theme="midnight"] .opponents .avatar { border-color: #28614d; color: #65d6a5; }
+        body[data-theme="midnight"] .duel-label, body[data-theme="midnight"] .player-status, body[data-theme="midnight"] .round-meta, body[data-theme="midnight"] .arena-note { color: #9baac0; }
+        body[data-theme="midnight"] .player-name, body[data-theme="midnight"] .question-box h3, body[data-theme="midnight"] .field-label, body[data-theme="midnight"] .setting-title, body[data-theme="midnight"] .switch-copy strong { color: #d6e0ef; }
+        body[data-theme="midnight"] .question-arabic { border: 1px solid #2b3b55; background: #0f1b2c; color: #f0e7d4; }
+        body[data-theme="midnight"] .voice-box, body[data-theme="midnight"] .notice { border-color: #2a3a50; background: #142137; color: #b6c3d6; }
+        body[data-theme="midnight"] .text-input, body[data-theme="midnight"] .select-input, body[data-theme="midnight"] .essay-input, body[data-theme="midnight"] .option-button, body[data-theme="midnight"] .timer-pill, body[data-theme="midnight"] .invite-code { border-color: #324158; background: #101b2c; color: #d6e0ef; }
+        body[data-theme="midnight"] .text-input::placeholder, body[data-theme="midnight"] .essay-input::placeholder { color: #8695ab; }
+        body[data-theme="midnight"] .timer-pill.low { border-color: #754a3b; background: #33231f; color: #ffc09f; }
+        body[data-theme="midnight"] .option-button:hover:not(:disabled) { border-color: #368b6c; background: #142d2a; }
+        body[data-theme="midnight"] .settings-dialog { border-color: #2b394f; background: #121d30; color: #d6e0ef; }
+        body[data-theme="midnight"] .settings-header, body[data-theme="midnight"] .setting-section + .setting-section { border-color: #2b394f; }
+        body[data-theme="midnight"] .settings-header h2 { color: #d6e0ef; }
+        body[data-theme="midnight"] .theme-option, body[data-theme="midnight"] .size-option, body[data-theme="midnight"] .reset-settings { border-color: #324158; background: #152238; color: #c5d2e4; }
+        body[data-theme="midnight"] .theme-option[aria-pressed="true"], body[data-theme="midnight"] .size-option[aria-pressed="true"] { border-color: #348e70; background: #142b2b; }
+        body[data-theme="midnight"] .waiting-card { border-color: #245442; background: linear-gradient(120deg,#142c2b,#17243a); }
+        body[data-theme="midnight"] .waiting-title { color: #d6e0ef; }
+        body[data-theme="midnight"] .waiting-copy, body[data-theme="midnight"] .settings-status { color: #a4b1c5; }
+        body[data-theme="midnight"] .small-button, body[data-theme="midnight"] .back-link, body[data-theme="midnight"] .button-secondary { border-color: #324158; background: #152238; color: #c7d7f4; }
+        body[data-theme="midnight"] .button-primary { background: #294779; color: #f7faff; }
+        body[data-theme="midnight"] .button-emerald { background: #087a59; color: #f2fff9; }
+        body[data-theme="midnight"] .settings-button:hover, body[data-theme="midnight"] .back-link:hover, body[data-theme="midnight"] .button-secondary:hover { border-color: #348e70; background: #142b2b; }
+        body[data-theme="midnight"] .reset-settings { color: #c5d2e4; }
+        body[data-theme="midnight"] .result-card p, body[data-theme="midnight"] .result-score span { color: #a4b1c5; }
+        [data-mode-card]:focus-visible, .format-card:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #10b981; outline-offset: 3px; }
+        @media (max-width: 850px) { .lobby-grid { grid-template-columns: 1fr; } .mode-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+        @media (max-width: 560px) { .shell { width: min(100% - 1.2rem, 1120px); } .topbar { height: 61px; } main { padding-top: 19px; } .hero { border-radius: 19px; } .mode-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; } .mode-card { min-height: 75px; padding: 9px; } .mode-card strong { font-size: .7rem; } .mode-card span { font-size: .61rem; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 4px; } .arena-top { grid-template-columns: 1fr; } .options { grid-template-columns: 1fr; } .action-row > button { flex: 1 1 100%; } .join-box { grid-template-columns: 1fr; } .result-scores { gap: 8px; } .result-score { min-width: 0; flex: 1; } .back-link { padding: 0 .65rem; font-size: .72rem; } }
+        @media (max-width: 560px) { .settings-button { width: 41px; padding: 0; } .settings-button span { display: none; } .settings-header, .settings-content { padding-right: 15px; padding-left: 15px; } .theme-option { padding: 8px 6px; font-size: .64rem; } .setting-actions { align-items: flex-start; flex-direction: column; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
+    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true">۞</span><span>Ustad <span style="color:#2563a6">Online</span></span></a>
+            <div class="topbar-actions">
+                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>
+                </button>
+                <a class="back-link" href="{{ url_for('home') }}"><span aria-hidden="true">←</span> Beranda</a>
+            </div>
+        </div>
+    </header>
+    {% include "partials/ui_customization.html" %}
+    <main class="shell">
+        <section class="hero" aria-labelledby="page-title">
+            <div class="hero-content">
+                <div class="eyebrow">LOBBY PERTANDINGAN</div>
+                <h1 id="page-title">Quran Battle Arena</h1>
+                <p>Latihan sendiri atau tantang teman dalam duel Al-Qur'an yang seru dan sportif.</p>
+            </div>
+        </section>
+
+        <section class="panel" id="lobby" aria-labelledby="lobby-title">
+            <div class="panel-heading">
+                <div><span class="kicker">SIAPKAN PERTANDINGAN</span><h2 id="lobby-title">Lobby &amp; Matchmaking</h2></div>
+                <p>Pilih format dan mode sebelum masuk arena.</p>
+            </div>
+            <div class="lobby-grid">
+                <div class="setup-box">
+                    <label class="field-label" for="player-name">Nama pemain</label>
+                    <input class="text-input" id="player-name" maxlength="24" value="Pemain Ustad" autocomplete="nickname">
+                    <span class="field-label" style="margin-top:15px">Format pertandingan</span>
+                    <div class="format-list" role="group" aria-label="Format pertandingan">
+                        <button class="format-card" data-format="solo" type="button" aria-pressed="false"><strong>Solo</strong><span>Latihan mandiri</span></button>
+                        <button class="format-card selected" data-format="duo" type="button" aria-pressed="true"><strong>Duo · 1 vs 1</strong><span>Matchmaking dua pemain</span></button>
+                        <button class="format-card" data-format="trio" type="button" aria-pressed="false"><strong>Trio</strong><span>Tiga pemain, semua bersaing</span></button>
+                        <button class="format-card" data-format="custom" type="button" aria-pressed="false"><strong>Custom Room</strong><span>Room privat dengan kode</span></button>
+                    </div>
+                    <div class="custom-capacity" id="capacity-field" hidden>
+                        <label class="field-label" for="room-capacity">Jumlah pemain di room</label>
+                        <select class="select-input" id="room-capacity">
+                            <option value="2">2 pemain</option><option value="3">3 pemain</option><option value="4">4 pemain</option><option value="5">5 pemain</option><option value="6">6 pemain</option>
+                        </select>
+                    </div>
+                    <div class="notice"><strong>Solo</strong> dimulai langsung. Matchmaking Duo/Trio mempertemukan pengguna yang memilih mode sama. Custom Room dapat dibagikan dengan kode.</div>
+                </div>
+                <div class="setup-box">
+                    <span class="field-label">Pilih mode kompetisi</span>
+                    <div class="mode-grid" role="group" aria-label="Mode kompetisi">
+                        <button class="mode-card selected" data-mode-card="tajwid-battle" type="button" aria-pressed="true"><strong>Tajwid Battle</strong><span>Tebak hukum bacaan</span></button>
+                        <button class="mode-card" data-mode-card="sambung-ayat" type="button" aria-pressed="false"><strong>Sambung Ayat</strong><span>Setoran lisan</span></button>
+                        <button class="mode-card" data-mode-card="hafalan-battle" type="button" aria-pressed="false"><strong>Hafalan Battle</strong><span>Uji hafalan dengan suara</span></button>
+                        <button class="mode-card" data-mode-card="team-battle" type="button" aria-pressed="false"><strong>Team Battle</strong><span>Skor tim A melawan tim B</span></button>
+                    </div>
+                </div>
+            </div>
+            <div class="action-row">
+                <button class="button-primary" id="find-match" type="button">⌕ Cari Lawan Otomatis</button>
+                <button class="button-emerald" id="create-room" type="button">＋ Buat Room</button>
+            </div>
+            <div class="join-box">
+                <div><label class="field-label" for="join-code">Gabung dengan kode room</label><input class="text-input room-code-input" id="join-code" maxlength="6" placeholder="CONTOH: A1B2C3" autocomplete="off"></div>
+                <button class="button-secondary" id="join-room" type="button">Gabung Room</button>
+            </div>
+            <p class="status-message" id="lobby-status" role="status" aria-live="polite"></p>
+            <div class="waiting-card" id="waiting-room" hidden>
+                <div class="waiting-title"><span class="pulse" aria-hidden="true"></span><span id="waiting-title">Menunggu pemain...</span></div>
+                <p class="waiting-copy" id="waiting-copy"></p>
+                <div class="invite-row" id="invite-row" hidden><span class="invite-code" id="invite-code"></span><button class="small-button" id="copy-code" type="button">Salin kode</button><span class="waiting-copy" id="player-count"></span></div>
+                <div class="action-row"><button class="button-danger" id="cancel-match" type="button">Batalkan / Keluar</button></div>
+            </div>
+        </section>
+
+        <section class="panel" id="arena" aria-labelledby="arena-title" hidden>
+            <div class="panel-heading"><div><span class="kicker">PERTANDINGAN LANGSUNG</span><h2 id="arena-title">Arena Duel</h2></div><p id="arena-mode"></p></div>
+            <div class="team-scoreboard" id="team-scoreboard" aria-label="Skor tim" hidden></div>
+            <div class="arena-top">
+                <article class="duel-card">
+                    <span class="duel-label">KAMU</span>
+                    <div class="duel-player"><span class="avatar" id="self-avatar">P</span><div class="player-meta"><div class="player-name" id="self-name">Pemain</div><div class="player-status" id="self-team">Skor pertandingan</div></div><span class="player-score" id="self-score">0</span></div>
+                </article>
+                <article class="duel-card opponents">
+                    <span class="duel-label" id="opponent-label">LAWAN</span>
+                    <div class="opponent-list" id="opponent-list"></div>
+                </article>
+            </div>
+            <div class="timer-row"><span class="round-meta" id="round-label">Soal 1/3</span><span class="timer-pill" id="round-timer">30 dtk</span></div>
+            <div class="progress-track" role="progressbar" aria-label="Progres soal pertandingan" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1"><div class="progress-fill" id="round-progress"></div></div>
+            <article class="question-box">
+                <span class="kicker" id="question-kind">TANTANGAN</span>
+                <h3 id="question-text"></h3>
+                <div class="question-arabic" id="question-arabic" lang="ar" dir="rtl" hidden></div>
+                <div class="voice-box" id="qari-audio-box" hidden>
+                    <div class="voice-controls"><button class="button-secondary" id="play-qari-audio" type="button">▶ Putar sampel murottal</button></div>
+                    <p class="voice-status" id="qari-audio-status" role="status" aria-live="polite">Audio dimuat saat diminta.</p>
+                    <audio class="audio-preview" id="qari-audio" controls hidden></audio>
+                </div>
+                <button class="buzzer-button" id="buzzer" type="button" hidden>🔔 Rebut Giliran (Buzzer)</button>
+                <div class="options" id="options" hidden></div>
+                <div class="answer-form" id="essay-form" hidden>
+                    <label class="field-label" for="essay-answer">Tulis jawaban esai</label>
+                    <textarea class="essay-input" id="essay-answer" maxlength="1000" placeholder="Tuliskan jawaban singkatmu..."></textarea>
+                    <button class="button-emerald" id="send-essay" type="button" style="margin-top:8px">Kirim Jawaban</button>
+                </div>
+                <div class="voice-box" id="voice-form" hidden>
+                    <div class="voice-controls"><button class="button-primary" id="start-record" type="button">🎙 Rekam Suara</button><button class="button-secondary" id="stop-record" type="button" disabled>Hentikan</button><button class="button-emerald" id="send-record" type="button" disabled>Kirim Rekaman</button></div>
+                    <p class="voice-status" id="voice-status">Rekaman hanya dimulai setelah izin mikrofon diberikan.</p>
+                    <audio class="audio-preview" id="own-audio" controls hidden></audio>
+                </div>
+                <p class="status-message" id="answer-status" role="status" aria-live="polite"></p>
+            </article>
+            <p class="arena-note">Jawaban pilihan ganda dinilai otomatis. Esai dan rekaman memperoleh EXP partisipasi; penilaiannya tidak otomatis. Audio rekaman disimpan sementara di memori server, dapat didengar peserta room, maksimal 3 MB, dan dihapus setelah kedaluwarsa (1 jam) atau server dimulai ulang.</p>
+            <div class="action-row"><button class="button-danger" id="leave-arena" type="button">Keluar dari Pertandingan</button></div>
+        </section>
+
+        <section class="result-card" id="result" hidden aria-live="polite">
+            <div class="result-icon" id="result-icon">🏆</div><h2 id="result-title">Hasil Duel</h2>
+            <p id="result-message"></p>
+            <div class="result-scores" id="result-scores"></div>
+            <p class="result-exp" id="result-exp"></p>
+            <button class="button-emerald" id="back-to-lobby" type="button">Kembali ke Lobby</button>
+        </section>
+    </main>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        const apiBase = '/api/battle';
+        const battleSocket = typeof window.io === 'function' ? window.io() : null;
+        const modeNames = {
+            'tajwid-battle': 'Tajwid Battle',
+            'sambung-ayat': 'Sambung Ayat',
+            'hafalan-battle': 'Hafalan Battle',
+            'team-battle': 'Team Battle'
+        };
+        let selectedFormat = 'duo';
+        let selectedMode = 'tajwid-battle';
+        let currentRoom = null;
+        let pollTimer = null;
+        let shownQuestionId = null;
+        let submittedQuestionId = null;
+        let mediaRecorder = null;
+        let recordingChunks = [];
+        let recordingBlob = null;
+        let ownAudioUrl = null;
+        let qariAudioRequest = null;
+        let opponentRosterSignature = '';
+        let lastBuzzerEvent = null;
+
+        const lobby = document.getElementById('lobby');
+        const waitingRoom = document.getElementById('waiting-room');
+        const arena = document.getElementById('arena');
+        const resultPanel = document.getElementById('result');
+        const lobbyStatus = document.getElementById('lobby-status');
+        const answerStatus = document.getElementById('answer-status');
+        const optionsPanel = document.getElementById('options');
+        const buzzerButton = document.getElementById('buzzer');
+        const essayForm = document.getElementById('essay-form');
+        const voiceForm = document.getElementById('voice-form');
+        const qariAudioBox = document.getElementById('qari-audio-box');
+        const qariAudioPlayer = document.getElementById('qari-audio');
+        const qariAudioButton = document.getElementById('play-qari-audio');
+        const qariAudioStatus = document.getElementById('qari-audio-status');
+
+        async function api(path, options) {
+            const response = await fetch(`${apiBase}${path}`, options || {});
+            let payload;
+            try {
+                payload = await response.json();
+            } catch (error) {
+                throw new Error('Server mengirim respons yang tidak dapat dibaca.');
+            }
+            if (!response.ok) throw new Error(payload.error || `Permintaan gagal (${response.status}).`);
+            return payload;
+        }
+
+        function jsonOptions(body) {
+            return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+        }
+
+        function submitScore(payload) {
+            if (!battleSocket || !battleSocket.connected) {
+                return api(`/rooms/${encodeURIComponent(payload.code)}/answer`, jsonOptions({
+                    player_id: payload.player_id,
+                    question_id: payload.question_id,
+                    answer: payload.answer
+                }));
+            }
+            return new Promise((resolve, reject) => {
+                const timeout = window.setTimeout(() => reject(new Error('Server real-time tidak merespons. Coba lagi setelah koneksi pulih.')), 10000);
+                battleSocket.emit('submit_score', payload, (response) => {
+                    window.clearTimeout(timeout);
+                    if (!response || response.error) {
+                        reject(new Error(response && response.error ? response.error : 'Respons skor tidak valid.'));
+                        return;
+                    }
+                    resolve(response);
+                });
+            });
+        }
+
+        function setStatus(element, message, kind) {
+            element.textContent = message;
+            element.className = `status-message${kind ? ` ${kind}` : ''}`;
+        }
+
+        function selectedName() {
+            const field = document.getElementById('player-name');
+            const name = field.value.trim().replace(/\s+/g, ' ');
+            if (name.length < 2 || name.length > 24) {
+                field.focus();
+                throw new Error('Nama pemain harus terdiri dari 2–24 karakter.');
+            }
+            return name;
+        }
+
+        function clearPolling() {
+            window.clearInterval(pollTimer);
+            pollTimer = null;
+        }
+
+        function setFormat(format) {
+            if (selectedMode === 'team-battle' && format === 'solo') {
+                setStatus(lobbyStatus, 'Team Battle memerlukan minimal dua pemain.', 'error');
+                return;
+            }
+            selectedFormat = format;
+            document.querySelectorAll('[data-format]').forEach((button) => {
+                const active = button.dataset.format === format;
+                button.classList.toggle('selected', active);
+                button.setAttribute('aria-pressed', String(active));
+            });
+            document.getElementById('capacity-field').hidden = format !== 'custom';
+            const findMatch = document.getElementById('find-match');
+            findMatch.disabled = format === 'custom';
+            findMatch.textContent = format === 'solo' ? '▶ Mulai Latihan Solo' : (format === 'custom' ? 'Gunakan Buat Room' : '⌕ Cari Lawan Otomatis');
+        }
+
+        document.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => setFormat(button.dataset.format)));
+        document.querySelectorAll('[data-mode-card]').forEach((button) => {
+            button.addEventListener('click', () => {
+                selectedMode = button.dataset.modeCard;
+                if (selectedMode === 'team-battle' && selectedFormat === 'solo') setFormat('duo');
+                document.querySelectorAll('[data-mode-card]').forEach((card) => {
+                    const active = card === button;
+                    card.classList.toggle('selected', active);
+                    card.setAttribute('aria-pressed', String(active));
+                });
+            });
+        });
+
+        async function startMatchmaking() {
+            setStatus(lobbyStatus, '', '');
+            try {
+                const room = await api('/matchmaking', jsonOptions({ name: selectedName(), format: selectedFormat, mode: selectedMode }));
+                await enterRoom(room);
+            } catch (error) {
+                setStatus(lobbyStatus, error.message, 'error');
+            }
+        }
+
+        async function createRoom() {
+            setStatus(lobbyStatus, '', '');
+            const capacity = selectedFormat === 'custom'
+                ? Number(document.getElementById('room-capacity').value)
+                : (selectedFormat === 'solo' ? 1 : (selectedFormat === 'duo' ? 2 : 3));
+            try {
+                const room = await api('/rooms', jsonOptions({
+                    name: selectedName(), format: selectedFormat, capacity, mode: selectedMode
+                }));
+                await enterRoom(room);
+            } catch (error) {
+                setStatus(lobbyStatus, error.message, 'error');
+            }
+        }
+
+        async function joinRoom() {
+            setStatus(lobbyStatus, '', '');
+            const code = document.getElementById('join-code').value.trim().toUpperCase();
+            if (!/^[A-F0-9]{6}$/.test(code)) {
+                setStatus(lobbyStatus, 'Masukkan kode room 6 karakter yang valid.', 'error');
+                return;
+            }
+            try {
+                const room = await api(`/rooms/${encodeURIComponent(code)}/join`, jsonOptions({ name: selectedName() }));
+                await enterRoom(room);
+            } catch (error) {
+                setStatus(lobbyStatus, error.message, 'error');
+            }
+        }
+
+        async function enterRoom(room) {
+            clearPolling();
+            currentRoom = room;
+            if (battleSocket && battleSocket.connected) {
+                battleSocket.emit('join_room', { code: room.code, player_id: room.player_id });
+            }
+            shownQuestionId = null;
+            submittedQuestionId = null;
+            opponentRosterSignature = '';
+            lastBuzzerEvent = null;
+            lobbyStatus.textContent = '';
+            waitingRoom.hidden = true;
+            arena.hidden = true;
+            resultPanel.hidden = true;
+            if (room.status === 'finished') {
+                showResult(room);
+            } else if (room.status === 'waiting') {
+                lobby.hidden = false;
+                waitingRoom.hidden = false;
+                document.getElementById('waiting-title').textContent = 'Menunggu pemain lain...';
+                document.getElementById('waiting-copy').textContent = `Room ${room.format === 'custom' ? 'custom' : room.format.toUpperCase()} untuk ${modeNames[room.mode.key]}. Saat jumlah pemain terpenuhi, pertandingan dimulai otomatis.`;
+                document.getElementById('invite-row').hidden = false;
+                document.getElementById('invite-code').textContent = room.code;
+                updatePlayerCount(room);
+            }
+            await syncRoom();
+            if (currentRoom && currentRoom.status !== 'finished') pollTimer = window.setInterval(syncRoom, 1000);
+        }
+
+        if (battleSocket) {
+            battleSocket.on('connect', () => {
+                if (!currentRoom) return;
+                battleSocket.emit('join_room', { code: currentRoom.code, player_id: currentRoom.player_id });
+                syncRoom();
+            });
+            battleSocket.on('battle_result', (event) => {
+                if (currentRoom && event && event.code === currentRoom.code) syncRoom();
+            });
+            battleSocket.on('room_updated', (event) => {
+                if (currentRoom && event && event.code === currentRoom.code) syncRoom();
+            });
+        }
+
+        function updatePlayerCount(room) {
+            document.getElementById('player-count').textContent = `${room.players.length}/${room.capacity} pemain bergabung`;
+        }
+
+        async function syncRoom() {
+            if (!currentRoom) return;
+            try {
+                const room = await api(`/rooms/${encodeURIComponent(currentRoom.code)}?player_id=${encodeURIComponent(currentRoom.player_id)}`);
+                if (room.status === 'finished') {
+                    currentRoom = room;
+                    clearPolling();
+                    showResult(room);
+                    return;
+                }
+                currentRoom = room;
+                if (room.status === 'waiting') {
+                    lobby.hidden = false;
+                    waitingRoom.hidden = false;
+                    arena.hidden = true;
+                    document.getElementById('invite-row').hidden = false;
+                    document.getElementById('invite-code').textContent = room.code;
+                    updatePlayerCount(room);
+                    const remaining = room.capacity - room.players.length;
+                    document.getElementById('waiting-title').textContent = 'Menunggu pemain lain...';
+                    document.getElementById('waiting-copy').textContent = `Sudah ada ${room.players.length} dari ${room.capacity} pemain. Bagikan kode room untuk mengundang pemain lain.`;
+                    if (remaining === 0) document.getElementById('waiting-title').textContent = 'Pemain lengkap, menyiapkan arena...';
+                    return;
+                }
+                lobby.hidden = true;
+                waitingRoom.hidden = true;
+                arena.hidden = false;
+                updateArena(room);
+            } catch (error) {
+                setStatus(lobbyStatus, error.message, 'error');
+                setStatus(answerStatus, error.message, 'error');
+                clearPolling();
+            }
+        }
+
+        function renderRoster(room) {
+            const rosterSignature = JSON.stringify(room.players.map((player) => [player.id, player.name, player.score, player.status, player.has_recording]));
+            if (rosterSignature === opponentRosterSignature) return;
+            opponentRosterSignature = rosterSignature;
+            const ownPlayer = room.players.find((player) => player.is_you);
+            const others = room.players.filter((player) => !player.is_you);
+            const teamScoreboard = document.getElementById('team-scoreboard');
+            teamScoreboard.hidden = room.mode.key !== 'team-battle';
+            if (!teamScoreboard.hidden) {
+                teamScoreboard.replaceChildren();
+                room.teams.forEach((team) => {
+                    const scoreCard = document.createElement('div');
+                    scoreCard.className = 'team-score-card';
+                    const label = document.createElement('span');
+                    label.textContent = `TIM ${team.id}`;
+                    const score = document.createElement('strong');
+                    score.textContent = String(team.score);
+                    scoreCard.append(label, score);
+                    teamScoreboard.append(scoreCard);
+                });
+            }
+            document.getElementById('self-name').textContent = ownPlayer ? ownPlayer.name : 'Pemain';
+            document.getElementById('self-avatar').textContent = ownPlayer ? ownPlayer.name.trim().charAt(0).toUpperCase() : 'P';
+            document.getElementById('self-score').textContent = ownPlayer ? String(ownPlayer.score) : '0';
+            document.getElementById('self-team').textContent = room.mode.key === 'team-battle' && ownPlayer
+                ? `Tim ${ownPlayer.team_id} · Skor pemain`
+                : 'Skor pertandingan';
+            document.getElementById('opponent-label').textContent = room.format === 'solo' ? 'LATIHAN SOLO' : (others.length > 1 ? 'LAWAN' : 'LAWAN');
+            const opponentList = document.getElementById('opponent-list');
+            opponentList.replaceChildren();
+            if (!others.length) {
+                const empty = document.createElement('div');
+                empty.className = 'player-status';
+                empty.textContent = room.format === 'solo' ? 'Mode latihan mandiri' : 'Mencari lawan...';
+                opponentList.append(empty);
+                return;
+            }
+            others.forEach((player) => {
+                const row = document.createElement('div');
+                row.className = 'duel-player';
+                const avatar = document.createElement('span');
+                avatar.className = 'avatar';
+                avatar.textContent = player.name.trim().charAt(0).toUpperCase();
+                const meta = document.createElement('div');
+                meta.className = 'player-meta';
+                const name = document.createElement('div');
+                name.className = 'player-name';
+                name.textContent = player.name;
+                const status = document.createElement('div');
+                status.className = 'player-status';
+                const statusLabels = {
+                    Bersiap: 'Menunggu jawaban...',
+                    'Rekaman terkirim': 'Lawan telah mengirim rekaman',
+                    'Esai terkirim': 'Lawan telah mengirim jawaban esai',
+                    'Merebut buzzer': 'Lawan merebut buzzer',
+                    'Jawaban tepat': 'Lawan telah menjawab',
+                    'Sudah menjawab': 'Lawan telah menjawab'
+                };
+                const playerStatus = statusLabels[player.status] || player.status;
+                status.textContent = room.mode.key === 'team-battle'
+                    ? `Tim ${player.team_id} · ${playerStatus}`
+                    : playerStatus;
+                meta.append(name, status);
+                const score = document.createElement('span');
+                score.className = 'player-score';
+                score.textContent = String(player.score);
+                row.append(avatar, meta, score);
+                opponentList.append(row);
+                if (player.has_recording) {
+                    const audio = document.createElement('audio');
+                    audio.className = 'audio-preview';
+                    audio.controls = true;
+                    audio.preload = 'none';
+                    audio.src = `${apiBase}/rooms/${encodeURIComponent(room.code)}/recordings/${encodeURIComponent(player.id)}?player_id=${encodeURIComponent(room.player_id)}`;
+                    opponentList.append(audio);
+                }
+            });
+        }
+
+        function updateArena(room) {
+            const buzzerEvent = room.buzzer_player_id ? `${room.question_index}:${room.buzzer_player_id}` : null;
+            if (buzzerEvent && buzzerEvent !== lastBuzzerEvent) window.UstadOnlineUI.playBuzzerTone(answerStatus);
+            lastBuzzerEvent = buzzerEvent;
+            document.getElementById('arena-mode').textContent = `${room.mode.name} · ${room.format.toUpperCase()} · Room ${room.code}`;
+            renderRoster(room);
+            document.getElementById('round-label').textContent = `Soal ${room.question_index + 1}/${room.total_questions}`;
+            document.getElementById('round-timer').textContent = `${room.seconds_remaining} dtk`;
+            document.getElementById('round-timer').classList.toggle('low', room.seconds_remaining <= 8);
+            const progress = ((room.question_index + 1) / room.total_questions) * 100;
+            document.getElementById('round-progress').style.width = `${progress}%`;
+            document.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(room.question_index + 1));
+            if (room.question && room.question.id !== shownQuestionId) renderQuestion(room);
+            updateInputState(room);
+        }
+
+        function renderQuestion(room) {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (qariAudioRequest) qariAudioRequest.abort();
+            qariAudioRequest = null;
+            qariAudioPlayer.pause();
+            qariAudioPlayer.removeAttribute('src');
+            qariAudioPlayer.load();
+            qariAudioPlayer.hidden = true;
+            qariAudioButton.disabled = false;
+            qariAudioStatus.textContent = 'Audio dimuat saat diminta.';
+            shownQuestionId = room.question.id;
+            submittedQuestionId = null;
+            answerStatus.textContent = '';
+            const question = room.question;
+            const typeLabels = { voice: 'SETORAN LISAN', essay: 'JAWABAN ESAI', buzzer: 'CEPAT TEPAT', choice: 'PILIHAN JAWABAN' };
+            document.getElementById('question-kind').textContent = typeLabels[room.mode.kind] || 'TANTANGAN';
+            document.getElementById('question-text').textContent = question.prompt;
+            const arabic = document.getElementById('question-arabic');
+            arabic.textContent = question.arabic || '';
+            arabic.hidden = !question.arabic;
+            optionsPanel.replaceChildren();
+            optionsPanel.hidden = !question.options;
+            essayForm.hidden = room.mode.kind !== 'essay';
+            voiceForm.hidden = room.mode.kind !== 'voice';
+            qariAudioBox.hidden = room.mode.key !== 'qari';
+            buzzerButton.hidden = room.mode.kind !== 'buzzer';
+            document.getElementById('essay-answer').value = '';
+            recordingBlob = null;
+            document.getElementById('send-record').disabled = true;
+            document.getElementById('start-record').disabled = false;
+            document.getElementById('stop-record').disabled = true;
+            document.getElementById('own-audio').hidden = true;
+            if (ownAudioUrl) URL.revokeObjectURL(ownAudioUrl);
+            ownAudioUrl = null;
+            document.getElementById('voice-status').textContent = 'Rekaman hanya dimulai setelah izin mikrofon diberikan.';
+            if (question.options) {
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'option-button';
+                    button.textContent = option;
+                    button.addEventListener('click', () => sendAnswer(index));
+                    optionsPanel.append(button);
+                });
+            }
+        }
+
+        function updateInputState(room) {
+            const currentQuestionId = room.question ? room.question.id : null;
+            const ownPlayer = room.players.find((player) => player.is_you);
+            const alreadySent = submittedQuestionId === currentQuestionId || (ownPlayer && ownPlayer.status !== 'Bersiap' && ownPlayer.status !== 'Merebut buzzer');
+            document.querySelectorAll('.option-button').forEach((button) => {
+                button.disabled = Boolean(alreadySent) || (room.mode.kind === 'buzzer' && room.buzzer_player_id !== room.player_id);
+            });
+            const essayButton = document.getElementById('send-essay');
+            essayButton.disabled = Boolean(alreadySent);
+            buzzerButton.disabled = room.buzzer_player_id !== null || Boolean(alreadySent);
+            if (room.mode.kind === 'buzzer' && room.buzzer_player_id && room.buzzer_player_id !== room.player_id) {
+                answerStatus.textContent = 'Lawan telah merebut buzzer. Tunggu soal berikutnya.';
+            } else if (room.mode.kind === 'buzzer' && room.buzzer_player_id === room.player_id && !alreadySent) {
+                answerStatus.textContent = 'Buzzer milikmu! Pilih jawaban sekarang.';
+            } else if (alreadySent && !answerStatus.textContent) {
+                answerStatus.textContent = 'Jawabanmu sudah terkirim. Menunggu pemain lain...';
+            }
+        }
+
+        async function sendAnswer(answer) {
+            if (!currentRoom || !currentRoom.question) return;
+            try {
+                const response = await submitScore({
+                    code: currentRoom.code,
+                    player_id: currentRoom.player_id,
+                    question_id: currentRoom.question.id,
+                    answer
+                });
+                submittedQuestionId = currentRoom.question.id;
+                setStatus(answerStatus, response.correct === null ? `Esai terkirim · +${response.points} EXP partisipasi.` : (response.correct ? `Tepat! +${response.points} EXP.` : 'Jawaban belum tepat.'), response.correct === false ? 'error' : 'success');
+                currentRoom = response.room;
+                await syncRoom();
+            } catch (error) {
+                setStatus(answerStatus, error.message, 'error');
+                await syncRoom();
+            }
+        }
+
+        async function pressBuzzer() {
+            if (!currentRoom) return;
+            try {
+                const room = await api(`/rooms/${encodeURIComponent(currentRoom.code)}/buzzer`, jsonOptions({ player_id: currentRoom.player_id }));
+                currentRoom = room;
+                answerStatus.textContent = 'Buzzer berhasil direbut! Pilih jawaban.';
+                updateArena(room);
+            } catch (error) {
+                setStatus(answerStatus, error.message, 'error');
+                await syncRoom();
+            }
+        }
+
+        async function sendEssay() {
+            const answer = document.getElementById('essay-answer').value.trim();
+            if (answer.length < 2) {
+                setStatus(answerStatus, 'Tuliskan jawaban terlebih dahulu.', 'error');
+                return;
+            }
+            await sendAnswer(answer);
+        }
+
+        async function startRecording() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                setStatus(document.getElementById('voice-status'), 'Perangkat atau browser ini belum mendukung perekaman suara.', 'error');
+                return;
+            }
+            const recordingQuestionId = currentRoom && currentRoom.question ? currentRoom.question.id : null;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                if (!currentRoom || currentRoom.question.id !== recordingQuestionId) {
+                    stream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
+                recordingChunks = [];
+                const recorder = new MediaRecorder(stream);
+                mediaRecorder = recorder;
+                recorder.addEventListener('dataavailable', (event) => {
+                    if (event.data.size) recordingChunks.push(event.data);
+                });
+                recorder.addEventListener('stop', () => {
+                    stream.getTracks().forEach((track) => track.stop());
+                    if (!currentRoom || currentRoom.question.id !== recordingQuestionId) return;
+                    recordingBlob = new Blob(recordingChunks, { type: recorder.mimeType || 'audio/webm' });
+                    ownAudioUrl = URL.createObjectURL(recordingBlob);
+                    const preview = document.getElementById('own-audio');
+                    preview.src = ownAudioUrl;
+                    preview.hidden = false;
+                    document.getElementById('send-record').disabled = recordingBlob.size > 3 * 1024 * 1024;
+                    setStatus(document.getElementById('voice-status'), recordingBlob.size > 3 * 1024 * 1024 ? 'Rekaman melebihi batas 3 MB. Rekam ulang dengan durasi lebih singkat.' : 'Rekaman siap ditinjau dan dikirim.', recordingBlob.size > 3 * 1024 * 1024 ? 'error' : 'success');
+                }, { once: true });
+                recorder.start();
+                document.getElementById('start-record').disabled = true;
+                document.getElementById('stop-record').disabled = false;
+                setStatus(document.getElementById('voice-status'), 'Sedang merekam... tekan Hentikan jika sudah selesai.', '');
+            } catch (error) {
+                setStatus(document.getElementById('voice-status'), 'Mikrofon tidak dapat diakses. Izinkan akses mikrofon lalu coba kembali.', 'error');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                document.getElementById('stop-record').disabled = true;
+            }
+        }
+
+        async function sendRecording() {
+            if (!recordingBlob || !currentRoom) return;
+            const formData = new FormData();
+            formData.append('player_id', currentRoom.player_id);
+            formData.append('recording', recordingBlob, 'setoran.webm');
+            try {
+                const response = await api(`/rooms/${encodeURIComponent(currentRoom.code)}/recording`, { method: 'POST', body: formData });
+                submittedQuestionId = currentRoom.question.id;
+                setStatus(answerStatus, `Rekaman terkirim · +${response.points} EXP partisipasi.`, 'success');
+                currentRoom = response.room;
+                await syncRoom();
+            } catch (error) {
+                setStatus(answerStatus, error.message, 'error');
+            }
+        }
+
+        async function playQariSample() {
+            if (qariAudioRequest) qariAudioRequest.abort();
+            qariAudioRequest = new AbortController();
+            qariAudioButton.disabled = true;
+            qariAudioStatus.textContent = 'Memuat sampel murottal...';
+            try {
+                const response = await fetch('https://equran.id/api/v2/surat/1', { signal: qariAudioRequest.signal });
+                if (!response.ok) throw new Error(`Layanan audio merespons dengan status ${response.status}.`);
+                const payload = await response.json();
+                const audioUrl = payload && payload.code === 200 && payload.data && payload.data.audioFull
+                    ? payload.data.audioFull['05']
+                    : null;
+                if (typeof audioUrl !== 'string' || !audioUrl) throw new Error('Audio qari tidak tersedia dari layanan.');
+                qariAudioPlayer.src = audioUrl;
+                qariAudioPlayer.hidden = false;
+                await qariAudioPlayer.play();
+                qariAudioStatus.textContent = 'Memutar sampel murottal Misyari Rasyid Al-Afasi.';
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                console.error('Sampel murottal tidak dapat dimuat:', error);
+                qariAudioStatus.textContent = 'Audio gagal dimuat. Periksa koneksi lalu coba kembali.';
+                qariAudioButton.disabled = false;
+            }
+        }
+
+        function showResult(room) {
+            clearPolling();
+            lobby.hidden = true;
+            waitingRoom.hidden = true;
+            arena.hidden = true;
+            resultPanel.hidden = false;
+            const own = room.players.find((player) => player.is_you);
+            const others = room.players.filter((player) => !player.is_you && player.status !== 'Keluar');
+            const activePlayers = room.players.filter((player) => player.status !== 'Keluar');
+            if (room.mode.key === 'team-battle') {
+                const teams = room.teams;
+                const highTeamScore = Math.max(0, ...teams.map((team) => team.score));
+                const winningTeams = teams.filter((team) => team.score === highTeamScore);
+                const ownTeam = teams.find((team) => own && team.id === own.team_id);
+                const teamTie = winningTeams.length > 1;
+                const teamWon = ownTeam && ownTeam.score === highTeamScore;
+                document.getElementById('result-icon').textContent = teamTie ? '🤝' : (teamWon ? '🏆' : '⚔️');
+                document.getElementById('result-title').textContent = teamTie ? 'Hasil Imbang' : (teamWon ? 'Tim Kamu Menang!' : 'Tim Lawan Menang');
+                document.getElementById('result-message').textContent = teamTie
+                    ? 'Skor kedua tim sama. Pertandingan berlangsung seimbang.'
+                    : (teamWon ? `Selamat, Tim ${ownTeam.id} meraih skor tertinggi!` : 'Terus berlatih dan coba tantangan berikutnya.');
+                const teamResults = document.getElementById('result-scores');
+                teamResults.replaceChildren();
+                teams.forEach((team) => {
+                    const card = document.createElement('div');
+                    card.className = 'result-score';
+                    const name = document.createElement('span');
+                    name.textContent = `Tim ${team.id}${ownTeam && team.id === ownTeam.id ? ' (Kamu)' : ''}`;
+                    const score = document.createElement('strong');
+                    score.textContent = String(team.score);
+                    card.append(name, score);
+                    teamResults.append(card);
+                });
+                document.getElementById('result-exp').textContent = `Skor individu kamu: ${own ? own.score : 0}`;
+                return;
+            }
+            const highest = Math.max(0, ...activePlayers.map((player) => player.score));
+            const winners = activePlayers.filter((player) => player.score === highest);
+            const isWinner = own && own.score === highest;
+            const tied = winners.length > 1;
+            const isSolo = room.format === 'solo';
+            document.getElementById('result-icon').textContent = isSolo ? '📖' : (tied ? '🤝' : (isWinner ? '🏆' : '⚔️'));
+            document.getElementById('result-title').textContent = isSolo ? 'Latihan Selesai' : (tied ? 'Hasil Imbang' : (isWinner ? 'Kamu Menang!' : 'Kamu Kalah'));
+            document.getElementById('result-message').textContent = isSolo ? 'Sesi latihan mandiri selesai.' : (tied ? 'Skor tertinggi sama. Pertandingan berlangsung seimbang.' : (isWinner ? 'Selamat, kamu memimpin duel ini!' : 'Terus berlatih dan coba tantangan berikutnya.'));
+            const scores = document.getElementById('result-scores');
+            scores.replaceChildren();
+            [own, ...others].filter(Boolean).forEach((player) => {
+                const card = document.createElement('div');
+                card.className = 'result-score';
+                const name = document.createElement('span');
+                name.textContent = player.is_you ? `${player.name} (Kamu)` : player.name;
+                const score = document.createElement('strong');
+                score.textContent = String(player.score);
+                card.append(name, score);
+                scores.append(card);
+            });
+            document.getElementById('result-exp').textContent = `EXP pertandingan kamu: +${own ? own.score : 0}`;
+        }
+
+        async function leaveCurrentRoom() {
+            if (!currentRoom) return;
+            clearPolling();
+            const room = currentRoom;
+            currentRoom = null;
+            if (battleSocket && battleSocket.connected) {
+                battleSocket.emit('leave_battle_room', { code: room.code, player_id: room.player_id });
+            }
+            try {
+                await api(`/rooms/${encodeURIComponent(room.code)}/leave`, jsonOptions({ player_id: room.player_id }));
+            } catch (error) {
+                console.warn('Room tidak dapat ditinggalkan secara normal:', error);
+            }
+            if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
+            if (qariAudioRequest) qariAudioRequest.abort();
+            qariAudioPlayer.pause();
+            if (ownAudioUrl) URL.revokeObjectURL(ownAudioUrl);
+            lobby.hidden = false;
+            waitingRoom.hidden = true;
+            arena.hidden = true;
+            resultPanel.hidden = true;
+            setStatus(lobbyStatus, 'Kamu telah kembali ke lobby.', 'success');
+        }
+
+        document.getElementById('find-match').addEventListener('click', startMatchmaking);
+        document.getElementById('create-room').addEventListener('click', createRoom);
+        document.getElementById('join-room').addEventListener('click', joinRoom);
+        document.getElementById('join-code').addEventListener('input', (event) => { event.target.value = event.target.value.toUpperCase().replace(/[^A-F0-9]/g, ''); });
+        document.getElementById('copy-code').addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(document.getElementById('invite-code').textContent);
+                document.getElementById('copy-code').textContent = 'Tersalin';
+            } catch (error) {
+                setStatus(lobbyStatus, 'Salin kode room secara manual.', 'error');
+            }
+        });
+        document.getElementById('cancel-match').addEventListener('click', leaveCurrentRoom);
+        document.getElementById('buzzer').addEventListener('click', pressBuzzer);
+        document.getElementById('send-essay').addEventListener('click', sendEssay);
+        document.getElementById('start-record').addEventListener('click', startRecording);
+        document.getElementById('stop-record').addEventListener('click', stopRecording);
+        document.getElementById('send-record').addEventListener('click', sendRecording);
+        document.getElementById('play-qari-audio').addEventListener('click', playQariSample);
+        document.getElementById('leave-arena').addEventListener('click', leaveCurrentRoom);
+        document.getElementById('back-to-lobby').addEventListener('click', leaveCurrentRoom);
+    </script>
+</body>
+</html>

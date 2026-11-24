@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0A192F">
+    <title>Ustad Connect | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: #233149; background: var(--ink); font-family: 'DM Sans', sans-serif; }
+        h1, h2, .brand { font-family: 'Space Grotesk', sans-serif; }
+        a { color: inherit; text-decoration: none; }
+        .shell { width: min(920px, calc(100% - 2rem)); margin: 0 auto; }
+        .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.92); }
+        .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .brand { color: var(--navy); font-size: 1rem; font-weight: 700; }
+        .back-link, .button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 0 .95rem; color: var(--navy); font-size: .82rem; font-weight: 700; }
+        .button-primary { border-color: var(--navy); background: var(--navy); color: #fff; }
+        main { padding: 30px 0 56px; }
+        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 20px; background: #fff; padding: clamp(20px, 4vw, 32px); box-shadow: 0 8px 26px rgba(15,35,66,.05); }
+        .hero { background: linear-gradient(120deg, #fff, #f3f8ff 60%, #effbf5); }
+        .eyebrow { color: var(--emerald); font-size: .68rem; font-weight: 700; letter-spacing: .15em; }
+        h1 { margin: 8px 0; color: #142b54; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+        .hero p, .panel p { color: #637087; line-height: 1.65; }
+        .panel { margin-top: 18px; }
+        .panel h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .note { margin-top: 18px; border-radius: 12px; background: #f3f7fc; padding: 13px 15px; color: #52627a; font-size: .8rem; line-height: 1.55; }
+        .back-link:focus-visible, .button:focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
+        @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 920px); } .topbar { height: 60px; } .actions > * { flex: 1 1 100%; } }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}">Ustad Online · Ustad Connect</a>
+            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+        </div>
+    </header>
+    <main class="shell">
+        <section class="hero" aria-labelledby="page-title">
+            <span class="eyebrow">BIMBINGAN BELAJAR</span>
+            <h1 id="page-title">Ustad Connect</h1>
+            <p>Ajukan pertanyaan seputar bacaan Al-Qur'an dan lanjutkan belajar bersama komunitas.</p>
+        </section>
+        <section class="panel" aria-labelledby="guidance-title">
+            <h2 id="guidance-title">Mulai dengan diskusi materi</h2>
+            <p>Untuk demo ini, bimbingan tersedia melalui diskusi materi di Komunitas. Konsultasi langsung dengan ustaz/ustazah belum tersedia.</p>
+            <div class="actions">
+                <a class="button button-primary" href="{{ url_for('komunitas', _anchor='discussion-form') }}">Tanya di Komunitas</a>
+                <a class="button" href="{{ url_for('ai_tahsin') }}">Latihan di AI Tahsin</a>
+            </div>
+            <div class="note">Hindari membagikan nomor telepon, alamat, atau informasi pribadi di diskusi.</div>
+        </section>
+    </main>
+</body>
+</html>

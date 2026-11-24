@@ -1,0 +1,31 @@
+<dialog class="settings-dialog" id="ui-customization-dialog" aria-labelledby="ui-customization-title">
+    <header class="settings-header">
+        <div><span class="kicker">PREFERENSI GLOBAL</span><h2 id="ui-customization-title">Pengaturan Belajar</h2></div>
+        <button class="small-button" id="ui-close-settings" type="button" aria-label="Tutup pengaturan">✕</button>
+    </header>
+    <div class="settings-content">
+        <section class="setting-section" aria-labelledby="ui-arabic-size-title">
+            <span class="setting-title" id="ui-arabic-size-title">Ukuran teks Arab &amp; konten Al-Qur'an</span>
+            <div class="size-options" role="group" aria-label="Ukuran teks Arab dan konten">
+                <button class="size-option" type="button" data-arabic-option="normal" aria-pressed="true">Normal</button>
+                <button class="size-option" type="button" data-arabic-option="large" aria-pressed="false">Besar</button>
+                <button class="size-option" type="button" data-arabic-option="xlarge" aria-pressed="false">Ekstra Besar</button>
+            </div>
+        </section>
+        <section class="setting-section" aria-label="Efek dan suara">
+            <div class="switch-row">
+                <div class="switch-copy"><strong>Efek suara interaktif</strong><span>Bunyi singkat untuk buzzer Quran Battle.</span></div>
+                <button class="switch" type="button" role="switch" aria-label="Efek suara interaktif" aria-checked="true" data-preference="buzzerSound"></button>
+            </div>
+            <div class="switch-row" style="margin-top:16px">
+                <div class="switch-copy"><strong>Animasi transisi</strong><span>Transisi halus di seluruh halaman dan arena.</span></div>
+                <button class="switch" type="button" role="switch" aria-label="Animasi transisi" aria-checked="true" data-preference="animations"></button>
+            </div>
+        </section>
+        <div class="setting-actions">
+            <button class="reset-settings" id="ui-reset-settings" type="button">Pulihkan default</button>
+            <span class="settings-save-note">Tersimpan otomatis di perangkat ini</span>
+        </div>
+        <p class="settings-status" id="ui-settings-status" role="status" aria-live="polite"></p>
+    </div>
+</dialog>

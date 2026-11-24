@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0A192F">
+    <title>Tahfidz &amp; Murajaah | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: #233149; background: var(--ink); font-family: 'DM Sans', sans-serif; }
+        h1, h2, .brand { font-family: 'Space Grotesk', sans-serif; }
+        a, button { font: inherit; }
+        a { color: inherit; text-decoration: none; }
+        .shell { width: min(820px, calc(100% - 2rem)); margin: 0 auto; }
+        .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.92); }
+        .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .brand { color: var(--navy); font-size: 1rem; font-weight: 700; }
+        .back-link, .button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 0 .95rem; color: var(--navy); font-size: .82rem; font-weight: 700; cursor: pointer; }
+        .button-primary { border-color: var(--navy); background: var(--navy); color: #fff; }
+        main { padding: 30px 0 56px; }
+        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 20px; background: #fff; padding: clamp(20px, 4vw, 32px); box-shadow: 0 8px 26px rgba(15,35,66,.05); }
+        .hero { background: linear-gradient(120deg, #fff, #f3f8ff 60%, #effbf5); }
+        .eyebrow { color: var(--emerald); font-size: .68rem; font-weight: 700; letter-spacing: .15em; }
+        h1 { margin: 8px 0; color: #142b54; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+        .hero p, .panel p { color: #637087; line-height: 1.65; }
+        .panel { margin-top: 18px; }
+        .panel h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
+        .date { margin: 6px 0 0; color: #718096; font-size: .82rem; }
+        .progress { height: 10px; margin-top: 16px; overflow: hidden; border-radius: 99px; background: #e8edf3; }
+        .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #07805b, #42b883); transition: width .2s ease; }
+        .task-list { display: grid; gap: 10px; margin-top: 18px; }
+        .task { display: flex; align-items: flex-start; gap: 12px; border: 1px solid #e1e8f0; border-radius: 12px; padding: 14px; cursor: pointer; }
+        .task input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--emerald); }
+        .task strong { display: block; color: #233b61; font-size: .9rem; }
+        .task span { display: block; margin-top: 3px; color: #65748b; font-size: .78rem; line-height: 1.5; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .status { min-height: 1.25rem; margin: 12px 0 0; color: #64748b; font-size: .78rem; }
+        .status.error { color: #a33838; }
+        .back-link:focus-visible, .button:focus-visible, .task input:focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
+        @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 820px); } .topbar { height: 60px; } .actions > * { flex: 1 1 100%; } }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}">Ustad Online · Tahfidz</a>
+            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+        </div>
+    </header>
+    <main class="shell">
+        <section class="hero" aria-labelledby="page-title">
+            <span class="eyebrow">JAGA HAFALAN</span>
+            <h1 id="page-title">Tahfidz &amp; Murajaah</h1>
+            <p>Buat rutinitas hafalan yang teratur. Tandai target hari ini setelah selesai dan ulangi secara konsisten.</p>
+        </section>
+        <section class="panel" aria-labelledby="targets-title">
+            <h2 id="targets-title">Target belajar hari ini</h2>
+            <p class="date" id="target-date"></p>
+            <div class="progress" id="target-progress" role="progressbar" aria-label="Progres target hafalan hari ini" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3">
+                <div class="progress-fill" id="target-progress-fill"></div>
+            </div>
+            <p class="date" id="progress-count">0 dari 3 target selesai</p>
+            <div class="task-list">
+                <label class="task"><input type="checkbox" data-target><span><strong>Hafalan baru</strong><span>Hafalkan beberapa ayat dengan tartil dan pahami maknanya.</span></span></label>
+                <label class="task"><input type="checkbox" data-target><span><strong>Murajaah hafalan terbaru</strong><span>Ulangi hafalan terakhir tanpa melihat mushaf, lalu cek kembali.</span></span></label>
+                <label class="task"><input type="checkbox" data-target><span><strong>Murajaah hafalan lama</strong><span>Jaga hafalan sebelumnya dengan pengulangan yang terjadwal.</span></span></label>
+            </div>
+            <p class="status" id="storage-status" role="status" aria-live="polite"></p>
+            <div class="actions">
+                <a class="button button-primary" href="{{ url_for('baca_alquran') }}">Buka Al-Qur'an</a>
+                <a class="button" href="{{ url_for('komunitas') }}">Diskusi di Komunitas</a>
+                <button class="button" id="reset-targets" type="button">Atur Ulang Target Hari Ini</button>
+            </div>
+        </section>
+    </main>
+    <script>
+        (() => {
+            const targets = Array.from(document.querySelectorAll('[data-target]'));
+            const progress = document.getElementById('target-progress');
+            const progressFill = document.getElementById('target-progress-fill');
+            const progressCount = document.getElementById('progress-count');
+            const status = document.getElementById('storage-status');
+            const date = new Date();
+            const dateKey = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+            const storageKey = `ustad-online-tahfidz-targets:${dateKey}`;
+            let storageAvailable = true;
+
+            document.getElementById('target-date').textContent = new Intl.DateTimeFormat('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }).format(date);
+
+            function updateProgress() {
+                const completed = targets.filter((target) => target.checked).length;
+                const percent = Math.round((completed / targets.length) * 100);
+                progressFill.style.width = `${percent}%`;
+                progress.setAttribute('aria-valuenow', String(completed));
+                progress.setAttribute('aria-valuetext', `${completed} dari ${targets.length} target selesai`);
+                progressCount.textContent = `${completed} dari ${targets.length} target selesai`;
+            }
+
+            try {
+                const saved = localStorage.getItem(storageKey);
+                if (saved !== null) {
+                    const parsed = JSON.parse(saved);
+                    if (!Array.isArray(parsed) || parsed.length !== targets.length || !parsed.every((item) => typeof item === 'boolean')) {
+                        throw new Error('Format target tersimpan tidak valid.');
+                    }
+                    targets.forEach((target, index) => {
+                        target.checked = parsed[index];
+                    });
+                }
+            } catch (error) {
+                storageAvailable = false;
+                console.error('Target tahfidz tidak dapat dibaca:', error);
+                status.className = 'status error';
+                status.textContent = 'Target tersimpan tidak dapat dibaca; perubahan hanya berlaku selama halaman terbuka.';
+            }
+
+            function saveTargets() {
+                updateProgress();
+                if (!storageAvailable) return;
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify(targets.map((target) => target.checked)));
+                    status.className = 'status';
+                    status.textContent = 'Progres target tersimpan di browser ini.';
+                } catch (error) {
+                    storageAvailable = false;
+                    console.error('Target tahfidz tidak dapat disimpan:', error);
+                    status.className = 'status error';
+                    status.textContent = 'Penyimpanan browser tidak tersedia; perubahan hanya berlaku selama halaman terbuka.';
+                }
+            }
+
+            targets.forEach((target) => target.addEventListener('change', saveTargets));
+            document.getElementById('reset-targets').addEventListener('click', () => {
+                targets.forEach((target) => {
+                    target.checked = false;
+                });
+                saveTargets();
+            });
+            updateProgress();
+        })();
+    </script>
+</body>
+</html>

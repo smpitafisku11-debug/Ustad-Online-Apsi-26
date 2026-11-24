@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0A192F">
+    <title>AI Tahsin | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; --navy: #172f5f; --emerald: #07805b; --ink: #f5f8fc; --line: #e2e8f0; --muted: #718096; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; min-height: 100vh; color: #233149; background: var(--ink); font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+        button, a { font: inherit; }
+        a { color: inherit; text-decoration: none; }
+        .shell { width: min(920px, calc(100% - 2rem)); margin: 0 auto; }
+        .topbar { height: 68px; border-bottom: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.92); }
+        .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+        .brand { color: var(--navy); font-size: 1rem; font-weight: 700; }
+        .back-link, .button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: .5rem; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 0 .95rem; color: var(--navy); font-size: .82rem; font-weight: 700; cursor: pointer; }
+        .button-primary { border-color: var(--navy); background: var(--navy); color: #fff; }
+        .button-primary:hover:not(:disabled) { background: #10254d; }
+        button:disabled { cursor: not-allowed; opacity: .48; }
+        main { padding: 30px 0 56px; }
+        .hero, .panel { border: 1px solid #dfe7f1; border-radius: 20px; background: #fff; padding: clamp(20px, 4vw, 32px); box-shadow: 0 8px 26px rgba(15,35,66,.05); }
+        .hero { background: linear-gradient(120deg, #fff, #f3f8ff 60%, #effbf5); }
+        .eyebrow { color: var(--emerald); font-size: .68rem; font-weight: 700; letter-spacing: .15em; }
+        h1 { margin: 8px 0; color: #142b54; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+        .hero p, .panel p { color: #637087; line-height: 1.65; }
+        .panel { margin-top: 18px; }
+        .panel h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
+        .record-controls { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+        .status { min-height: 24px; margin: 13px 0 0; color: #64748b; font-size: .82rem; }
+        .status.error { color: #a33838; }
+        .status.success { color: var(--emerald); font-weight: 700; }
+        audio { width: 100%; margin-top: 15px; }
+        .notice { margin-top: 15px; border-radius: 12px; background: #f3f7fc; padding: 13px 15px; color: #52627a; font-size: .78rem; line-height: 1.55; }
+        .result-card { margin-top: 18px; border: 1px solid #cfe7da; border-radius: 16px; background: #f5fcf8; padding: 18px; }
+        .result-card h3 { margin: 0; color: #126343; }
+        .result-card ul { margin: 12px 0 0; padding-left: 1.2rem; color: #46566e; line-height: 1.7; }
+        .result-card .button { margin-top: 15px; }
+        @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 920px); } .topbar { height: 60px; } .record-controls .button { flex: 1 1 100%; } }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}">Ustad Online · AI Tahsin</a>
+            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+        </div>
+    </header>
+    <main class="shell">
+        <section class="hero" aria-labelledby="page-title">
+            <span class="eyebrow">LATIHAN PELAFALAN</span>
+            <h1 id="page-title">AI Tahsin</h1>
+            <p>Rekam latihan singkat, dengarkan kembali, lalu gunakan panduan awal sebagai bahan murajaah.</p>
+        </section>
+        <section class="panel" aria-labelledby="record-title">
+            <h2 id="record-title">Rekaman latihan</h2>
+            <p>Rekaman diproses di browser untuk demo ini dan tidak diunggah ke server.</p>
+            <div class="record-controls">
+                <button class="button button-primary" id="start-recording" type="button">● Mulai Merekam</button>
+                <button class="button" id="stop-recording" type="button" disabled>Hentikan Rekaman</button>
+                <button class="button" id="analyze-recording" type="button" disabled>Proses Evaluasi Awal</button>
+            </div>
+            <p class="status" id="recording-status" role="status" aria-live="polite">Izinkan akses mikrofon untuk memulai latihan.</p>
+            <audio id="audio-preview" controls hidden aria-label="Pratinjau rekaman latihan"></audio>
+            <div class="notice">Evaluasi pada halaman ini adalah <strong>simulasi antarmuka</strong>, bukan analisis AI atau penilaian tajwid yang sesungguhnya. Untuk koreksi makhraj dan hukum bacaan, konfirmasikan bacaan kepada ustaz/ustazah.</div>
+            <section class="result-card" id="analysis-result" aria-labelledby="analysis-title" hidden>
+                <h3 id="analysis-title">Audio berhasil diproses · simulasi</h3>
+                <p id="analysis-summary"></p>
+                <ul>
+                    <li>Latih makhraj huruf secara perlahan dan pastikan posisi lidah serta aliran napas stabil.</li>
+                    <li>Ulangi potongan bacaan pendek, lalu cocokkan panjang-pendek harakat dengan contoh guru.</li>
+                    <li>Minta ustaz/ustazah menyimak rekaman untuk konfirmasi hukum tajwid dan pelafalan.</li>
+                </ul>
+                <a class="button button-primary" href="{{ url_for('komunitas') }}#discussion-form">Konfirmasi ke ustaz/ustazah</a>
+            </section>
+        </section>
+    </main>
+    <script>
+        (() => {
+            const startButton = document.getElementById('start-recording');
+            const stopButton = document.getElementById('stop-recording');
+            const analyzeButton = document.getElementById('analyze-recording');
+            const status = document.getElementById('recording-status');
+            const preview = document.getElementById('audio-preview');
+            const result = document.getElementById('analysis-result');
+            const summary = document.getElementById('analysis-summary');
+            let recorder = null;
+            let stream = null;
+            let chunks = [];
+            let recordingBlob = null;
+            let audioUrl = null;
+
+            function setStatus(message, kind) {
+                status.textContent = message;
+                status.className = `status${kind ? ` ${kind}` : ''}`;
+            }
+
+            function stopMicrophone() {
+                if (stream) {
+                    stream.getTracks().forEach((track) => track.stop());
+                    stream = null;
+                }
+            }
+
+            startButton.addEventListener('click', async () => {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                    setStatus('Perekaman tidak didukung. Buka halaman melalui HTTPS atau browser yang mendukung MediaRecorder.', 'error');
+                    return;
+                }
+                startButton.disabled = true;
+                analyzeButton.disabled = true;
+                result.hidden = true;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    chunks = [];
+                    recorder = new MediaRecorder(stream);
+                    recorder.addEventListener('dataavailable', (event) => {
+                        if (event.data.size) chunks.push(event.data);
+                    });
+                    recorder.addEventListener('stop', () => {
+                        recordingBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+                        stopMicrophone();
+                        startButton.disabled = false;
+                        if (!recordingBlob.size) {
+                            setStatus('Rekaman kosong. Silakan coba lagi.', 'error');
+                            return;
+                        }
+                        if (audioUrl) URL.revokeObjectURL(audioUrl);
+                        audioUrl = URL.createObjectURL(recordingBlob);
+                        preview.src = audioUrl;
+                        preview.hidden = false;
+                        analyzeButton.disabled = false;
+                        setStatus('Rekaman siap diputar dan diproses.', 'success');
+                    }, { once: true });
+                    recorder.start();
+                    stopButton.disabled = false;
+                    setStatus('Sedang merekam. Bacakan satu potongan ayat dengan jelas.');
+                } catch (error) {
+                    stopMicrophone();
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+                    setStatus(error.name === 'NotAllowedError'
+                        ? 'Izin mikrofon ditolak. Aktifkan izin mikrofon untuk merekam.'
+                        : 'Mikrofon tidak dapat digunakan. Periksa perangkat lalu coba lagi.', 'error');
+                }
+            });
+
+            stopButton.addEventListener('click', () => {
+                if (!recorder || recorder.state !== 'recording') return;
+                stopButton.disabled = true;
+                recorder.stop();
+            });
+
+            analyzeButton.addEventListener('click', () => {
+                if (!recordingBlob) {
+                    setStatus('Buat rekaman terlebih dahulu sebelum menjalankan evaluasi.', 'error');
+                    return;
+                }
+                summary.textContent = `Rekaman ${Math.ceil(recordingBlob.size / 1024)} KB diproses secara lokal. Saran di bawah adalah panduan latihan umum, bukan hasil pengenalan suara.`;
+                result.hidden = false;
+                setStatus('Simulasi evaluasi selesai. Tidak ada model AI yang menganalisis audio ini.', 'success');
+            });
+
+            window.addEventListener('pagehide', () => {
+                stopMicrophone();
+                if (audioUrl) URL.revokeObjectURL(audioUrl);
+            });
+        })();
+    </script>
+</body>
+</html>

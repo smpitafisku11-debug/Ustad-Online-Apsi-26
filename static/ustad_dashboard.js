@@ -67,6 +67,7 @@
             ? '<span class="status-dot is-approved"></span><strong>Pengajar terverifikasi</strong><small>Identitas & kompetensi telah diperiksa admin</small>'
             : '<span class="status-dot"></span><strong>Verifikasi belum selesai</strong><small>Profil belum dapat menerima pemesanan</small>';
         await loadBookings();
+        await loadTahfidzSubmissions();
     }
     async function loadBookings() {
         const payload = await requestJson('/api/connect/bookings');
@@ -115,6 +116,61 @@
         }
         list.innerHTML = slots.map((slot) => `<article class="schedule-card"><strong>${escapeHtml(formatDate(slot.starts_at))}</strong>${slot.status === 'available' ? 'Masih tersedia untuk siswa' : 'Sudah dipesan atau ditutup'}</article>`).join('');
     }
+
+    async function loadTahfidzSubmissions() {
+        const list = document.querySelector('[data-tahfidz-review-list]');
+        try {
+            const payload = await requestJson('/api/tahfidz/submissions');
+            const pending = (payload.submissions || []).filter((item) => item.status === 'pending');
+            if (!pending.length) {
+                list.innerHTML = '<div class="dashboard-empty">Belum ada setoran hafalan yang menunggu tinjauan.</div>';
+                return;
+            }
+            list.innerHTML = pending.map((item) => `
+                <article class="dashboard-request" data-tahfidz-submission="${item.id}">
+                    <div class="dashboard-request-header"><h3>${escapeHtml(item.student_name)}</h3><span class="status-pill status-requested">Menunggu tinjauan</span></div>
+                    <div class="dashboard-request-meta"><span>${escapeHtml(item.target_title)}</span><span>${escapeHtml(item.target_detail)}</span></div>
+                    <audio controls preload="metadata" src="/api/tahfidz/submissions/${item.id}/audio"></audio>
+                    <label>Catatan penilaian
+                        <textarea name="review_note" minlength="3" maxlength="1000" rows="3" required></textarea>
+                    </label>
+                    <div class="dashboard-request-actions">
+                        <button class="button button-primary button-compact" type="button" data-tahfidz-review="approved" data-submission-id="${item.id}">Setujui</button>
+                        <button class="button button-compact" type="button" data-tahfidz-review="needs_revision" data-submission-id="${item.id}">Perlu diperbaiki</button>
+                    </div>
+                </article>
+            `).join('');
+        } catch (error) {
+            list.innerHTML = `<div class="dashboard-empty">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+    document.querySelector('[data-tahfidz-review-list]').addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-tahfidz-review]');
+        if (!button) return;
+        const card = button.closest('[data-tahfidz-submission]');
+        const note = card.querySelector('[name="review_note"]').value.trim();
+        if (note.length < 3) {
+            showToast('Catatan penilaian minimal 3 karakter.','error');
+            return;
+        }
+        button.disabled = true;
+        try {
+            const response = await requestJson(
+                `/api/tahfidz/submissions/${button.dataset.submissionId}/review`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                    body: JSON.stringify({ status: button.dataset.tahfidzReview, review_note: note })
+                }
+            );
+            showToast(response.message);
+            await loadTahfidzSubmissions();
+        } catch (error) {
+            showToast(error.message,'error');
+            button.disabled = false;
+        }
+    });
     function renderEvaluations(completed) {
         const list = document.querySelector('[data-evaluation-list]');
         if (!completed.length) {

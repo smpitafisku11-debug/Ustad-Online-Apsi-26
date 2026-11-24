@@ -178,10 +178,11 @@
             }
 
             targets.forEach((target) => target.addEventListener('change', () => {
-                if (target.checked && approvedSubmissionCount < 1) {
+                const completedCount = targets.filter((item) => item.checked).length;
+                if (target.checked && approvedSubmissionCount < completedCount) {
                     target.checked = false;
                     updateProgress();
-                    setSubmissionStatus('Buktikan target dengan rekaman yang telah disetujui pengajar sebelum mencentang selesai.', 'error');
+                    setSubmissionStatus('Setiap target selesai membutuhkan rekaman setoran yang telah disetujui pengajar.', 'error');
                     return;
                 }
                 saveTargets();

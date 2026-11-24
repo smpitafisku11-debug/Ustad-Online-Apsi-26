@@ -48,6 +48,7 @@
         <div class="dashboard-grid">
             <aside class="dashboard-nav" aria-label="Menu panel Ustad">
                 <button type="button" class="is-active" data-dashboard-tab="requests">Permintaan siswa <span data-nav-requested>0</span></button>
+                <button type="button" data-dashboard-tab="tahfidz">Setoran hafalan</button>
                 <button type="button" data-dashboard-tab="schedule">Jadwal mengajar</button>
                 <button type="button" data-dashboard-tab="profile">Profil pengajar</button>
                 <button type="button" data-dashboard-tab="evaluations">Evaluasi selesai</button>
@@ -57,6 +58,11 @@
                 <section class="dashboard-panel is-active" data-dashboard-panel="requests" aria-labelledby="requests-title">
                     <div class="panel-heading"><div><span class="eyebrow">MANAJEMEN SESI</span><h2 id="requests-title">Permintaan siswa</h2></div></div>
                     <div class="request-list" data-request-list><div class="dashboard-empty">Memuat permintaan…</div></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="tahfidz" aria-labelledby="tahfidz-title">
+                    <div class="panel-heading"><div><span class="eyebrow">VALIDASI TARGET SISWA</span><h2 id="tahfidz-title">Setoran hafalan</h2></div></div>
+                    <div class="request-list" data-tahfidz-review-list><div class="dashboard-empty">Memuat setoran hafalan…</div></div>
                 </section>
 
                 <section class="dashboard-panel" data-dashboard-panel="schedule" aria-labelledby="schedule-title">

@@ -2,6 +2,7 @@
     'use strict';
 
     const photoStorageKey = 'ustadOnline.profile.photo.v1';
+    const gamificationStorageKey = 'ustadOnline.gamification.v1';
     const loginDialog = document.getElementById('account-login-dialog');
     const profileDialog = document.getElementById('profile-dialog');
     const authForm = document.getElementById('account-auth-form');
@@ -16,6 +17,159 @@
     let authMode = 'login';
     let pendingPhoto = '';
     let deferredInstallPrompt = null;
+    let gamificationStorageAvailable = true;
+    let gamification = readGamification();
+
+    function emptyGamification() {
+        return { version: 1, totalXp: 0, earnedTasks: [], activityDates: [], achievements: [] };
+    }
+
+    function setGamificationNote(message) {
+        document.querySelectorAll('[data-gamification-note]').forEach((element) => {
+            element.textContent = message;
+        });
+    }
+
+    function readGamification() {
+        try {
+            const stored = localStorage.getItem(gamificationStorageKey);
+            if (stored === null) return emptyGamification();
+            const value = JSON.parse(stored);
+            if (
+                !value ||
+                value.version !== 1 ||
+                !Number.isSafeInteger(value.totalXp) ||
+                value.totalXp < 0 ||
+                !Array.isArray(value.earnedTasks) ||
+                !value.earnedTasks.every((item) => typeof item === 'string') ||
+                !Array.isArray(value.activityDates) ||
+                !value.activityDates.every((item) => /^\d{4}-\d{2}-\d{2}$/.test(item)) ||
+                !Array.isArray(value.achievements) ||
+                !value.achievements.every((item) => typeof item === 'string')
+            ) {
+                throw new Error('Format progres gamifikasi tersimpan tidak valid.');
+            }
+            return value;
+        } catch (error) {
+            gamificationStorageAvailable = false;
+            console.error('Progres gamifikasi tidak dapat dibaca:', error);
+            setGamificationNote('Penyimpanan progres tidak dapat dibaca. Aktivitas hanya berlaku selama halaman ini terbuka.');
+            return emptyGamification();
+        }
+    }
+
+    function saveGamification() {
+        if (!gamificationStorageAvailable) return;
+        try {
+            localStorage.setItem(gamificationStorageKey, JSON.stringify(gamification));
+        } catch (error) {
+            gamificationStorageAvailable = false;
+            console.error('Progres gamifikasi tidak dapat disimpan:', error);
+            setGamificationNote('Progres sesi ini berjalan, tetapi tidak dapat disimpan di browser perangkat.');
+        }
+    }
+
+    function localDateKey(date) {
+        return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    }
+
+    function dateDifferenceInDays(later, earlier) {
+        const [laterYear, laterMonth, laterDay] = later.split('-').map(Number);
+        const [earlierYear, earlierMonth, earlierDay] = earlier.split('-').map(Number);
+        return Math.round((Date.UTC(laterYear, laterMonth - 1, laterDay) - Date.UTC(earlierYear, earlierMonth - 1, earlierDay)) / 86400000);
+    }
+
+    function activeDayStreak() {
+        const dates = [...new Set(gamification.activityDates)].sort();
+        if (!dates.length) return 0;
+        const today = localDateKey(new Date());
+        const latestDateOffset = dateDifferenceInDays(today, dates[dates.length - 1]);
+        if (latestDateOffset < 0 || latestDateOffset > 2) return 0;
+        let streak = 1;
+        for (let index = dates.length - 1; index > 0; index -= 1) {
+            const gap = dateDifferenceInDays(dates[index], dates[index - 1]);
+            if (gap > 2) break;
+            streak += 1;
+        }
+        return streak;
+    }
+
+    function recordAchievement(id) {
+        if (!gamification.achievements.includes(id)) {
+            gamification.achievements.push(id);
+            saveGamification();
+        }
+    }
+
+    function updateGamification() {
+        const today = localDateKey(new Date());
+        const taskInputs = Array.from(document.querySelectorAll('[data-hafalan-task]'));
+        const completedToday = taskInputs.filter((input) => input.checked).length;
+        const streak = activeDayStreak();
+        const level = Math.floor(gamification.totalXp / 100) + 1;
+        const levelXp = gamification.totalXp % 100;
+        const rankNames = ['Penjelajah Ilmu', 'Sahabat Ilmu', 'Penjaga Konsistensi', 'Ahli Tilawah', 'Cahaya Ilmu'];
+        const rank = rankNames[Math.min(level - 1, rankNames.length - 1)];
+        const formattedXp = new Intl.NumberFormat('id-ID').format(gamification.totalXp);
+
+        document.querySelectorAll('[data-gamification-level], [data-home-level]').forEach((element) => {
+            element.textContent = String(level).padStart(2, '0');
+        });
+        document.querySelectorAll('[data-gamification-xp], [data-home-xp]').forEach((element) => {
+            element.textContent = formattedXp;
+        });
+        document.querySelectorAll('[data-gamification-streak], [data-home-streak]').forEach((element) => {
+            element.textContent = String(streak);
+        });
+        document.querySelectorAll('[data-gamification-missions]').forEach((element) => {
+            element.textContent = `${completedToday}/${taskInputs.length}`;
+        });
+        document.querySelectorAll('[data-gamification-rank], [data-home-rank]').forEach((element) => {
+            element.textContent = rank;
+        });
+        document.querySelectorAll('[data-gamification-level-xp]').forEach((element) => {
+            element.textContent = String(levelXp);
+        });
+        document.querySelectorAll('[data-gamification-next-xp]').forEach((element) => {
+            element.textContent = '100';
+        });
+        document.querySelectorAll('.profile-level-track').forEach((element) => {
+            element.setAttribute('aria-valuenow', String(levelXp));
+            element.setAttribute('aria-valuetext', `${levelXp} dari 100 EXP menuju level berikutnya`);
+        });
+        document.querySelectorAll('[data-gamification-progress]').forEach((element) => {
+            element.style.width = `${levelXp}%`;
+        });
+
+        if (gamification.totalXp >= 10) recordAchievement('first-step');
+        if (streak >= 3) recordAchievement('steady-rhythm');
+        if (taskInputs.length > 0 && completedToday === taskInputs.length) recordAchievement('daily-finish');
+        gamification.achievements.forEach((id) => {
+            const achievement = Array.from(document.querySelectorAll('[data-achievement]'))
+                .find((element) => element.dataset.achievement === id);
+            if (achievement) {
+                achievement.classList.add('is-earned');
+                achievement.setAttribute('aria-label', `${achievement.querySelector('strong').textContent}, berhasil diraih`);
+                achievement.querySelector('b').textContent = '✓';
+            }
+        });
+    }
+
+    function recordMission(input) {
+        if (!input.checked) {
+            updateGamification();
+            return;
+        }
+        const today = localDateKey(new Date());
+        const rewardKey = `${today}:${input.dataset.hafalanTask}`;
+        if (!gamification.earnedTasks.includes(rewardKey)) {
+            gamification.earnedTasks.push(rewardKey);
+            gamification.totalXp += 10;
+            if (!gamification.activityDates.includes(today)) gamification.activityDates.push(today);
+            saveGamification();
+        }
+        updateGamification();
+    }
 
     function safeName(value) {
         return typeof value === 'string' && value.trim() ? value.trim() : 'Pengguna';
@@ -85,10 +239,8 @@
         document.querySelectorAll('[data-profile-name]').forEach((element) => {
             element.textContent = name;
         });
-        document.querySelectorAll('[data-profile-avatar]').forEach((element) => {
-            const container = element.closest('.profile-photo-preview, .profile-avatar') || element;
-            renderAvatar(container, name);
-        });
+        document.querySelectorAll('.profile-photo-preview, .profile-avatar, .profile-journey-avatar')
+            .forEach((container) => renderAvatar(container, name));
         const button = document.getElementById('profile-button');
         if (button) button.setAttribute('aria-label', user ? `Profil ${name}, ${roleLabel(user.role)}` : 'Login atau profil pengguna');
     }
@@ -169,6 +321,12 @@
         });
     });
     document.querySelectorAll('[data-profile-open]').forEach((button) => button.addEventListener('click', openProfile));
+    document.querySelectorAll('[data-open-profile-missions]').forEach((button) => {
+        button.addEventListener('click', () => {
+            profileDialog?.close();
+            document.getElementById('hafalan-modal')?.showModal();
+        });
+    });
     document.querySelectorAll('[data-profile-close]').forEach((button) => {
         button.addEventListener('click', () => profileDialog?.close());
     });
@@ -214,7 +372,7 @@
             applyProfile();
             loginDialog?.close();
         } catch (error) {
-            console.error('Akun tidak dapat diproses:', error);
+            if (!error.status || error.status >= 500) console.error('Akun tidak dapat diproses:', error);
             setStatus(document.getElementById('login-status'), error.message, 'error');
         } finally {
             submit.disabled = false;
@@ -268,7 +426,7 @@
             applyProfile();
             setStatus(document.getElementById('profile-status'), 'Perubahan profil berhasil disimpan.', 'success');
         } catch (error) {
-            console.error('Profil tidak dapat disimpan:', error);
+            if (!error.status || error.status >= 500) console.error('Profil tidak dapat disimpan:', error);
             setStatus(document.getElementById('profile-status'), error.message, 'error');
         }
     });
@@ -314,6 +472,12 @@
             });
         });
     }
+
+    document.querySelectorAll('[data-hafalan-task]').forEach((input) => {
+        input.addEventListener('change', () => recordMission(input));
+        if (input.checked) recordMission(input);
+    });
+    updateGamification();
 
     async function initializeAuth() {
         updateAuthForm();

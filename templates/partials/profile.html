@@ -78,12 +78,87 @@
 <dialog class="profile-dialog profile-edit-dialog" id="profile-dialog" aria-labelledby="profile-title">
     <header class="profile-dialog-header">
         <div>
-            <p class="profile-kicker">AKUN BELAJAR</p>
-            <h2 id="profile-title">Profil Saya</h2>
+            <p class="profile-kicker">RUANG TUMBUH PERSONAL</p>
+            <h2 id="profile-title">Profil &amp; Perjalanan Belajar</h2>
         </div>
         <button class="profile-close-button" type="button" data-profile-close aria-label="Tutup profil">✕</button>
     </header>
+    <section class="profile-journey" aria-labelledby="profile-journey-title">
+        <div class="profile-journey-top">
+            <div class="profile-journey-avatar" aria-hidden="true"><span data-profile-avatar>U</span></div>
+            <div class="profile-journey-intro">
+                <p class="profile-journey-kicker">LANGKAH KECIL, TUMBUH BERARTI</p>
+                <h3 id="profile-journey-title">Salam, <span data-profile-name>Pengguna</span></h3>
+                <p>Setiap usaha belajar adalah kemajuan. Jalani dengan ritmemu sendiri.</p>
+            </div>
+            <div class="profile-level-badge" aria-label="Level belajar saat ini">
+                <span aria-hidden="true">✦</span>
+                <small>LEVEL</small>
+                <strong data-gamification-level>01</strong>
+            </div>
+        </div>
+
+        <div class="profile-journey-stats" aria-label="Ringkasan aktivitas belajar">
+            <article>
+                <span class="profile-journey-stat-icon" aria-hidden="true">✧</span>
+                <div><small>TOTAL EXP</small><strong data-gamification-xp>0</strong></div>
+            </article>
+            <article>
+                <span class="profile-journey-stat-icon" aria-hidden="true">☼</span>
+                <div><small>HARI AKTIF</small><strong><span data-gamification-streak>0</span> <small>hari</small></strong></div>
+            </article>
+            <article>
+                <span class="profile-journey-stat-icon" aria-hidden="true">✓</span>
+                <div><small>MISI HARI INI</small><strong data-gamification-missions>0/3</strong></div>
+            </article>
+        </div>
+
+        <div class="profile-level-progress">
+            <div class="profile-level-progress-copy">
+                <span data-gamification-rank>Penjelajah Ilmu</span>
+                <span><b data-gamification-level-xp>0</b> / <span data-gamification-next-xp>100</span> EXP menuju level berikutnya</span>
+            </div>
+            <div class="profile-level-track" role="progressbar" aria-label="Progres menuju level berikutnya" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <span data-gamification-progress></span>
+            </div>
+            <p class="profile-rest-note"><span aria-hidden="true">☾</span> Istirahat itu bagian dari perjalanan. Progres belajarmu tetap dihargai.</p>
+        </div>
+
+        <div class="profile-journey-lower">
+            <section class="profile-mission-card" aria-labelledby="profile-mission-title">
+                <div class="profile-section-heading">
+                    <div><p class="profile-journey-kicker">PILIH YANG TERASA RINGAN</p><h4 id="profile-mission-title">Misi hari ini</h4></div>
+                    <span class="profile-mini-count"><span data-gamification-missions>0/3</span> selesai</span>
+                </div>
+                <p class="profile-mission-copy">Tiga target sederhana untuk menemani hafalan dan murajaahmu.</p>
+                <button class="profile-mission-link" type="button" data-open-profile-missions>
+                    Buka target harian <span aria-hidden="true">↗</span>
+                </button>
+            </section>
+            <section class="profile-achievements" aria-labelledby="profile-achievement-title">
+                <div class="profile-section-heading">
+                    <div><p class="profile-journey-kicker">APRESIASI PERJALANANMU</p><h4 id="profile-achievement-title">Pencapaian</h4></div>
+                </div>
+                <div class="profile-achievement-list">
+                    <article data-achievement="first-step" aria-label="Langkah Pertama, belum diraih">
+                        <span aria-hidden="true">✧</span><div><strong>Langkah Pertama</strong><small>Selesaikan satu misi</small></div><b aria-hidden="true">◇</b>
+                    </article>
+                    <article data-achievement="steady-rhythm" aria-label="Ritme Terjaga, belum diraih">
+                        <span aria-hidden="true">☼</span><div><strong>Ritme Terjaga</strong><small>Aktif belajar 3 hari</small></div><b aria-hidden="true">◇</b>
+                    </article>
+                    <article data-achievement="daily-finish" aria-label="Misi Tuntas, belum diraih">
+                        <span aria-hidden="true">✓</span><div><strong>Misi Tuntas</strong><small>Rampungkan target harian</small></div><b aria-hidden="true">◇</b>
+                    </article>
+                </div>
+            </section>
+        </div>
+        <p class="profile-journey-footnote" data-gamification-note>Level dan EXP menggambarkan aktivitas di aplikasi, bukan ukuran keimanan. Progres tersimpan di browser perangkat ini.</p>
+    </section>
     <form id="profile-form" class="profile-edit-form" novalidate>
+        <div class="profile-edit-heading">
+            <p class="profile-kicker">PENGATURAN AKUN</p>
+            <h3>Perbarui profilmu</h3>
+        </div>
         <div class="profile-photo-row">
             <div class="profile-photo-preview" id="profile-photo-preview"><span data-profile-avatar>U</span></div>
             <div>

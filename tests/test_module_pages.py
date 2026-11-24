@@ -41,6 +41,16 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b'data-profile-open', response.data)
         self.assertIn(b'data-account-role="student"', response.data)
         self.assertIn(b'data-account-role="teacher"', response.data)
+        for expected in (
+            b"Profil &amp; Perjalanan Belajar",
+            b'data-gamification-xp',
+            b'data-gamification-streak',
+            b'data-gamification-missions',
+            b'data-achievement="daily-finish"',
+            b"bukan ukuran keimanan",
+            b"+10 EXP",
+        ):
+            self.assertIn(expected, response.data)
         for href in (
             b'href="/battle"',
             b'href="/tahsin"',
@@ -88,6 +98,29 @@ class ModulePageTests(unittest.TestCase):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(content, response.data)
+
+    def test_tilawah_academy_has_seven_modules_levels_and_evaluation(self):
+        response = self.client.get("/tilawah")
+        self.assertEqual(response.status_code, 200)
+        for expected in (
+            b'data-learning-level="pemula"',
+            b'data-learning-level="menengah"',
+            b'data-learning-level="lanjutan"',
+            b'data-lesson-id="hijaiyah"',
+            b'data-lesson-id="harakat"',
+            b'data-lesson-id="makharij"',
+            b'data-lesson-id="sifat"',
+            b'data-lesson-id="tajwid"',
+            b'data-lesson-id="waqaf"',
+            b'data-lesson-id="evaluasi"',
+            b'id="quiz-dialog"',
+            b'id="lesson-dialog"',
+        ):
+            self.assertIn(expected, response.data)
+        script = self.client.get("/static/tilawah.js")
+        self.assertEqual(script.status_code, 200)
+        self.assertIn(b"speechSynthesis", script.data)
+        script.close()
 
     def test_quran_battle_has_requested_modes_and_socket_events(self):
         response = self.client.get("/quran-battle")

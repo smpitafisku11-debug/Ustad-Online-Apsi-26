@@ -216,6 +216,11 @@
                     const payload = await response.json();
                     if (!response.ok) throw new Error(payload.error || 'Riwayat setoran tidak dapat dimuat.');
                     approvedSubmissionCount = payload.submissions.filter((item) => item.status === 'approved').length;
+                    if (approvedSubmissionCount < targets.filter((target) => target.checked).length) {
+                        targets.forEach((target) => { target.checked = false; });
+                        localStorage.removeItem(storageKey);
+                        updateProgress();
+                    }
                     submissionList.innerHTML = payload.submissions.length
                         ? payload.submissions.map((item) => {
                             const statusLabels = { pending: 'Menunggu tinjauan', approved: 'Disetujui', needs_revision: 'Perlu diperbaiki' };

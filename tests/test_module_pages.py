@@ -42,13 +42,23 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b'data-account-role="student"', response.data)
         self.assertIn(b'data-account-role="teacher"', response.data)
         for expected in (
-            b"Profil &amp; Perjalanan Belajar",
+            b"Profil &amp; Dashboard Perkembangan",
             b'data-gamification-xp',
             b'data-gamification-streak',
             b'data-gamification-missions',
             b'data-achievement="daily-finish"',
             b"bukan ukuran keimanan",
             b"+10 EXP",
+            b'data-week-chart',
+            b'data-week-offset="6"',
+            b'data-mission-history',
+            b'data-learning-history',
+            b'data-profile-target-count',
+            b'data-profile-recommendation',
+            b'data-reflection-note',
+            b'data-save-reflection',
+            b'pengajar atau orang tua',
+            b'tidak tersinkron antarperangkat',
         ):
             self.assertIn(expected, response.data)
         for href in (

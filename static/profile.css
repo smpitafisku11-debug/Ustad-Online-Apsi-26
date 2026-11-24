@@ -126,6 +126,51 @@
 .profile-achievement-list article.is-earned strong { color: #fff1c5; }
 .profile-achievement-list article.is-earned small,.profile-achievement-list article.is-earned > b { color: #dfd1a8; }
 .profile-journey-footnote { position: relative; z-index: 1; margin: 13px 0 0; color: #b7cbbd; font-size: .54rem; line-height: 1.5; }
+.profile-dashboard { margin: 20px 22px 0; }
+.profile-dashboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 3px 12px; }
+.profile-dashboard-heading h3 { margin: 2px 0 0; color: #233a30; font: 600 1.12rem 'Space Grotesk',sans-serif; letter-spacing: -.025em; }
+.profile-dashboard-heading > div > p:last-child { margin: 4px 0 0; color: #78857c; font-size: .68rem; }
+.profile-dashboard-mark,.profile-history-icon,.profile-recommendation-icon { display: grid; width: 35px; height: 35px; flex: 0 0 auto; place-items: center; border: 1px solid #e8e4d3; border-radius: 12px; background: #faf8f0; color: #9c8955; }
+.profile-dashboard-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 10px; }
+.profile-dashboard-card,.profile-reflection-card { min-width: 0; border: 1px solid #e7ece5; border-radius: 16px; background: linear-gradient(155deg,#fff 0%,#fbfcf8 100%); padding: 14px; box-shadow: 0 5px 16px rgba(32,62,43,.035); }
+.profile-dashboard-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.profile-dashboard-eyebrow { margin: 0 0 4px; color: #78907e; font-size: .49rem; font-weight: 800; letter-spacing: .13em; }
+.profile-dashboard-card-heading h4,.profile-reflection-heading h4 { margin: 0; color: #2b4034; font: 600 .87rem 'Space Grotesk',sans-serif; }
+.profile-dashboard-card-heading > strong { flex: 0 0 auto; color: #307455; font: 700 .75rem 'Space Grotesk',sans-serif; }
+.profile-week-chart { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 6px; margin-top: 15px; }
+.profile-week-column { display: grid; min-width: 0; grid-template-rows: 15px 64px 17px; justify-items: center; gap: 4px; }
+.profile-week-column > span { color: #758378; font-size: .54rem; font-weight: 700; }
+.profile-week-track { display: flex; width: min(100%,24px); height: 64px; align-items: flex-end; overflow: hidden; border-radius: 7px; background: #f0f3ed; }
+.profile-week-track > span { display: block; width: 100%; min-height: 0; border-radius: 7px; background: linear-gradient(180deg,#9bb779,#3f8060); transition: height .35s ease; }
+.profile-week-column small { color: #88938a; font-size: .49rem; text-transform: capitalize; }
+.profile-dashboard-footnote { margin: 10px 0 0; color: #89938b; font-size: .56rem; line-height: 1.55; }
+.profile-history-subtitle { margin: 12px 0 5px; color: #7d8b7f; font-size: .53rem; font-weight: 700; }
+.profile-learning-history { display: grid; max-height: 104px; overflow-y: auto; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.profile-learning-history li { display: grid; min-width: 0; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 6px; border-radius: 8px; background: #f5f7f2; padding: 6px 7px; color: #7a867d; font-size: .55rem; line-height: 1.35; }
+.profile-learning-history li.empty { display: block; color: #8a958c; }
+.profile-history-type { border: 1px solid #e0eadf; border-radius: 5px; background: #fff; padding: 2px 4px; color: #538065; font-size: .45rem; font-weight: 700; }
+.profile-history-title { overflow: hidden; color: #46594d; text-overflow: ellipsis; white-space: nowrap; }
+.profile-learning-history time { color: #8c978d; font-size: .48rem; white-space: nowrap; }
+.profile-target-track { height: 8px; overflow: hidden; border-radius: 99px; margin-top: 14px; background: #edf2eb; }
+.profile-target-track > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#48815f,#a6bb7e); transition: width .35s ease; }
+.profile-dashboard-link { display: inline-flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 9px; border: 1px solid #dce8dd; border-radius: 9px; margin-top: 10px; background: #f5f8f2; padding: 0 10px; color: #347252; font: 700 .58rem 'DM Sans',sans-serif; text-decoration: none; cursor: pointer; transition: background .2s,border-color .2s; }
+.profile-dashboard-link:hover { border-color: #b9d1bd; background: #edf5eb; }
+.profile-recommendation-card { background: radial-gradient(ellipse at 100% 0%,rgba(221,210,171,.2),transparent 40%),linear-gradient(145deg,#fff,#fbfaf4); }
+.profile-recommendation-icon { border-color: #ebe4cf; background: #f8f5e9; color: #a48d4e; }
+.profile-recommendation-copy { min-height: 42px; margin: 11px 0 0; color: #65756a; font-size: .64rem; line-height: 1.6; }
+.profile-quiz-result { margin: 8px 0 0; border-left: 2px solid #c8b87d; padding-left: 8px; color: #847447; font-size: .54rem; line-height: 1.5; }
+.profile-reflection-card { margin-top: 10px; }
+.profile-reflection-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.profile-private-toggle { display: flex !important; min-width: 0; align-items: center; gap: 6px; margin: 0 !important; color: #55705d !important; font-size: .55rem !important; cursor: pointer; }
+.profile-private-toggle input { width: 15px !important; height: 15px; flex: 0 0 auto; accent-color: #438260; }
+.profile-reflection-label { display: block; margin: 11px 0 6px !important; color: #738178 !important; font-size: .59rem !important; font-weight: 500 !important; }
+.profile-reflection-card textarea { min-height: 66px; padding: 9px 10px; font-size: .65rem; line-height: 1.5; }
+.profile-reflection-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.profile-reflection-footer .profile-dashboard-footnote { max-width: 570px; margin: 7px 0 0; }
+.profile-reflection-save { min-height: 32px; flex: 0 0 auto; border: 1px solid #cfe0d1; border-radius: 9px; margin-top: 7px; background: #f0f6ee; padding: 0 10px; color: #397454; font: 700 .56rem 'DM Sans',sans-serif; cursor: pointer; }
+.profile-reflection-save:hover { background: #e6f0e3; }
+.profile-privacy-note { display: flex; align-items: flex-start; gap: 7px; margin: 10px 4px 0; color: #879187; font-size: .55rem; line-height: 1.55; }
+.profile-privacy-note span { flex: 0 0 auto; color: #79947e; font-size: .8rem; }
 .profile-edit-form { border-top: 1px solid #edf0e9; margin-top: 19px; padding: 19px 24px 24px; }
 .profile-edit-heading { margin-bottom: 14px; }
 .profile-edit-heading h3 { margin: 3px 0 0; color: #263d32; font: 600 1rem 'Space Grotesk',sans-serif; }
@@ -165,6 +210,11 @@
     .profile-journey-stats article strong { font-size: .9rem; }
     .profile-level-progress-copy { font-size: .54rem; }
     .profile-journey-lower { grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+    .profile-dashboard { margin: 15px 12px 0; }
+    .profile-dashboard-grid { grid-template-columns: 1fr; }
+    .profile-dashboard-card,.profile-reflection-card { padding: 12px; }
+    .profile-week-column { grid-template-rows: 15px 56px 17px; }
+    .profile-week-track { height: 56px; }
     .profile-mission-copy { min-height: auto; }
     .profile-achievement-list { gap: 5px; }
     .profile-achievement-list article { align-items: flex-start; flex-direction: column; gap: 5px; padding: 7px; }
@@ -205,6 +255,8 @@
     .profile-achievement-list article { min-height: 115px; }
     .profile-journey-stats article { padding: 7px; }
     .profile-level-progress-copy { flex-direction: column; gap: 4px; }
+    .profile-dashboard { margin-right: 8px; margin-left: 8px; }
+    .profile-reflection-heading,.profile-reflection-footer { align-items: flex-start; flex-direction: column; }
     .profile-login-brand { padding-right: 19px; padding-left: 19px; }
     .profile-orbit-art { right: 7px; width: 94px; }
     .profile-brand-copy h2 { max-width: 240px; }

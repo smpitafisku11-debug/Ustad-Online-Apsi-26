@@ -79,7 +79,7 @@
     <header class="profile-dialog-header">
         <div>
             <p class="profile-kicker">RUANG TUMBUH PERSONAL</p>
-            <h2 id="profile-title">Profil &amp; Perjalanan Belajar</h2>
+            <h2 id="profile-title">Profil &amp; Dashboard Perkembangan</h2>
         </div>
         <button class="profile-close-button" type="button" data-profile-close aria-label="Tutup profil">✕</button>
     </header>
@@ -153,6 +153,77 @@
             </section>
         </div>
         <p class="profile-journey-footnote" data-gamification-note>Level dan EXP menggambarkan aktivitas di aplikasi, bukan ukuran keimanan. Progres tersimpan di browser perangkat ini.</p>
+    </section>
+    <section class="profile-dashboard" aria-labelledby="profile-dashboard-title">
+        <div class="profile-dashboard-heading">
+            <div>
+                <p class="profile-kicker">CATATAN PERJALANAN BELAJAR</p>
+                <h3 id="profile-dashboard-title">Perkembanganmu</h3>
+                <p>Ringkasan aktivitas yang benar-benar kamu tandai di perangkat ini.</p>
+            </div>
+            <span class="profile-dashboard-mark" aria-hidden="true">✦</span>
+        </div>
+        <div class="profile-dashboard-grid">
+            <article class="profile-dashboard-card profile-week-card">
+                <div class="profile-dashboard-card-heading">
+                    <div><p class="profile-dashboard-eyebrow">RITME BELAJAR</p><h4>7 hari terakhir</h4></div>
+                    <strong data-week-total>0 misi</strong>
+                </div>
+                <div class="profile-week-chart" data-week-chart role="list" aria-label="Jumlah misi hafalan selesai dalam 7 hari terakhir">
+                    {% for offset in range(6, -1, -1) %}
+                    <div class="profile-week-column" data-week-offset="{{ offset }}" role="listitem">
+                        <span data-week-value>0</span>
+                        <div class="profile-week-track" aria-hidden="true"><span data-week-bar></span></div>
+                        <small data-week-label>—</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="profile-dashboard-footnote">Grafik menghitung target hafalan atau murajaah yang ditandai selesai—bukan penilaian kualitas bacaan.</p>
+            </article>
+            <article class="profile-dashboard-card">
+                <div class="profile-dashboard-card-heading">
+                    <div><p class="profile-dashboard-eyebrow">LANGKAH TERCATAT</p><h4>Riwayat belajarmu</h4></div>
+                    <span class="profile-history-icon" aria-hidden="true">↗</span>
+                </div>
+                <p class="profile-history-subtitle">Target selesai</p>
+                <ul class="profile-learning-history" data-mission-history aria-live="polite"></ul>
+                <p class="profile-history-subtitle">Materi &amp; evaluasi</p>
+                <ul class="profile-learning-history" data-learning-history aria-live="polite"></ul>
+            </article>
+            <article class="profile-dashboard-card profile-target-card">
+                <div class="profile-dashboard-card-heading">
+                    <div><p class="profile-dashboard-eyebrow">HAFALAN &amp; MURAJAAH</p><h4>Target hari ini</h4></div>
+                    <strong data-profile-target-count>0/3</strong>
+                </div>
+                <div class="profile-target-track" role="progressbar" aria-label="Progres target hafalan hari ini" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3">
+                    <span data-profile-target-progress></span>
+                </div>
+                <p class="profile-dashboard-footnote" data-profile-target-note>Target yang selesai akan tercatat di perangkat ini.</p>
+                <button class="profile-dashboard-link" type="button" data-open-profile-missions>Buka target &amp; murajaah <span aria-hidden="true">↗</span></button>
+            </article>
+            <article class="profile-dashboard-card profile-recommendation-card">
+                <div class="profile-dashboard-card-heading">
+                    <div><p class="profile-dashboard-eyebrow">LANGKAH SELANJUTNYA</p><h4 data-profile-recommendation-title>Rekomendasi belajar</h4></div>
+                    <span class="profile-recommendation-icon" aria-hidden="true">✧</span>
+                </div>
+                <p class="profile-recommendation-copy" data-profile-recommendation>Mulai dari materi Huruf Hijaiyah, atau pilih target murajaah yang terasa ringan hari ini.</p>
+                <p class="profile-quiz-result" data-profile-quiz-result hidden></p>
+                <a class="profile-dashboard-link" data-profile-recommendation-link href="{{ url_for('akademi_tilawah') }}#pilih-materi">Lihat jalur belajar <span aria-hidden="true">↗</span></a>
+            </article>
+        </div>
+        <section class="profile-reflection-card" aria-labelledby="profile-reflection-title">
+            <div class="profile-reflection-heading">
+                <div><p class="profile-dashboard-eyebrow">RUANG REFLEKSI PRIBADI</p><h4 id="profile-reflection-title">Catatan murajaah &amp; latihan</h4></div>
+                <label class="profile-private-toggle"><input type="checkbox" data-save-reflection checked><span>Simpan di perangkat ini</span></label>
+            </div>
+            <label class="profile-reflection-label" for="profile-reflection-note">Tulis pengingat atau hal yang ingin diulang. Catatan ini hanya untukmu.</label>
+            <textarea id="profile-reflection-note" data-reflection-note maxlength="500" rows="3" placeholder="Contoh: ulangi hukum nun sukun dan minta koreksi guru pada bacaan..."></textarea>
+            <div class="profile-reflection-footer">
+                <p class="profile-dashboard-footnote" data-reflection-status role="status" aria-live="polite">Catatan tidak dibagikan kepada pengajar atau orang tua dan tidak tersinkron antarperangkat.</p>
+                <button class="profile-reflection-save" type="button" data-save-reflection-note>Simpan catatan</button>
+            </div>
+        </section>
+        <p class="profile-privacy-note"><span aria-hidden="true">⌑</span> Privasi: riwayat, EXP, dan catatan tersimpan di browser perangkat ini. Saat ini pengajar/orang tua tidak dapat melihat dashboard ini; hapus data browser dapat menghilangkan progres lokal.</p>
     </section>
     <form id="profile-form" class="profile-edit-form" novalidate>
         <div class="profile-edit-heading">

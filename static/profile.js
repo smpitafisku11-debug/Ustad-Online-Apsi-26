@@ -21,7 +21,15 @@
     let gamification = readGamification();
 
     function emptyGamification() {
-        return { version: 1, totalXp: 0, earnedTasks: [], activityDates: [], achievements: [] };
+        return {
+            version: 1,
+            totalXp: 0,
+            earnedTasks: [],
+            activityDates: [],
+            achievements: [],
+            reflectionNote: '',
+            saveReflection: true
+        };
     }
 
     function setGamificationNote(message) {
@@ -45,10 +53,15 @@
                 !Array.isArray(value.activityDates) ||
                 !value.activityDates.every((item) => /^\d{4}-\d{2}-\d{2}$/.test(item)) ||
                 !Array.isArray(value.achievements) ||
-                !value.achievements.every((item) => typeof item === 'string')
+                !value.achievements.every((item) => typeof item === 'string') ||
+                (value.reflectionNote !== undefined && typeof value.reflectionNote !== 'string') ||
+                (value.saveReflection !== undefined && typeof value.saveReflection !== 'boolean')
             ) {
                 throw new Error('Format progres gamifikasi tersimpan tidak valid.');
             }
+            if (value.reflectionNote === undefined) value.reflectionNote = '';
+            if (value.saveReflection === undefined) value.saveReflection = true;
+            if (!value.saveReflection) value.reflectionNote = '';
             return value;
         } catch (error) {
             gamificationStorageAvailable = false;
@@ -59,13 +72,15 @@
     }
 
     function saveGamification() {
-        if (!gamificationStorageAvailable) return;
+        if (!gamificationStorageAvailable) return false;
         try {
             localStorage.setItem(gamificationStorageKey, JSON.stringify(gamification));
+            return true;
         } catch (error) {
             gamificationStorageAvailable = false;
             console.error('Progres gamifikasi tidak dapat disimpan:', error);
             setGamificationNote('Progres sesi ini berjalan, tetapi tidak dapat disimpan di browser perangkat.');
+            return false;
         }
     }
 
@@ -153,6 +168,7 @@
                 achievement.querySelector('b').textContent = '✓';
             }
         });
+        updateProfileDashboard();
     }
 
     function recordMission(input) {
@@ -169,6 +185,241 @@
             saveGamification();
         }
         updateGamification();
+    }
+
+    function readAcademyProgress() {
+        const storageKey = 'ustadOnline.tilawah.progress.v1';
+        try {
+            const stored = localStorage.getItem(storageKey);
+            if (!stored) return null;
+            const value = JSON.parse(stored);
+            if (!value || typeof value !== 'object' || !value.byLevel || typeof value.byLevel !== 'object') {
+                throw new Error('Format riwayat Akademi Tilawah tidak valid.');
+            }
+            document.querySelector('[data-learning-history]')?.removeAttribute('data-error');
+            return value;
+        } catch (error) {
+            console.error('Riwayat Akademi Tilawah tidak dapat dibaca:', error);
+            const history = document.querySelector('[data-learning-history]');
+            if (history) history.dataset.error = 'true';
+            return null;
+        }
+    }
+
+    function profileActivityCounts() {
+        const counts = new Map();
+        gamification.earnedTasks.forEach((reward) => {
+            const match = /^(\d{4}-\d{2}-\d{2}):[0-2]$/.exec(reward);
+            if (match) counts.set(match[1], (counts.get(match[1]) || 0) + 1);
+        });
+        return counts;
+    }
+
+    function renderWeeklyActivity() {
+        const chart = document.querySelector('[data-week-chart]');
+        if (!chart) return;
+        const counts = profileActivityCounts();
+        let total = 0;
+        chart.querySelectorAll('[data-week-offset]').forEach((column) => {
+            const date = new Date();
+            date.setHours(12, 0, 0, 0);
+            date.setDate(date.getDate() - Number(column.dataset.weekOffset));
+            const dateKey = localDateKey(date);
+            const completed = counts.get(dateKey) || 0;
+            total += completed;
+            column.querySelector('[data-week-value]').textContent = String(completed);
+            column.querySelector('[data-week-label]').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'short' }).format(date);
+            column.setAttribute('aria-label', `${new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}: ${completed} misi selesai`);
+            column.querySelector('[data-week-bar]').style.height = `${Math.min(100, (completed / 3) * 100)}%`;
+        });
+        const totalElement = document.querySelector('[data-week-total]');
+        if (totalElement) totalElement.textContent = `${total} misi`;
+    }
+
+    function renderLearningHistory(academyProgress) {
+        const history = document.querySelector('[data-learning-history]');
+        const missions = document.querySelector('[data-mission-history]');
+        if (!history || !missions) return;
+        history.replaceChildren();
+        missions.replaceChildren();
+        const missionTitles = ['Hafalan baru · Surah Al-Mulk', 'Setoran · Surah Ar-Rahman', 'Murajaah · Juz 30'];
+        const missionActivities = [];
+        gamification.earnedTasks.forEach((reward) => {
+            const match = /^(\d{4}-\d{2}-\d{2}):([0-2])$/.exec(reward);
+            if (match) missionActivities.push({ date: match[1], title: missionTitles[Number(match[2])], type: 'Target' });
+        });
+        missionActivities.sort((first, second) => second.date.localeCompare(first.date));
+        if (!missionActivities.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = 'Belum ada target yang ditandai selesai.';
+            missions.append(empty);
+        } else {
+            missionActivities.slice(0, 3).forEach((activity) => appendHistoryItem(missions, activity));
+        }
+
+        if (history.dataset.error === 'true') {
+            const unavailable = document.createElement('li');
+            unavailable.className = 'empty';
+            unavailable.textContent = 'Riwayat materi tidak dapat dibaca dari browser ini.';
+            history.append(unavailable);
+            return;
+        }
+
+        const lessons = [];
+        const lessonTitles = {
+            hijaiyah: 'Huruf Hijaiyah',
+            harakat: 'Harakat & Tanda Baca',
+            makharij: 'Makharijul Huruf',
+            sifat: 'Sifat Huruf',
+            tajwid: 'Hukum Tajwid',
+            waqaf: 'Waqaf & Ibtida'
+        };
+        const levelTitles = { pemula: 'Pemula', menengah: 'Menengah', lanjutan: 'Lanjutan' };
+        if (academyProgress && academyProgress.byLevel) {
+            Object.keys(levelTitles).forEach((level) => {
+                const progress = academyProgress.byLevel[level];
+                if (!progress || typeof progress !== 'object') return;
+                [...new Set(Array.isArray(progress.completed) ? progress.completed : [])].forEach((id) => {
+                    if (lessonTitles[id]) lessons.push({ title: `${lessonTitles[id]} · ${levelTitles[level]}`, type: 'Materi' });
+                });
+                if (progress.quiz && Number.isFinite(progress.quiz.score) && progress.quiz.score >= 0 && progress.quiz.score <= 100) {
+                    lessons.push({ title: `Evaluasi ${levelTitles[level]} · ${progress.quiz.score}%`, type: 'Latihan' });
+                }
+            });
+        }
+        if (!lessons.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = 'Belum ada materi selesai atau hasil evaluasi.';
+            history.append(empty);
+            return;
+        }
+        lessons.slice(0, 5).forEach((activity) => appendHistoryItem(history, activity));
+    }
+
+    function appendHistoryItem(list, activity) {
+        const item = document.createElement('li');
+        const badge = document.createElement('span');
+        badge.className = 'profile-history-type';
+        badge.textContent = activity.type;
+        const title = document.createElement('span');
+        title.className = 'profile-history-title';
+        title.textContent = activity.title;
+        item.append(badge, title);
+        if (activity.date) {
+            const date = document.createElement('time');
+            date.dateTime = activity.date;
+            const [year, month, day] = activity.date.split('-').map(Number);
+            date.textContent = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(year, month - 1, day));
+            item.append(date);
+        }
+        list.append(item);
+    }
+
+    function updateLearningRecommendation(academyProgress) {
+        const title = document.querySelector('[data-profile-recommendation-title]');
+        const message = document.querySelector('[data-profile-recommendation]');
+        const quizResult = document.querySelector('[data-profile-quiz-result]');
+        if (!title || !message) return;
+
+        const lessonTitles = {
+            hijaiyah: 'Huruf Hijaiyah',
+            harakat: 'Harakat & Tanda Baca',
+            makharij: 'Makharijul Huruf',
+            sifat: 'Sifat Huruf',
+            tajwid: 'Hukum Tajwid',
+            waqaf: 'Waqaf & Ibtida'
+        };
+        const levels = ['pemula', 'menengah', 'lanjutan'];
+        const levelTitles = { pemula: 'Pemula', menengah: 'Menengah', lanjutan: 'Lanjutan' };
+        const lessonIds = Object.keys(lessonTitles);
+        let recommendation = 'Mulai dari materi Huruf Hijaiyah, atau pilih target murajaah yang terasa ringan hari ini.';
+        let evaluation = null;
+
+        if (academyProgress && academyProgress.byLevel) {
+            const level = levels.includes(academyProgress.level) ? academyProgress.level : 'pemula';
+            const progress = academyProgress.byLevel[level];
+            if (progress && progress.quiz && Number.isFinite(progress.quiz.score)) {
+                evaluation = progress.quiz.score;
+                const missedLesson = Array.isArray(progress.quiz.missed)
+                    ? progress.quiz.missed.find((id) => lessonTitles[id])
+                    : null;
+                recommendation = missedLesson
+                    ? `Ulangi ${lessonTitles[missedLesson]} pada jalur ${levelTitles[level]} berdasarkan catatan latihanmu.`
+                    : `Kamu telah menuntaskan evaluasi jalur ${levelTitles[level]}. Kamu bisa mengulang materi pilihan atau mencoba jalur berikutnya.`;
+            } else if (progress && Array.isArray(progress.completed)) {
+                const nextLesson = lessonIds.find((id) => !progress.completed.includes(id));
+                recommendation = nextLesson
+                    ? `Langkah berikut yang belum ditandai selesai: ${lessonTitles[nextLesson]} pada jalur ${levelTitles[level]}.`
+                    : `Semua materi jalur ${levelTitles[level]} telah ditandai selesai. Coba evaluasi untuk melihat topik yang ingin kamu ulangi.`;
+            }
+        }
+
+        title.textContent = evaluation === null ? 'Saran langkah berikutnya' : 'Saran dari latihan terakhir';
+        message.textContent = recommendation;
+        if (quizResult) {
+            quizResult.hidden = evaluation === null;
+            if (evaluation !== null) quizResult.textContent = `Hasil evaluasi tercatat: ${evaluation}%. Ini catatan latihan, bukan penilaian menyeluruh atas kemampuanmu.`;
+        }
+    }
+
+    function updateProfileDashboard() {
+        renderWeeklyActivity();
+        const academyProgress = readAcademyProgress();
+        renderLearningHistory(academyProgress);
+        updateLearningRecommendation(academyProgress);
+
+        const inputs = Array.from(document.querySelectorAll('[data-hafalan-task]'));
+        const completed = inputs.filter((input) => input.checked).length;
+        const count = document.querySelector('[data-profile-target-count]');
+        const progress = document.querySelector('.profile-target-card [role="progressbar"]');
+        const fill = document.querySelector('[data-profile-target-progress]');
+        if (count) count.textContent = `${completed}/${inputs.length}`;
+        if (progress) {
+            progress.setAttribute('aria-valuenow', String(completed));
+            progress.setAttribute('aria-valuetext', `${completed} dari ${inputs.length} target selesai`);
+        }
+        if (fill) fill.style.width = `${inputs.length ? (completed / inputs.length) * 100 : 0}%`;
+        const targetNote = document.querySelector('[data-profile-target-note]');
+        if (targetNote) {
+            targetNote.textContent = completed === inputs.length
+                ? 'Semua target hari ini sudah ditandai. Istirahat juga bagian dari belajar.'
+                : `${inputs.length - completed} target tersedia—pilih yang terasa ringan, tidak perlu diselesaikan sekaligus.`;
+        }
+    }
+
+    function initializeReflectionNotes() {
+        const note = document.querySelector('[data-reflection-note]');
+        const savePreference = document.querySelector('[data-save-reflection]');
+        const status = document.querySelector('[data-reflection-status]');
+        if (!note || !savePreference || !status) return;
+        savePreference.checked = gamification.saveReflection;
+        note.value = gamification.saveReflection ? gamification.reflectionNote : '';
+        if (!savePreference.checked) status.textContent = 'Penyimpanan dimatikan. Catatan hanya berlaku selama halaman ini terbuka.';
+
+        document.querySelector('[data-save-reflection-note]')?.addEventListener('click', () => {
+            if (savePreference.checked) {
+                gamification.reflectionNote = note.value.trim();
+                gamification.saveReflection = true;
+                status.textContent = saveGamification()
+                    ? 'Catatan murajaah tersimpan di browser perangkat ini.'
+                    : 'Catatan tidak dapat disimpan. Perangkat hanya menyimpannya selama halaman ini terbuka.';
+            } else {
+                gamification.reflectionNote = '';
+                status.textContent = 'Catatan tidak disimpan dan hanya berlaku selama halaman ini terbuka.';
+            }
+        });
+        savePreference.addEventListener('change', () => {
+            gamification.saveReflection = savePreference.checked;
+            gamification.reflectionNote = savePreference.checked ? note.value.trim() : '';
+            const saved = saveGamification();
+            status.textContent = !saved
+                ? 'Preferensi penyimpanan tidak dapat disimpan pada browser ini.'
+                : savePreference.checked
+                    ? 'Penyimpanan catatan di browser perangkat ini aktif.'
+                    : 'Penyimpanan catatan dimatikan. Catatan hanya berlaku selama halaman ini terbuka.';
+        });
     }
 
     function safeName(value) {
@@ -478,6 +729,7 @@
         if (input.checked) recordMission(input);
     });
     updateGamification();
+    initializeReflectionNotes();
 
     async function initializeAuth() {
         updateAuthForm();

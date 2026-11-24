@@ -61,6 +61,10 @@ def init_tahfidz_db():
             """
         )
         connection.commit()
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(tahfidz_submissions)").fetchall()}
+        if 'target_key' not in columns:
+            connection.execute("ALTER TABLE tahfidz_submissions ADD COLUMN target_key TEXT NOT NULL DEFAULT ''")
+            connection.commit()
     finally:
         connection.close()
 
@@ -139,7 +143,7 @@ def list_tahfidz_submissions():
         if user['role'] == 'teacher':
             rows = connection.execute(
                 """
-                SELECT s.id, s.student_id, s.target_title, s.target_detail, s.status,
+                SELECT s.id, s.student_id, s.target_key, s.target_title, s.target_detail, s.status,
                        s.review_note, s.submitted_at, s.reviewed_at, u.name AS student_name
                 FROM tahfidz_submissions s
                 JOIN users u ON u.id = s.student_id
@@ -149,7 +153,7 @@ def list_tahfidz_submissions():
         else:
             rows = connection.execute(
                 """
-                SELECT s.id, s.target_title, s.target_detail, s.status,
+                SELECT s.id, s.target_key, s.target_title, s.target_detail, s.status,
                        s.review_note, s.submitted_at, s.reviewed_at
                 FROM tahfidz_submissions s
                 WHERE s.student_id = ?

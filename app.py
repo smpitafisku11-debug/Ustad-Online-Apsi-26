@@ -44,6 +44,7 @@ def init_tahfidz_db():
             CREATE TABLE IF NOT EXISTS tahfidz_submissions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                target_key TEXT NOT NULL DEFAULT '',
                 target_title TEXT NOT NULL,
                 target_detail TEXT NOT NULL,
                 audio BLOB NOT NULL,
@@ -97,10 +98,13 @@ def submit_tahfidz():
     recording = request.files.get('recording')
     target_title = request.form.get('target_title', '').strip()[:120]
     target_detail = request.form.get('target_detail', '').strip()[:500]
+    target_key = request.form.get('target_key', '').strip()[:40]
     if not recording or not recording.mimetype.startswith('audio/'):
         return jsonify(error='Rekaman setoran audio tidak valid.'), 400
     if not 3 <= len(target_title) or not 3 <= len(target_detail):
         return jsonify(error='Lengkapi jenis target dan ayat atau surah yang disetorkan.'), 400
+    if target_key not in ('hafalan-baru', 'murajaah-terbaru', 'murajaah-lama'):
+        return jsonify(error='Pilih target hafalan yang valid.'), 400
     payload = recording.read(3 * 1024 * 1024 + 1)
     if not payload or len(payload) > 3 * 1024 * 1024:
         return jsonify(error='Rekaman kosong atau melebihi 3 MB.'), 413
@@ -109,13 +113,15 @@ def submit_tahfidz():
         user = _tahfidz_current_user(connection)
         if not user or user['status'] != 'approved':
             return jsonify(error='Silakan masuk dengan akun yang sudah aktif.'), 401
+        if user['role'] != 'student':
+            return jsonify(error='Setoran hafalan hanya dapat dikirim oleh akun siswa.'), 403
         connection.execute(
             """
             INSERT INTO tahfidz_submissions
-                (student_id, target_title, target_detail, audio, audio_type)
-            VALUES (?, ?, ?, ?, ?)
+                (student_id, target_key, target_title, target_detail, audio, audio_type)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (user['id'], target_title, target_detail, sqlite3.Binary(payload), recording.mimetype),
+            (user['id'], target_key, target_title, target_detail, sqlite3.Binary(payload), recording.mimetype),
         )
         connection.commit()
         return jsonify(message='Setoran hafalan dikirim dan menunggu tinjauan pengajar.'), 201

@@ -40,6 +40,20 @@
         .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
         .status { min-height: 1.25rem; margin: 12px 0 0; color: #64748b; font-size: .78rem; }
         .status.error { color: #a33838; }
+        .submission-form { display: grid; gap: 12px; margin-top: 16px; }
+        .submission-form label { display: grid; gap: 6px; color: #40526c; font-size: .78rem; font-weight: 700; }
+        .submission-form input, .submission-form textarea { width: 100%; border: 1px solid #dfe7f1; border-radius: 10px; background: #fff; padding: 11px 12px; color: #233149; font: inherit; }
+        .submission-form textarea { min-height: 70px; resize: vertical; }
+        .record-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .recording-dot { width: 8px; height: 8px; border-radius: 50%; background: #b42318; box-shadow: 0 0 0 4px #fee4e2; }
+        .submission-list { display: grid; gap: 10px; margin-top: 14px; }
+        .submission-card { border: 1px solid #e1e8f0; border-radius: 12px; padding: 13px; }
+        .submission-card strong { display: block; color: #233b61; }
+        .submission-card p { margin: 5px 0 0; font-size: .78rem; }
+        .submission-status { display: inline-flex; margin-top: 8px; border-radius: 99px; background: #eef2f6; padding: 5px 9px; color: #53657d; font-size: .68rem; font-weight: 800; }
+        .submission-status.approved { background: #e8f6ef; color: #08785a; }
+        .submission-status.needs_revision { background: #fff1e8; color: #9a4e16; }
+        .submission-card audio { width: 100%; margin-top: 9px; }
         .back-link:focus-visible, .button:focus-visible, .task input:focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
         @media (max-width: 520px) { .shell { width: min(100% - 1.25rem, 820px); } .topbar { height: 60px; } .actions > * { flex: 1 1 100%; } }
     </style>
@@ -77,6 +91,26 @@
                 <button class="button" id="reset-targets" type="button">Atur Ulang Target Hari Ini</button>
             </div>
         </section>
+        <section class="panel" aria-labelledby="submission-title">
+            <h2 id="submission-title">Bukti setoran hafalan</h2>
+            <p>Kirim rekaman target hafalan untuk ditinjau pengajar. Target disetujui hanya setelah status <strong>Disetujui</strong>.</p>
+            <form class="submission-form" id="submission-form">
+                <label>Jenis target
+                    <input name="target_title" maxlength="120" required placeholder="Contoh: Hafalan baru Surah Al-Mulk">
+                </label>
+                <label>Ayat atau surah yang disetorkan
+                    <textarea name="target_detail" maxlength="500" required placeholder="Contoh: Al-Mulk ayat 1–10"></textarea>
+                </label>
+                <div class="record-controls">
+                    <button class="button button-primary" id="start-submission" type="button">Mulai Rekam Setoran</button>
+                    <button class="button" id="stop-submission" type="button" disabled>Hentikan Rekaman</button>
+                    <button class="button" id="send-submission" type="button" disabled>Kirim untuk Ditinjau</button>
+                </div>
+                <p class="status" id="submission-status" role="status">Masuk dengan akun aktif dan izinkan mikrofon untuk setoran.</p>
+                <audio id="submission-preview" controls hidden></audio>
+            </form>
+            <div class="submission-list" id="submission-list"></div>
+        </section>
     </main>
     <script>
         (() => {
@@ -89,6 +123,12 @@
             const dateKey = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
             const storageKey = `ustad-online-tahfidz-targets:${dateKey}`;
             let storageAvailable = true;
+            let mediaRecorder = null;
+            let recordingStream = null;
+            let recordingChunks = [];
+            let recordingBlob = null;
+            let approvedSubmissionCount = 0;
+            let csrfToken = '';
 
             document.getElementById('target-date').textContent = new Intl.DateTimeFormat('id-ID', {
                 weekday: 'long',
@@ -113,9 +153,7 @@
                     if (!Array.isArray(parsed) || parsed.length !== targets.length || !parsed.every((item) => typeof item === 'boolean')) {
                         throw new Error('Format target tersimpan tidak valid.');
                     }
-                    targets.forEach((target, index) => {
-                        target.checked = parsed[index];
-                    });
+                    targets.forEach((target, index) => { target.checked = parsed[index]; });
                 }
             } catch (error) {
                 storageAvailable = false;
@@ -139,13 +177,163 @@
                 }
             }
 
-            targets.forEach((target) => target.addEventListener('change', saveTargets));
+            targets.forEach((target) => target.addEventListener('change', () => {
+                if (target.checked && approvedSubmissionCount < 1) {
+                    target.checked = false;
+                    updateProgress();
+                    setSubmissionStatus('Buktikan target dengan rekaman yang telah disetujui pengajar sebelum mencentang selesai.', 'error');
+                    return;
+                }
+                saveTargets();
+            }));
             document.getElementById('reset-targets').addEventListener('click', () => {
                 targets.forEach((target) => {
                     target.checked = false;
                 });
                 saveTargets();
             });
+
+            const submissionForm = document.getElementById('submission-form');
+            const startSubmission = document.getElementById('start-submission');
+            const stopSubmission = document.getElementById('stop-submission');
+            const sendSubmission = document.getElementById('send-submission');
+            const submissionStatus = document.getElementById('submission-status');
+            const submissionPreview = document.getElementById('submission-preview');
+            const submissionList = document.getElementById('submission-list');
+
+            function setSubmissionStatus(message, kind) {
+                submissionStatus.className = `status${kind ? ` ${kind}` : ''}`;
+                submissionStatus.textContent = message;
+            }
+
+            async function loadSubmissionState() {
+                try {
+                    const sessionResponse = await fetch('/api/auth/session', { credentials: 'same-origin' });
+                    const sessionPayload = await sessionResponse.json();
+                    if (!sessionResponse.ok || !sessionPayload.user) throw new Error('Silakan masuk dengan akun aktif untuk mengirim setoran.');
+                    csrfToken = sessionPayload.csrf_token || '';
+                    const response = await fetch('/api/tahfidz/submissions', { credentials: 'same-origin' });
+                    const payload = await response.json();
+                    if (!response.ok) throw new Error(payload.error || 'Riwayat setoran tidak dapat dimuat.');
+                    approvedSubmissionCount = payload.submissions.filter((item) => item.status === 'approved').length;
+                    submissionList.innerHTML = payload.submissions.length
+                        ? payload.submissions.map((item) => {
+                            const statusLabels = { pending: 'Menunggu tinjauan', approved: 'Disetujui', needs_revision: 'Perlu diperbaiki' };
+                            const review = item.review_note ? `<p><strong>Tinjauan:</strong> ${escapeHtml(item.review_note)}</p>` : '';
+                            return `<article class="submission-card">
+                                <strong>${escapeHtml(item.target_title)}</strong>
+                                <p>${escapeHtml(item.target_detail)}</p>
+                                <span class="submission-status ${escapeHtml(item.status)}">${statusLabels[item.status] || escapeHtml(item.status)}</span>
+                                ${review}
+                                <audio controls preload="metadata" src="/api/tahfidz/submissions/${item.id}/audio"></audio>
+                            </article>`;
+                        }).join('')
+                        : '<div class="status">Belum ada setoran hafalan.</div>';
+                    setSubmissionStatus(payload.role === 'teacher'
+                        ? 'Masuk sebagai pengajar. Setoran siswa ditinjau melalui API pengajar.'
+                        : 'Setoran baru menunggu tinjauan pengajar.');
+                } catch (error) {
+                    setSubmissionStatus(error.message, 'error');
+                }
+            }
+
+            function escapeHtml(value) {
+                return String(value == null ? '' : value).replace(/[&<>"']/g, (character) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                })[character]);
+            }
+
+            startSubmission.addEventListener('click', async () => {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    setSubmissionStatus('Perekaman tidak didukung. Gunakan browser baru melalui HTTPS.', 'error');
+                    return;
+                }
+                startSubmission.disabled = true;
+                sendSubmission.disabled = true;
+                try {
+                    recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (error) {
+                    startSubmission.disabled = false;
+                    setSubmissionStatus(error.name === 'NotAllowedError'
+                        ? 'Izin mikrofon ditolak. Aktifkan izin mikrofon untuk merekam.'
+                        : 'Mikrofon tidak dapat digunakan. Periksa perangkat lalu coba lagi.', 'error');
+                    return;
+                }
+                recordingChunks = [];
+                if (!window.MediaRecorder) {
+                    recordingStream.getTracks().forEach((track) => track.stop());
+                    startSubmission.disabled = false;
+                    setSubmissionStatus('Browser ini tidak mendukung MediaRecorder.', 'error');
+                    return;
+                }
+                mediaRecorder = new MediaRecorder(recordingStream);
+                mediaRecorder.addEventListener('dataavailable', (event) => {
+                    if (event.data.size) recordingChunks.push(event.data);
+                });
+                mediaRecorder.addEventListener('stop', () => {
+                    recordingBlob = new Blob(recordingChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    if (!recordingBlob.size) {
+                        setSubmissionStatus('Rekaman kosong. Coba rekam kembali.', 'error');
+                        return;
+                    }
+                    if (submissionPreview.src) URL.revokeObjectURL(submissionPreview.src);
+                    submissionPreview.src = URL.createObjectURL(recordingBlob);
+                    submissionPreview.hidden = false;
+                    sendSubmission.disabled = false;
+                    setSubmissionStatus('Rekaman siap dikirim untuk ditinjau pengajar.', 'success');
+                    recordingStream.getTracks().forEach((track) => track.stop());
+                }, { once: true });
+                mediaRecorder.start();
+                stopSubmission.disabled = false;
+                setSubmissionStatus('Sedang merekam setoran hafalan. Bacalah dengan tartil.');
+            });
+
+            stopSubmission.addEventListener('click', () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+                stopSubmission.disabled = true;
+                startSubmission.disabled = false;
+            });
+
+            sendSubmission.addEventListener('click', async () => {
+                const formData = new FormData(submissionForm);
+                if (!recordingBlob) {
+                    setSubmissionStatus('Rekam setoran terlebih dahulu.', 'error');
+                    return;
+                }
+                if (!formData.get('target_title').trim() || !formData.get('target_detail').trim()) {
+                    setSubmissionStatus('Lengkapi jenis target dan ayat atau surah yang disetorkan.', 'error');
+                    return;
+                }
+                if (recordingBlob.size > 3 * 1024 * 1024) {
+                    setSubmissionStatus('Rekaman melebihi batas 3 MB. Rekam ulang dengan durasi lebih singkat.', 'error');
+                    return;
+                }
+                const payload = new FormData();
+                payload.append('target_title', formData.get('target_title').trim());
+                payload.append('target_detail', formData.get('target_detail').trim());
+                payload.append('recording', recordingBlob, 'setoran-hafalan.webm');
+                sendSubmission.disabled = true;
+                try {
+                    const response = await fetch('/api/tahfidz/submissions', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'X-CSRF-Token': csrfToken },
+                        body: payload
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Setoran tidak dapat dikirim.');
+                    submissionForm.reset();
+                    submissionPreview.hidden = true;
+                    recordingBlob = null;
+                    setSubmissionStatus(result.message, 'success');
+                    await loadSubmissionState();
+                } catch (error) {
+                    sendSubmission.disabled = false;
+                    setSubmissionStatus(error.message, 'error');
+                }
+            });
+
+            loadSubmissionState();
             updateProgress();
         })();
     </script>

@@ -66,6 +66,157 @@ def init_tahfidz_db():
 
 init_tahfidz_db()
 
+
+def _tahfidz_database():
+    init_tahfidz_db()
+    connection = sqlite3.connect(app.config['AUTH_DATABASE'], timeout=10)
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
+def _tahfidz_current_user(connection):
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    return connection.execute(
+        "SELECT id, name, role, status FROM users WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+
+
+def _tahfidz_csrf_valid():
+    expected = session.get('csrf_token', '')
+    supplied = request.headers.get('X-CSRF-Token', '')
+    return bool(expected and supplied and hmac.compare_digest(expected, supplied))
+
+
+@app.post('/api/tahfidz/submissions')
+def submit_tahfidz():
+    if not _tahfidz_csrf_valid():
+        return jsonify(error='Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.'), 400
+    recording = request.files.get('recording')
+    target_title = request.form.get('target_title', '').strip()[:120]
+    target_detail = request.form.get('target_detail', '').strip()[:500]
+    if not recording or not recording.mimetype.startswith('audio/'):
+        return jsonify(error='Rekaman setoran audio tidak valid.'), 400
+    if not 3 <= len(target_title) or not 3 <= len(target_detail):
+        return jsonify(error='Lengkapi jenis target dan ayat atau surah yang disetorkan.'), 400
+    payload = recording.read(3 * 1024 * 1024 + 1)
+    if not payload or len(payload) > 3 * 1024 * 1024:
+        return jsonify(error='Rekaman kosong atau melebihi 3 MB.'), 413
+    connection = _tahfidz_database()
+    try:
+        user = _tahfidz_current_user(connection)
+        if not user or user['status'] != 'approved':
+            return jsonify(error='Silakan masuk dengan akun yang sudah aktif.'), 401
+        connection.execute(
+            """
+            INSERT INTO tahfidz_submissions
+                (student_id, target_title, target_detail, audio, audio_type)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (user['id'], target_title, target_detail, sqlite3.Binary(payload), recording.mimetype),
+        )
+        connection.commit()
+        return jsonify(message='Setoran hafalan dikirim dan menunggu tinjauan pengajar.'), 201
+    finally:
+        connection.close()
+
+
+@app.get('/api/tahfidz/submissions')
+def list_tahfidz_submissions():
+    connection = _tahfidz_database()
+    try:
+        user = _tahfidz_current_user(connection)
+        if not user or user['status'] != 'approved':
+            return jsonify(error='Silakan masuk dengan akun yang sudah aktif.'), 401
+        if user['role'] == 'teacher':
+            rows = connection.execute(
+                """
+                SELECT s.id, s.student_id, s.target_title, s.target_detail, s.status,
+                       s.review_note, s.submitted_at, s.reviewed_at, u.name AS student_name
+                FROM tahfidz_submissions s
+                JOIN users u ON u.id = s.student_id
+                ORDER BY s.submitted_at DESC LIMIT 100
+                """
+            ).fetchall()
+        else:
+            rows = connection.execute(
+                """
+                SELECT s.id, s.target_title, s.target_detail, s.status,
+                       s.review_note, s.submitted_at, s.reviewed_at
+                FROM tahfidz_submissions s
+                WHERE s.student_id = ?
+                ORDER BY s.submitted_at DESC LIMIT 50
+                """,
+                (user['id'],),
+            ).fetchall()
+        return jsonify(submissions=[dict(row) for row in rows], role=user['role'])
+    finally:
+        connection.close()
+
+
+@app.get('/api/tahfidz/submissions/<int:submission_id>/audio')
+def tahfidz_submission_audio(submission_id):
+    connection = _tahfidz_database()
+    try:
+        user = _tahfidz_current_user(connection)
+        if not user or user['status'] != 'approved':
+            return jsonify(error='Silakan masuk dengan akun yang sudah aktif.'), 401
+        submission = connection.execute(
+            "SELECT student_id, audio, audio_type FROM tahfidz_submissions WHERE id = ?",
+            (submission_id,),
+        ).fetchone()
+        if not submission:
+            return jsonify(error='Setoran tidak ditemukan.'), 404
+        if user['role'] != 'teacher' and submission['student_id'] != user['id']:
+            return jsonify(error='Rekaman hanya dapat diputar oleh pemilik atau pengajar.'), 403
+        return send_file(
+            io.BytesIO(submission['audio']),
+            mimetype=submission['audio_type'],
+            download_name='setoran-hafalan.webm',
+            as_attachment=False,
+        )
+    finally:
+        connection.close()
+
+
+@app.post('/api/tahfidz/submissions/<int:submission_id>/review')
+def review_tahfidz(submission_id):
+    if not _tahfidz_csrf_valid():
+        return jsonify(error='Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.'), 400
+    data = request.get_json(silent=True)
+    data = data if isinstance(data, dict) else {}
+    status = data.get('status')
+    note = data.get('review_note', '').strip() if isinstance(data.get('review_note'), str) else ''
+    if status not in ('approved', 'needs_revision'):
+        return jsonify(error='Status tinjauan tidak valid.'), 400
+    if not 3 <= len(note) <= 1000:
+        return jsonify(error='Catatan tinjauan harus berisi 3–1000 karakter.'), 400
+    connection = _tahfidz_database()
+    try:
+        user = _tahfidz_current_user(connection)
+        if not user or user['status'] != 'approved' or user['role'] != 'teacher':
+            return jsonify(error='Fitur tinjauan hanya untuk ustad/ustazah.'), 403
+        submission = connection.execute(
+            "SELECT id FROM tahfidz_submissions WHERE id = ?",
+            (submission_id,),
+        ).fetchone()
+        if not submission:
+            return jsonify(error='Setoran tidak ditemukan.'), 404
+        connection.execute(
+            """
+            UPDATE tahfidz_submissions
+            SET status = ?, review_note = ?, reviewer_id = ?, reviewed_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (status, note, user['id'], submission_id),
+        )
+        connection.commit()
+        return jsonify(message='Hasil tinjauan setoran hafalan berhasil disimpan.')
+    finally:
+        connection.close()
+
 @app.route('/')
 def home():
     return render_template('index.html', active_learning_endpoint='akademi_tilawah')

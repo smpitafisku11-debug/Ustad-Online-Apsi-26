@@ -205,37 +205,63 @@
     <main class="shell">
         <section class="hero" aria-labelledby="page-title">
             <div class="hero-content">
-                <div class="eyebrow">LOMBA SOAL PILIHAN GANDA</div>
-                <h1 id="page-title">Quran Battle Arena</h1>
-                <p>Jawab soal pilihan ganda secepat mungkin. Jawaban benar yang lebih cepat mendapat poin lebih tinggi.</p>
+                <div class="eyebrow">BELAJAR BERSAMA, BERTANDING DENGAN SPORTIF</div>
+                <h1 id="page-title">Quran Battle</h1>
+                <p>Latihan interaktif untuk belajar bersama. Ketepatan dan kualitas bacaan lebih penting daripada kecepatan.</p>
             </div>
         </section>
 
         <section class="panel" id="lobby" aria-labelledby="lobby-title">
             <div class="panel-heading">
-                <div><span class="kicker">PERTANDINGAN SOLO</span><h2 id="lobby-title">Pilih Tantangan</h2></div>
-                <p>Semua soal menggunakan pilihan ganda.</p>
+                <div><span class="kicker">LOBBY PERTANDINGAN</span><h2 id="lobby-title">Pilih Tantangan</h2></div>
+                <p>Pilih mode, tingkat, dan format pertandingan.</p>
             </div>
             <div class="lobby-grid">
                 <div class="setup-box">
                     <label class="field-label" for="player-name">Nama pemain</label>
                     <input class="text-input" id="player-name" maxlength="24" value="Pemain Ustad" autocomplete="nickname">
-                    <div class="notice"><strong>Skor kecepatan:</strong> jawaban benar tercepat dapat 100 poin, lalu nilai berkurang sesuai waktu hingga minimal 50 poin.</div>
+                    <label class="field-label" for="difficulty" style="margin-top:14px">Tingkat kemampuan · waktu untuk kuis</label>
+                    <select class="select-input" id="difficulty">
+                        <option value="pemula">Pemula · 45 detik per soal</option>
+                        <option value="menengah" selected>Berkembang · 35 detik per soal</option>
+                        <option value="mahir">Mahir · 30 detik per soal</option>
+                    </select>
+                    <div id="hafalan-category-field" hidden>
+                        <label class="field-label" for="hafalan-category" style="margin-top:14px">Kategori hafalan</label>
+                        <select class="select-input" id="hafalan-category">
+                            <option value="juz-amma">Juz Amma</option>
+                            <option value="surah-pendek">Surah pendek</option>
+                            <option value="target-pribadi">Target pribadi</option>
+                        </select>
+                    </div>
+                    <div class="notice"><strong>Catatan:</strong> waktu lebih longgar untuk latihan dasar; setoran suara mendapat 90 detik. Rekaman tidak dinilai otomatis atau dibagikan ke peserta lain. Materi ayat harus merujuk sumber terverifikasi.</div>
                 </div>
                 <div class="setup-box">
-                    <span class="field-label">Pilih mode kompetisi</span>
+                    <span class="field-label">Pilih mode pertandingan</span>
                     <div class="mode-grid" role="group" aria-label="Mode kompetisi">
                         <button class="mode-card selected" data-mode-card="tajwid-battle" type="button" aria-pressed="true"><strong>Tajwid Battle</strong><span>Tebak hukum bacaan</span></button>
-                        <button class="mode-card" data-mode-card="sambung-surat" type="button" aria-pressed="false"><strong>Sambung Surat</strong><span>Tebak urutan surat</span></button>
-                        <button class="mode-card" data-mode-card="nama-surat" type="button" aria-pressed="false"><strong>Tebak Nama Surat</strong><span>Kenali nama surat</span></button>
-                        <button class="mode-card" data-mode-card="juz-halaman" type="button" aria-pressed="false"><strong>Juz &amp; Halaman</strong><span>Uji pengetahuan mushaf</span></button>
-                        <button class="mode-card" data-mode-card="puzzle" type="button" aria-pressed="false"><strong>Puzzle Ayat</strong><span>Susun pilihan ayat</span></button>
-                        <button class="mode-card" data-mode-card="asbabun-nuzul" type="button" aria-pressed="false"><strong>Asbabun Nuzul</strong><span>Tebak konteks turunnya ayat</span></button>
+                        <button class="mode-card" data-mode-card="sambung-ayat" type="button" aria-pressed="false"><strong>Sambung Ayat</strong><span>Setoran dengan materi terverifikasi</span></button>
+                        <button class="mode-card" data-mode-card="hafalan-battle" type="button" aria-pressed="false"><strong>Hafalan Battle</strong><span>Setor hafalan, bukan adu cepat</span></button>
+                        <button class="mode-card" data-mode-card="nama-surat" type="button" aria-pressed="false"><strong>Tebak Surah</strong><span>Kenali nama dan informasi surah</span></button>
+                        <button class="mode-card" data-mode-card="makharij-battle" type="button" aria-pressed="false"><strong>Makharij Battle</strong><span>Latihan pelafalan untuk ditinjau</span></button>
+                        <button class="mode-card" data-mode-card="team-battle" type="button" aria-pressed="false"><strong>Team Battle</strong><span>Kuis kerja sama dua tim</span></button>
                     </div>
                 </div>
             </div>
+            <div class="setup-box" style="margin-top:14px">
+                <span class="field-label">Format pertandingan</span>
+                <div class="format-list" role="group" aria-label="Format pertandingan">
+                    <button class="format-card" data-format-card="solo" type="button" aria-pressed="false"><strong>Solo</strong><span>Latihan mandiri</span></button>
+                    <button class="format-card selected" data-format-card="duel" type="button" aria-pressed="true"><strong>Duel</strong><span>1 lawan 1</span></button>
+                    <button class="format-card" data-format-card="team" type="button" aria-pressed="false"><strong>Tim</strong><span>4 pemain · 2 tim</span></button>
+                </div>
+            </div>
             <div class="action-row">
-                <button class="button-primary" id="find-match" type="button">▶ Mulai Lomba Solo</button>
+                <button class="button-primary" id="find-match" type="button">Buat Ruang Battle</button>
+            </div>
+            <div class="join-box">
+                <div><label class="field-label" for="join-code">Kode ruang</label><input class="text-input room-code-input" id="join-code" maxlength="6" autocomplete="off" placeholder="KODE"></div>
+                <button class="button-emerald" id="join-room" type="button">Gabung Ruang</button>
             </div>
             <p class="status-message" id="lobby-status" role="status" aria-live="polite"></p>
             <div class="waiting-card" id="waiting-room" hidden>
@@ -278,13 +304,14 @@
                     <button class="button-emerald" id="send-essay" type="button" style="margin-top:8px">Kirim Jawaban</button>
                 </div>
                 <div class="voice-box" id="voice-form" hidden>
+                    <p class="voice-status">Rekaman hanya untuk ditinjau; kualitas bacaan tidak dinilai otomatis dan rekaman tidak dibagikan ke peserta lain.</p>
                     <div class="voice-controls"><button class="button-primary" id="start-record" type="button">🎙 Rekam Suara</button><button class="button-secondary" id="stop-record" type="button" disabled>Hentikan</button><button class="button-emerald" id="send-record" type="button" disabled>Kirim Rekaman</button></div>
                     <p class="voice-status" id="voice-status">Rekaman hanya dimulai setelah izin mikrofon diberikan.</p>
                     <audio class="audio-preview" id="own-audio" controls hidden></audio>
                 </div>
                 <p class="status-message" id="answer-status" role="status" aria-live="polite"></p>
             </article>
-            <p class="arena-note">Jawaban pilihan ganda dinilai otomatis. Jawaban benar lebih cepat memperoleh poin lebih besar.</p>
+            <p class="arena-note">Poin kuis diberikan berdasarkan ketepatan, bukan kecepatan. Setoran suara menunggu peninjauan dan tidak dinilai otomatis.</p>
             <div class="action-row"><button class="button-danger" id="leave-arena" type="button">Keluar dari Pertandingan</button></div>
         </section>
 
@@ -302,13 +329,13 @@
         const battleSocket = typeof window.io === 'function' ? window.io() : null;
         const modeNames = {
             'tajwid-battle': 'Tajwid Battle',
-            'sambung-surat': 'Sambung Surat',
-            'nama-surat': 'Tebak Nama Surat',
-            'juz-halaman': 'Tebak Juz & Halaman',
-            'puzzle': 'Puzzle Ayat',
-            'asbabun-nuzul': 'Asbabun Nuzul'
+            'sambung-ayat': 'Sambung Ayat',
+            'hafalan-battle': 'Hafalan Battle',
+            'nama-surat': 'Tebak Surah',
+            'makharij-battle': 'Makharij Battle',
+            'team-battle': 'Team Battle'
         };
-        let selectedFormat = 'solo';
+        let selectedFormat = 'duel';
         let selectedMode = 'tajwid-battle';
         let currentRoom = null;
         let pollTimer = null;
@@ -394,21 +421,86 @@
             pollTimer = null;
         }
 
+        function setLobbyControlsDisabled(disabled) {
+            document.querySelectorAll(
+                '#player-name, #difficulty, #hafalan-category, #join-code, #find-match, #join-room, [data-mode-card], [data-format-card]'
+            ).forEach((control) => {
+                control.disabled = disabled;
+            });
+        }
+
         document.querySelectorAll('[data-mode-card]').forEach((button) => {
             button.addEventListener('click', () => {
                 selectedMode = button.dataset.modeCard;
+                if (selectedMode === 'team-battle') {
+                    selectedFormat = 'team';
+                } else if (selectedFormat === 'team') {
+                    selectedFormat = 'duel';
+                }
                 document.querySelectorAll('[data-mode-card]').forEach((card) => {
                     const active = card === button;
                     card.classList.toggle('selected', active);
                     card.setAttribute('aria-pressed', String(active));
                 });
+                updateModeFields();
+                updateFormatSelection();
             });
         });
+
+        function updateModeFields() {
+            document.getElementById('hafalan-category-field').hidden = selectedMode !== 'hafalan-battle';
+        }
+
+        function updateFormatSelection() {
+            document.querySelectorAll('[data-format-card]').forEach((card) => {
+                const active = card.dataset.formatCard === selectedFormat;
+                card.classList.toggle('selected', active);
+                card.setAttribute('aria-pressed', String(active));
+                card.disabled = (card.dataset.formatCard === 'team') !== (selectedMode === 'team-battle');
+            });
+        }
+
+        document.querySelectorAll('[data-format-card]').forEach((button) => {
+            button.addEventListener('click', () => {
+                selectedFormat = button.dataset.formatCard;
+                selectedMode = selectedFormat === 'team' ? 'team-battle' : (selectedMode === 'team-battle' ? 'tajwid-battle' : selectedMode);
+                document.querySelectorAll('[data-mode-card]').forEach((card) => {
+                    const active = card.dataset.modeCard === selectedMode;
+                    card.classList.toggle('selected', active);
+                    card.setAttribute('aria-pressed', String(active));
+                });
+                updateModeFields();
+                updateFormatSelection();
+            });
+        });
+        updateModeFields();
+        updateFormatSelection();
 
         async function startMatchmaking() {
             setStatus(lobbyStatus, '', '');
             try {
-                const room = await api('/matchmaking', jsonOptions({ name: selectedName(), format: selectedFormat, mode: selectedMode }));
+                const room = await api('/matchmaking', jsonOptions({
+                    name: selectedName(),
+                    format: selectedFormat,
+                    mode: selectedMode,
+                    difficulty: document.getElementById('difficulty').value,
+                    category: document.getElementById('hafalan-category').value
+                }));
+                await enterRoom(room);
+            } catch (error) {
+                setStatus(lobbyStatus, error.message, 'error');
+            }
+        }
+
+        async function joinExistingRoom() {
+            setStatus(lobbyStatus, '', '');
+            const code = document.getElementById('join-code').value.trim().toUpperCase();
+            if (!/^[A-F0-9]{6}$/.test(code)) {
+                setStatus(lobbyStatus, 'Masukkan kode ruang 6 karakter yang valid.', 'error');
+                return;
+            }
+            try {
+                const room = await api(`/rooms/${encodeURIComponent(code)}/join`, jsonOptions({ name: selectedName() }));
                 await enterRoom(room);
             } catch (error) {
                 setStatus(lobbyStatus, error.message, 'error');
@@ -432,6 +524,7 @@
             if (room.status === 'finished') {
                 showResult(room);
             } else if (room.status === 'waiting') {
+                setLobbyControlsDisabled(true);
                 lobby.hidden = false;
                 waitingRoom.hidden = false;
                 document.getElementById('waiting-title').textContent = 'Menunggu pemain lain...';
@@ -474,6 +567,7 @@
                 }
                 currentRoom = room;
                 if (room.status === 'waiting') {
+                    setLobbyControlsDisabled(true);
                     lobby.hidden = false;
                     waitingRoom.hidden = false;
                     arena.hidden = true;
@@ -504,7 +598,7 @@
             const ownPlayer = room.players.find((player) => player.is_you);
             const others = room.players.filter((player) => !player.is_you);
             const teamScoreboard = document.getElementById('team-scoreboard');
-            teamScoreboard.hidden = room.mode.key !== 'team-battle';
+            teamScoreboard.hidden = room.format !== 'team';
             if (!teamScoreboard.hidden) {
                 teamScoreboard.replaceChildren();
                 room.teams.forEach((team) => {
@@ -521,7 +615,7 @@
             document.getElementById('self-name').textContent = ownPlayer ? ownPlayer.name : 'Pemain';
             document.getElementById('self-avatar').textContent = ownPlayer ? ownPlayer.name.trim().charAt(0).toUpperCase() : 'P';
             document.getElementById('self-score').textContent = ownPlayer ? String(ownPlayer.score) : '0';
-            document.getElementById('self-team').textContent = room.mode.key === 'team-battle' && ownPlayer
+            document.getElementById('self-team').textContent = room.format === 'team' && ownPlayer
                 ? `Tim ${ownPlayer.team_id} · Skor pemain`
                 : 'Skor pertandingan';
             document.getElementById('opponent-label').textContent = room.format === 'solo' ? 'LATIHAN SOLO' : (others.length > 1 ? 'LAWAN' : 'LAWAN');
@@ -550,37 +644,59 @@
                 const statusLabels = {
                     Bersiap: 'Menunggu jawaban...',
                     'Rekaman terkirim': 'Lawan telah mengirim rekaman',
+                    'Menunggu pemeriksaan pengajar': 'Setoran menunggu pemeriksaan pengajar',
                     'Esai terkirim': 'Lawan telah mengirim jawaban esai',
                     'Merebut buzzer': 'Lawan merebut buzzer',
                     'Jawaban tepat': 'Lawan telah menjawab',
                     'Sudah menjawab': 'Lawan telah menjawab'
                 };
                 const playerStatus = statusLabels[player.status] || player.status;
-                status.textContent = room.mode.key === 'team-battle'
+                status.textContent = room.format === 'team'
                     ? `Tim ${player.team_id} · ${playerStatus}`
                     : playerStatus;
                 meta.append(name, status);
                 const score = document.createElement('span');
                 score.className = 'player-score';
                 score.textContent = String(player.score);
-                row.append(avatar, meta, score);
+                const reportButton = document.createElement('button');
+                reportButton.className = 'small-button';
+                reportButton.type = 'button';
+                reportButton.textContent = 'Laporkan';
+                reportButton.setAttribute('aria-label', `Laporkan ${player.name}`);
+                reportButton.addEventListener('click', () => reportPlayer(player));
+                row.append(avatar, meta, score, reportButton);
                 opponentList.append(row);
-                if (player.has_recording) {
-                    const audio = document.createElement('audio');
-                    audio.className = 'audio-preview';
-                    audio.controls = true;
-                    audio.preload = 'none';
-                    audio.src = `${apiBase}/rooms/${encodeURIComponent(room.code)}/recordings/${encodeURIComponent(player.id)}?player_id=${encodeURIComponent(room.player_id)}`;
-                    opponentList.append(audio);
-                }
             });
+        }
+
+        async function reportPlayer(player) {
+            const reason = window.prompt('Kategori laporan: perilaku, konten, atau lainnya.', 'perilaku');
+            if (!reason) return;
+            const normalizedReason = reason.trim().toLowerCase();
+            if (!['perilaku', 'konten', 'lainnya'].includes(normalizedReason)) {
+                setStatus(answerStatus, 'Kategori laporan harus perilaku, konten, atau lainnya.', 'error');
+                return;
+            }
+            const details = window.prompt('Jelaskan alasan laporan (10–500 karakter).');
+            if (details === null) return;
+            try {
+                const response = await api(`/rooms/${encodeURIComponent(currentRoom.code)}/report`, jsonOptions({
+                    player_id: currentRoom.player_id,
+                    target_id: player.id,
+                    reason: normalizedReason,
+                    details
+                }));
+                setStatus(answerStatus, response.message, 'success');
+            } catch (error) {
+                setStatus(answerStatus, error.message, 'error');
+            }
         }
 
         function updateArena(room) {
             const buzzerEvent = room.buzzer_player_id ? `${room.question_index}:${room.buzzer_player_id}` : null;
             if (buzzerEvent && buzzerEvent !== lastBuzzerEvent) window.UstadOnlineUI.playBuzzerTone(answerStatus);
             lastBuzzerEvent = buzzerEvent;
-            document.getElementById('arena-mode').textContent = `${room.mode.name} · ${room.format.toUpperCase()} · Room ${room.code}`;
+            document.getElementById('arena-mode').textContent = `${room.mode.name}${room.category ? ` · ${room.category}` : ''} · ${room.format.toUpperCase()} · ${room.difficulty.toUpperCase()} · Room ${room.code}`;
             renderRoster(room);
             document.getElementById('round-label').textContent = `Soal ${room.question_index + 1}/${room.total_questions}`;
             document.getElementById('round-timer').textContent = `${room.seconds_remaining} dtk`;
@@ -648,6 +764,8 @@
             });
             const essayButton = document.getElementById('send-essay');
             essayButton.disabled = Boolean(alreadySent);
+            document.getElementById('start-record').disabled = Boolean(alreadySent);
+            document.getElementById('send-record').disabled = Boolean(alreadySent) || !recordingBlob;
             buzzerButton.disabled = room.buzzer_player_id !== null || Boolean(alreadySent);
             if (room.mode.kind === 'buzzer' && room.buzzer_player_id && room.buzzer_player_id !== room.player_id) {
                 answerStatus.textContent = 'Lawan telah merebut buzzer. Tunggu soal berikutnya.';
@@ -668,7 +786,7 @@
                     answer
                 });
                 submittedQuestionId = currentRoom.question.id;
-                setStatus(answerStatus, response.correct === null ? `Esai terkirim · +${response.points} EXP partisipasi.` : (response.correct ? `Tepat! +${response.points} EXP.` : 'Jawaban belum tepat.'), response.correct === false ? 'error' : 'success');
+                setStatus(answerStatus, response.correct === null ? `Jawaban terkirim untuk ditinjau · +5 EXP partisipasi.` : (response.correct ? `Tepat! +${response.points} poin · +5 EXP partisipasi.` : 'Belum tepat · +5 EXP partisipasi.'), response.correct === false ? 'error' : 'success');
                 currentRoom = response.room;
                 await syncRoom();
             } catch (error) {
@@ -752,7 +870,7 @@
             try {
                 const response = await api(`/rooms/${encodeURIComponent(currentRoom.code)}/recording`, { method: 'POST', body: formData });
                 submittedQuestionId = currentRoom.question.id;
-                setStatus(answerStatus, `Rekaman terkirim · +${response.points} EXP partisipasi.`, 'success');
+                setStatus(answerStatus, 'Setoran terkirim · +5 EXP partisipasi. Kualitas bacaan tidak dinilai otomatis dan dapat ditinjau pengajar.', 'success');
                 currentRoom = response.room;
                 await syncRoom();
             } catch (error) {
@@ -794,7 +912,7 @@
             const own = room.players.find((player) => player.is_you);
             const others = room.players.filter((player) => !player.is_you && player.status !== 'Keluar');
             const activePlayers = room.players.filter((player) => player.status !== 'Keluar');
-            if (room.mode.key === 'team-battle') {
+            if (room.format === 'team') {
                 const teams = room.teams;
                 const highTeamScore = Math.max(0, ...teams.map((team) => team.score));
                 const winningTeams = teams.filter((team) => team.score === highTeamScore);
@@ -818,7 +936,7 @@
                     card.append(name, score);
                     teamResults.append(card);
                 });
-                document.getElementById('result-exp').textContent = `Skor individu kamu: ${own ? own.score : 0}`;
+                document.getElementById('result-exp').textContent = `Poin individu: ${own ? own.score : 0} · EXP partisipasi: +${own ? own.exp : 0}`;
                 return;
             }
             const highest = Math.max(0, ...activePlayers.map((player) => player.score));
@@ -841,7 +959,7 @@
                 card.append(name, score);
                 scores.append(card);
             });
-            document.getElementById('result-exp').textContent = `EXP pertandingan kamu: +${own ? own.score : 0}`;
+            document.getElementById('result-exp').textContent = `Poin pertandingan: ${own ? own.score : 0} · EXP partisipasi: +${own ? own.exp : 0}. EXP bukan penilaian kualitas bacaan.`;
         }
 
         async function leaveCurrentRoom() {
@@ -862,6 +980,7 @@
             qariAudioPlayer.pause();
             if (ownAudioUrl) URL.revokeObjectURL(ownAudioUrl);
             lobby.hidden = false;
+            setLobbyControlsDisabled(false);
             waitingRoom.hidden = true;
             arena.hidden = true;
             resultPanel.hidden = true;
@@ -869,6 +988,7 @@
         }
 
         document.getElementById('find-match').addEventListener('click', startMatchmaking);
+        document.getElementById('join-room').addEventListener('click', joinExistingRoom);
         document.getElementById('cancel-match').addEventListener('click', leaveCurrentRoom);
         document.getElementById('buzzer').addEventListener('click', pressBuzzer);
         document.getElementById('send-essay').addEventListener('click', sendEssay);
@@ -878,6 +998,14 @@
         document.getElementById('play-qari-audio').addEventListener('click', playQariSample);
         document.getElementById('leave-arena').addEventListener('click', leaveCurrentRoom);
         document.getElementById('back-to-lobby').addEventListener('click', leaveCurrentRoom);
+        document.getElementById('copy-code').addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(document.getElementById('invite-code').textContent);
+                document.getElementById('copy-code').textContent = 'Tersalin';
+            } catch (error) {
+                setStatus(lobbyStatus, 'Kode tidak dapat disalin. Silakan salin secara manual.', 'error');
+            }
+        });
     </script>
 </body>
 </html>

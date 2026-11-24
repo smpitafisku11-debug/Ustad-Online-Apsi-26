@@ -275,6 +275,7 @@
     const quizQuestions = document.getElementById('quiz-questions');
     const quizForm = document.getElementById('quiz-form');
     let activeLesson = null;
+    let verifiedAudioCache = null;
     let recommendationTarget = null;
     let state = loadState();
 
@@ -370,8 +371,34 @@
         const button = create('button', 'audio-button', '♫ Dengarkan');
         button.type = 'button';
         button.dataset.speak = text;
-        button.setAttribute('aria-label', `Dengarkan contoh ${text}`);
+        button.setAttribute('aria-label', `Dengarkan contoh Mushaf untuk ${text}`);
         return button;
+    }
+
+    function renderMakhrajMap(container) {
+        const points = [
+            ['mulut', '◯', 'Rongga mulut · Al-Jauf', 'Tempat aliran suara untuk huruf mad dan vokal panjang.'],
+            ['tenggorokan', '⌁', 'Tenggorokan · Al-Halq', 'Kelompok huruf: ا, ه, ع, ح, غ, خ pada titik yang berbeda.'],
+            ['lidah', '⌇', 'Lidah · Al-Lisan', 'Huruf dibedakan oleh pangkal, tengah, tepi, atau ujung lidah.'],
+            ['bibir', '○', 'Bibir · Asy-Syafatain', 'Fathah pada ف, rapatan bibir pada ب dan م, serta lipatan pada و.'],
+            ['hidung', '≋', 'Rongga hidung · Al-Khaisyum', 'Tempat dengung pada nun atau mim yang bertasydid.']
+        ];
+        const map = create('div', 'makharij-map');
+        const detail = create('div', 'makharij-detail', points[0][3]);
+        points.forEach((point, index) => {
+            const button = create('button', 'makharij-hotspot');
+            button.type = 'button';
+            button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
+            button.innerHTML = `<span class="map-icon" aria-hidden="true">${point[1]}</span><strong>${point[2]}</strong>`;
+            button.addEventListener('click', () => {
+                map.querySelectorAll('.makharij-hotspot').forEach((item) => item.setAttribute('aria-pressed', 'false'));
+                button.setAttribute('aria-pressed', 'true');
+                detail.textContent = point[3];
+            });
+            map.appendChild(button);
+        });
+        container.appendChild(map);
+        container.appendChild(detail);
     }
 
     function renderExamples(container, examples, isHijaiyah) {
@@ -401,6 +428,9 @@
             const wrapper = create('section', 'lesson-section');
             wrapper.appendChild(create('h3', '', section.title));
             wrapper.appendChild(create('p', '', section.text));
+            if (lesson.id === 'makharij' && section.title === 'Lima kelompok makhraj') {
+                renderMakhrajMap(wrapper);
+            }
             if (section.letters) {
                 renderExamples(wrapper, letters.map((letter) => ({
                     arabic: letter[0],
@@ -495,31 +525,38 @@
 
     function speak(text) {
         const status = document.getElementById('audio-status');
-        if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
-            status.textContent = 'Browser ini belum mendukung audio pelafalan.';
-            status.className = 'lesson-audio-status error';
-            return;
-        }
-        const arabicVoice = window.speechSynthesis.getVoices().find((voice) => voice.lang && voice.lang.toLowerCase().startsWith('ar'));
-        if (!arabicVoice) {
-            status.textContent = 'Suara Arab belum tersedia di perangkat ini. Tambahkan/pilih suara Arab pada pengaturan suara perangkat.';
-            status.className = 'lesson-audio-status error';
-            return;
-        }
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = arabicVoice.lang;
-        utterance.voice = arabicVoice;
-        utterance.rate = 0.78;
-        utterance.onstart = () => {
-            status.textContent = 'Audio contoh sedang diputar. Ikuti perlahan.';
+        status.textContent = `Contoh tertulis: ${text}. Gunakan pemutar Mushaf terverifikasi untuk mendengar bacaan qari kredibel.`;
+        status.className = 'lesson-audio-status';
+    }
+
+    async function playVerifiedExample() {
+        const status = document.getElementById('audio-status');
+        const player = document.getElementById('verified-audio-player');
+        status.textContent = 'Memuat contoh bacaan Mushaf dari Equran.id...';
+        status.className = 'lesson-audio-status';
+        try {
+            if (!verifiedAudioCache) {
+                const response = await fetch('https://equran.id/api/v2/surat/1');
+                if (!response.ok) throw new Error('Layanan audio merespons dengan status yang tidak valid.');
+                const payload = await response.json();
+                if (payload.code !== 200 || !payload.data || !payload.data.ayat || !payload.data.ayat.length) {
+                    throw new Error('Data audio Mushaf tidak lengkap.');
+                }
+                verifiedAudioCache = payload.data.ayat
+                    .map((ayah) => ayah.audio && ayah.audio['05'])
+                    .filter(Boolean);
+            }
+            if (!verifiedAudioCache.length) throw new Error('Audio Misyari Rasyid Al-Afasi tidak tersedia.');
+            player.src = verifiedAudioCache[0];
+            player.load();
+            await player.play();
+            status.textContent = 'Memutar Al-Fatihah ayat 1 oleh Misyari Rasyid Al-Afasi.';
             status.className = 'lesson-audio-status';
-        };
-        utterance.onerror = () => {
-            status.textContent = 'Audio tidak dapat diputar. Periksa pengaturan suara perangkat.';
+        } catch (error) {
+            console.error('Gagal memuat audio Mushaf:', error);
+            status.textContent = 'Contoh Mushaf gagal dimuat. Periksa koneksi internet atau coba kembali.';
             status.className = 'lesson-audio-status error';
-        };
-        window.speechSynthesis.speak(utterance);
+        }
     }
 
     document.querySelectorAll('[data-learning-level]').forEach((button) => {
@@ -546,6 +583,7 @@
         const button = event.target.closest('[data-speak]');
         if (button) speak(button.dataset.speak);
     });
+    document.getElementById('play-verified-example').addEventListener('click', playVerifiedExample);
     document.getElementById('lesson-complete').addEventListener('click', () => {
         if (!activeLesson) return;
         const completed = currentProgress().completed;

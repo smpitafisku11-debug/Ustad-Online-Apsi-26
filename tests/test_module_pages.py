@@ -463,7 +463,9 @@ class ModulePageTests(unittest.TestCase):
             self.assertIn(expected, response.data)
         script = self.client.get("/static/tilawah.js")
         self.assertEqual(script.status_code, 200)
-        self.assertIn(b"speechSynthesis", script.data)
+        self.assertIn(b"equran.id/api/v2/surat/1", script.data)
+        self.assertIn(b"Misyari Rasyid Al-Afasi", script.data)
+        self.assertIn(b"renderMakhrajMap", script.data)
         script.close()
 
     def test_feature_pages_include_shared_page_transitions(self):
@@ -484,9 +486,12 @@ class ModulePageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         for expected in (
             b'data-mode-card="tajwid-battle"',
-            b'data-mode-card="sambung-surat"',
+            b'data-mode-card="sambung-ayat"',
             b'data-mode-card="nama-surat"',
-            b"Mulai Lomba Solo",
+            b'data-mode-card="hafalan-battle"',
+            b'data-mode-card="makharij-battle"',
+            b'data-mode-card="team-battle"',
+            b"Buat Ruang Battle",
             b"join_room",
             b"submit_score",
             b"battle_result",

@@ -46,6 +46,7 @@
         .chat-header-copy { min-width:0; }
         .chat-title { margin:0; overflow:hidden; color:#1b2f52; font-size:.92rem; text-overflow:ellipsis; white-space:nowrap; }
         .chat-subtitle { margin-top:3px; color:#7a8798; font-size:.68rem; }
+        .chat-invite { margin-left:auto; height:36px; border:1px solid #dfe7ef; border-radius:9px; background:#fff; padding:0 10px; color:var(--navy); font-size:.72rem; font-weight:700; white-space:nowrap; }
         .messages { overflow-y:auto; background-image:linear-gradient(rgba(243,248,245,.92),rgba(243,248,245,.92)),radial-gradient(circle at 15% 20%,#cde4d5 1px,transparent 2px); background-size:auto,18px 18px; padding:18px 28px; }
         .empty-chat { max-width:330px; margin:30px auto; border-radius:14px; background:rgba(255,255,255,.88); padding:20px; color:#69788d; font-size:.78rem; line-height:1.6; text-align:center; }
         .message-row { display:flex; margin:4px 0; }
@@ -98,6 +99,7 @@
             <div class="sidebar-header">
                 <h1 class="sidebar-title">Grup Komunitas</h1>
                 <div class="header-actions">
+                    <button class="icon-button" id="open-join" type="button" title="Gabung dengan kode undangan" aria-label="Gabung dengan kode undangan">↗</button>
                     <button class="icon-button" id="open-create" type="button" title="Buat grup" aria-label="Buat grup">＋</button>
                 </div>
             </div>
@@ -105,7 +107,7 @@
                 <input id="profile-name" maxlength="30" value="Pemain Ustad" autocomplete="name" aria-label="Nama Anda">
                 <button class="small-button" id="save-profile" type="button">Simpan</button>
             </div>
-            <div class="search-row"><input id="group-search" type="search" placeholder="Cari grup..." aria-label="Cari grup"></div>
+            <div class="search-row"><input id="group-search" type="search" placeholder="Cari grup Anda..." aria-label="Cari grup yang diikuti"></div>
             <div class="group-list" id="group-list"></div>
         </aside>
         <section class="chat" aria-label="Percakapan grup">
@@ -116,6 +118,7 @@
                     <h2 class="chat-title" id="chat-title">Pilih grup</h2>
                     <div class="chat-subtitle" id="chat-subtitle">Gabung untuk mulai mengirim pesan</div>
                 </div>
+                <button class="chat-invite" id="share-invite" type="button" hidden>Bagikan kode</button>
             </header>
             <div class="messages" id="messages" aria-live="polite">
                 <div class="empty-chat">Pilih grup di sebelah kiri untuk melihat percakapan.</div>
@@ -144,6 +147,21 @@
         </form>
     </div>
 
+    <div class="modal-backdrop" id="join-modal" hidden>
+        <form class="modal" id="join-form">
+            <h2>Gabung ke Grup</h2>
+            <p class="status">Minta kode undangan dari pemilik atau anggota grup.</p>
+            <label>Kode undangan
+                <input id="join-code" maxlength="12" required autocomplete="off" placeholder="Contoh: TJ7K2M">
+            </label>
+            <p class="status" id="join-status" role="status"></p>
+            <div class="modal-actions">
+                <button id="close-join" type="button">Batal</button>
+                <button class="primary" type="submit">Gabung</button>
+            </div>
+        </form>
+    </div>
+
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
         (() => {
@@ -158,6 +176,9 @@
             const sendButton = document.getElementById('send-message');
             const profileName = document.getElementById('profile-name');
             const createModal = document.getElementById('create-modal');
+            const joinModal = document.getElementById('join-modal');
+            const renderedMessageIds = new Set();
+            const messageLimit = 100;
             let groups = [];
             let activeGroup = null;
             let memberIds = {};
@@ -182,6 +203,10 @@
 
             function jsonOptions(body) {
                 return { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) };
+            }
+
+            function memberOptions(memberId) {
+                return { headers:{'X-Member-Id':memberId} };
             }
 
             function cleanName() {
@@ -212,7 +237,7 @@
                 if (!groups.length) {
                     const empty = document.createElement('div');
                     empty.className = 'empty-chat';
-                    empty.textContent = 'Grup tidak ditemukan.';
+                    empty.textContent = 'Belum bergabung ke grup. Buat grup atau minta kode undangan untuk bergabung.';
                     groupList.append(empty);
                     return;
                 }
@@ -220,6 +245,7 @@
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = `group-row${activeGroup && activeGroup.id === group.id ? ' active' : ''}`;
+                    button.dataset.groupId = group.id;
                     const avatar = document.createElement('span');
                     avatar.className = 'group-avatar';
                     avatar.textContent = group.name.trim().charAt(0).toUpperCase();
@@ -241,9 +267,19 @@
                 });
             }
 
+            function updateGroupPreview(groupId, message) {
+                const group = groups.find((item) => item.id === groupId);
+                if (!group) return;
+                group.last_message = message;
+                const row = groupList.querySelector(`[data-group-id="${groupId}"]`);
+                if (!row) return;
+                row.querySelector('.group-preview').textContent = `${message.sender}: ${message.text}`;
+                row.querySelector('.group-meta').textContent = timeLabel(message.created_at);
+            }
+
             function renderMessages(payload) {
-                const myName = profileName.value.trim();
                 messagesPanel.replaceChildren();
+                renderedMessageIds.clear();
                 if (!payload.messages.length) {
                     const empty = document.createElement('div');
                     empty.className = 'empty-chat';
@@ -251,52 +287,62 @@
                     messagesPanel.append(empty);
                     return;
                 }
-                payload.messages.forEach((message) => {
-                    const row = document.createElement('div');
-                    row.className = `message-row${message.sender === myName ? ' mine' : ''}`;
-                    const bubble = document.createElement('div');
-                    bubble.className = 'bubble';
-                    const sender = document.createElement('span');
-                    sender.className = 'sender';
-                    sender.textContent = message.sender;
-                    const text = document.createElement('div');
-                    text.className = 'message-text';
-                    text.textContent = message.text;
-                    const time = document.createElement('time');
-                    time.className = 'message-time';
-                    time.textContent = timeLabel(message.created_at);
-                    bubble.append(sender, text, time);
-                    row.append(bubble);
-                    messagesPanel.append(row);
-                });
+                payload.messages.forEach(appendMessage);
                 messagesPanel.scrollTop = messagesPanel.scrollHeight;
+            }
+
+            function appendMessage(message) {
+                if (renderedMessageIds.has(message.id)) return;
+                const wasAtBottom = messagesPanel.scrollHeight - messagesPanel.scrollTop - messagesPanel.clientHeight < 80;
+                const empty = messagesPanel.querySelector('.empty-chat');
+                if (empty) empty.remove();
+                const row = document.createElement('div');
+                row.className = `message-row${message.sender === profileName.value.trim() ? ' mine' : ''}`;
+                row.dataset.messageId = message.id;
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const sender = document.createElement('span');
+                sender.className = 'sender';
+                sender.textContent = message.sender;
+                const text = document.createElement('div');
+                text.className = 'message-text';
+                text.textContent = message.text;
+                const time = document.createElement('time');
+                time.className = 'message-time';
+                time.textContent = timeLabel(message.created_at);
+                bubble.append(sender, text, time);
+                row.append(bubble);
+                messagesPanel.append(row);
+                renderedMessageIds.add(message.id);
+                while (messagesPanel.querySelectorAll('.message-row').length > messageLimit) {
+                    const oldest = messagesPanel.querySelector('.message-row');
+                    renderedMessageIds.delete(oldest.dataset.messageId);
+                    oldest.remove();
+                }
+                if (wasAtBottom) messagesPanel.scrollTop = messagesPanel.scrollHeight;
             }
 
             async function openGroup(groupId) {
                 try {
-                    const name = saveProfile();
-                    if (!name) return;
                     let memberId = memberIds[groupId];
                     if (!memberId) {
-                        const joined = await api(`/groups/${encodeURIComponent(groupId)}/join`, jsonOptions({name}));
-                        memberId = joined.member_id;
-                        memberIds[groupId] = memberId;
-                        localStorage.setItem(memberKey, JSON.stringify(memberIds));
+                        throw new Error('Anda belum bergabung. Gunakan kode undangan untuk masuk.');
                     }
-                    if (activeGroup && communitySocket) {
+                    const payload = await api(`/groups/${encodeURIComponent(groupId)}/messages`, memberOptions(memberId));
+                    if (activeGroup && activeGroup.id !== groupId && communitySocket) {
                         communitySocket.emit('leave_community', {group_id:activeGroup.id});
                     }
-                    const payload = await api(`/groups/${encodeURIComponent(groupId)}/messages`);
                     activeGroup = payload.group;
                     appShell.classList.add('chat-open');
                     document.getElementById('chat-avatar').textContent = activeGroup.name.trim().charAt(0).toUpperCase();
                     document.getElementById('chat-title').textContent = activeGroup.name;
                     document.getElementById('chat-subtitle').textContent = `${activeGroup.member_count} anggota · ${payload.members.length} bergabung`;
+                    document.getElementById('share-invite').hidden = false;
                     messageInput.disabled = false;
                     sendButton.disabled = false;
                     renderMessages(payload);
                     renderGroups();
-                    if (communitySocket) communitySocket.emit('join_community', {group_id:groupId});
+                    if (communitySocket) communitySocket.emit('join_community', {group_id:groupId, member_id:memberId});
                 } catch (error) {
                     alert(error.message);
                 }
@@ -304,7 +350,12 @@
 
             async function loadGroups(query) {
                 try {
-                    const path = `/groups${query ? `?q=${encodeURIComponent(query)}` : ''}`;
+                    const params = new URLSearchParams();
+                    if (query) params.set('q', query);
+                    const ids = Object.values(memberIds).filter((id) => typeof id === 'string');
+                    if (ids.length) params.set('ids', ids.join(','));
+                    const suffix = params.toString();
+                    const path = `/groups${suffix ? `?${suffix}` : ''}`;
                     groups = await api(path);
                     renderGroups();
                 } catch (error) {
@@ -318,12 +369,42 @@
                 searchTimer = window.setTimeout(() => loadGroups(event.target.value.trim()), 180);
             });
             document.getElementById('mobile-back').addEventListener('click', () => appShell.classList.remove('chat-open'));
+            document.getElementById('open-join').addEventListener('click', () => {
+                joinModal.hidden = false;
+                document.getElementById('join-code').focus();
+            });
+            document.getElementById('close-join').addEventListener('click', () => { joinModal.hidden = true; });
+            joinModal.addEventListener('click', (event) => { if (event.target === joinModal) joinModal.hidden = true; });
             document.getElementById('open-create').addEventListener('click', () => {
                 createModal.hidden = false;
                 document.getElementById('create-name').focus();
             });
             document.getElementById('close-create').addEventListener('click', () => { createModal.hidden = true; });
             createModal.addEventListener('click', (event) => { if (event.target === createModal) createModal.hidden = true; });
+
+            document.getElementById('join-form').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const status = document.getElementById('join-status');
+                status.className = 'status';
+                status.textContent = '';
+                try {
+                    const name = saveProfile();
+                    if (!name) return;
+                    const joined = await api('/join', jsonOptions({
+                        code:document.getElementById('join-code').value,
+                        name
+                    }));
+                    memberIds[joined.group.id] = joined.member_id;
+                    localStorage.setItem(memberKey, JSON.stringify(memberIds));
+                    joinModal.hidden = true;
+                    document.getElementById('join-form').reset();
+                    await loadGroups('');
+                    await openGroup(joined.group.id);
+                } catch (error) {
+                    status.className = 'status error';
+                    status.textContent = error.message;
+                }
+            });
 
             document.getElementById('create-form').addEventListener('submit', async (event) => {
                 event.preventDefault();
@@ -359,15 +440,31 @@
                     const memberId = memberIds[activeGroup.id];
                     const payload = await api(`/groups/${encodeURIComponent(activeGroup.id)}/messages`, jsonOptions({member_id:memberId, text}));
                     messageInput.value = '';
-                    await openGroup(activeGroup.id);
+                    appendMessage(payload.message);
+                    updateGroupPreview(activeGroup.id, payload.message);
                 } catch (error) {
                     alert(error.message);
                 }
             });
 
+            document.getElementById('share-invite').addEventListener('click', () => {
+                if (!activeGroup) return;
+                window.prompt(`Bagikan kode ini agar orang lain dapat bergabung ke ${activeGroup.name}:`, activeGroup.invite_code);
+            });
+
             if (communitySocket) {
+                communitySocket.on('connect', () => {
+                    if (activeGroup) {
+                        communitySocket.emit('join_community', {
+                            group_id:activeGroup.id,
+                            member_id:memberIds[activeGroup.id]
+                        });
+                    }
+                });
                 communitySocket.on('community_message', (event) => {
-                    if (activeGroup && event && event.group_id === activeGroup.id) openGroup(activeGroup.id);
+                    if (!activeGroup || !event || event.group_id !== activeGroup.id) return;
+                    appendMessage(event.message);
+                    updateGroupPreview(activeGroup.id, event.message);
                 });
             }
 

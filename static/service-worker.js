@@ -1,4 +1,4 @@
-const cacheName = 'ustad-online-v3';
+const cacheName = 'ustad-online-v4';
 const appShell = [
     '/',
     '/static/manifest.json',

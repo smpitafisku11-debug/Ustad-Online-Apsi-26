@@ -1,9 +1,11 @@
 import io
+import hmac
 import secrets
+import sqlite3
 import threading
 import time
 
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, current_app, jsonify, request, send_file, session
 from flask_socketio import join_room as join_socket_room
 from flask_socketio import leave_room as leave_socket_room
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -15,7 +17,6 @@ quran_battle_api = Blueprint("quran_battle_api", __name__)
 _rooms = {}
 _rooms_lock = threading.RLock()
 _room_ttl = 3600
-_round_seconds = 30
 
 
 def _notify_room_update(code):
@@ -97,13 +98,22 @@ MODES = {
             {"prompt": "Apa hukum mim sukun bertemu mim?", "options": ["Idgham mimi", "Izhar syafawi", "Ikhfa haqiqi"], "answer": 0},
         ],
     },
+    "makharij-battle": {
+        "name": "Makharij Battle",
+        "kind": "voice",
+        "questions": [
+            {"prompt": "Latih pelafalan huruf yang sedang dipelajari. Pengajar dapat memeriksa rekaman."},
+            {"prompt": "Ucapkan huruf sesuai materi makharij terverifikasi. Bacaan tidak dinilai otomatis."},
+            {"prompt": "Setorkan latihan makharij untuk ditinjau pengajar bila diperlukan."},
+        ],
+    },
     "hafalan-battle": {
         "name": "Hafalan Battle",
         "kind": "voice",
         "questions": [
-            {"prompt": "Lanjutkan bacaan setelah potongan ayat ini.", "arabic": "قُلْ هُوَ اللَّهُ أَحَدٌ"},
-            {"prompt": "Setorkan lanjutan ayat pertama Surah Al-Kautsar.", "arabic": "إِنَّا أَعْطَيْنَاكَ"},
-            {"prompt": "Bacakan ayat berikutnya dari Surah Al-Falaq.", "arabic": "مِن شَرِّ مَا خَلَقَ"},
+            {"prompt": "Setorkan hafalan sesuai kategori yang dipilih dari materi terverifikasi."},
+            {"prompt": "Bacakan hafalan yang telah dipelajari. Bacaan tidak dinilai otomatis."},
+            {"prompt": "Pilih bagian hafalan yang sesuai tingkat kemampuanmu dan setorkan untuk ditinjau."},
         ],
     },
     "team-battle": {
@@ -119,9 +129,9 @@ MODES = {
         "name": "Sambung Ayat",
         "kind": "voice",
         "questions": [
-            {"prompt": "Bacakan kelanjutan ayat berikut.", "arabic": "قُلْ هُوَ اللَّهُ أَحَدٌ"},
-            {"prompt": "Setorkan lanjutan ayat pertama Surah Al-Kautsar.", "arabic": "إِنَّا أَعْطَيْنَاكَ"},
-            {"prompt": "Lanjutkan bacaan setelah potongan ayat ini.", "arabic": "وَالضُّحَىٰ"},
+            {"prompt": "Lanjutkan ayat yang telah dipelajari dengan merujuk mushaf terverifikasi."},
+            {"prompt": "Setorkan kelanjutan ayat pilihan dari materi yang telah diverifikasi pengajar."},
+            {"prompt": "Bacakan lanjutan ayat dari materi belajar yang telah diverifikasi."},
         ],
     },
     "sambung-surat": {
@@ -143,7 +153,7 @@ MODES = {
         ],
     },
     "nama-surat": {
-        "name": "Tebak Nama Surat",
+        "name": "Tebak Surah",
         "kind": "choice",
         "questions": [
             {"prompt": "Surat pembuka Al-Qur'an yang terdiri dari tujuh ayat adalah...", "options": ["Al-Fatihah", "Al-Ikhlas", "Al-Kautsar"], "answer": 0},
@@ -225,10 +235,16 @@ MODES = {
     },
 }
 
-_format_sizes = {"solo": 1}
-CHOICE_MODE_KEYS = {
-    key for key, mode in MODES.items()
-    if mode["kind"] == "choice" and key != "team-battle"
+_format_sizes = {"solo": 1, "duel": 2, "team": 4}
+_difficulty_round_seconds = {"pemula": 45, "menengah": 35, "mahir": 30}
+_hafalan_categories = {
+    "juz-amma": "Juz Amma",
+    "surah-pendek": "Surah pendek",
+    "target-pribadi": "Target pribadi",
+}
+AVAILABLE_MODE_KEYS = {
+    "tajwid-battle", "sambung-ayat", "hafalan-battle", "nama-surat",
+    "makharij-battle", "team-battle",
 }
 
 
@@ -239,6 +255,31 @@ def handle_upload_too_large(_error):
 
 def _error(message, status):
     return jsonify(error=message), status
+
+
+def _battle_database():
+    connection = sqlite3.connect(current_app.config["AUTH_DATABASE"], timeout=10)
+    connection.row_factory = sqlite3.Row
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS battle_reports (
+            report_id TEXT PRIMARY KEY,
+            room_code TEXT NOT NULL,
+            reporter_id TEXT NOT NULL,
+            reporter_name TEXT NOT NULL,
+            target_id TEXT NOT NULL,
+            target_name TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            details TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at REAL NOT NULL,
+            reviewed_at REAL,
+            UNIQUE (room_code, reporter_id, target_id)
+        )
+        """
+    )
+    connection.commit()
+    return connection
 
 
 def _json_body():
@@ -253,7 +294,7 @@ def _validate_name(value):
     return name if 2 <= len(name) <= 24 else None
 
 
-def _new_room(name, player_id, mode_key, game_format, capacity):
+def _new_room(name, player_id, mode_key, game_format, capacity, difficulty, category):
     code = secrets.token_hex(3).upper()
     while code in _rooms:
         code = secrets.token_hex(3).upper()
@@ -263,6 +304,9 @@ def _new_room(name, player_id, mode_key, game_format, capacity):
         "format": game_format,
         "capacity": capacity,
         "mode_key": mode_key,
+        "difficulty": difficulty,
+        "category": category,
+        "round_seconds": 90 if MODES[mode_key]["kind"] == "voice" else _difficulty_round_seconds[difficulty],
         "status": "playing" if capacity == 1 else "waiting",
         "host_id": player_id,
         "created_at": now,
@@ -273,8 +317,9 @@ def _new_room(name, player_id, mode_key, game_format, capacity):
             player_id: {
                 "id": player_id,
                 "name": name,
-                "team_id": "A" if mode_key == "team-battle" else None,
+                "team_id": "A" if game_format == "team" else None,
                 "score": 0,
+                "exp": 0,
                 "status": "Bersiap",
                 "answered_question": None,
                 "recording": None,
@@ -293,7 +338,7 @@ def _new_player_id():
 def _join_room(room, name):
     player_id = _new_player_id()
     team_id = None
-    if room["mode_key"] == "team-battle":
+    if room["format"] == "team":
         team_counts = {
             team: sum(player.get("team_id") == team for player in room["players"].values())
             for team in ("A", "B")
@@ -304,6 +349,7 @@ def _join_room(room, name):
         "name": name,
         "team_id": team_id,
         "score": 0,
+        "exp": 0,
         "status": "Bersiap",
         "answered_question": None,
         "recording": None,
@@ -332,7 +378,7 @@ def _advance_if_ready(room):
     questions = MODES[room["mode_key"]]["questions"]
     question_index = room["question_index"]
     all_answered = all(player["answered_question"] == question_index for player in _active_players(room))
-    timed_out = time.monotonic() - room["round_started_at"] >= _round_seconds
+    timed_out = time.monotonic() - room["round_started_at"] >= room["round_seconds"]
     if not all_answered and not timed_out:
         return
     if question_index + 1 == len(questions):
@@ -358,7 +404,7 @@ def _room_response(room, player_id):
         public_question = {key: value for key, value in question.items() if key != "answer"}
         public_question["id"] = question_index
         public_question["kind"] = mode["kind"]
-        seconds_remaining = max(0, _round_seconds - int(time.monotonic() - room["round_started_at"]))
+        seconds_remaining = max(0, room["round_seconds"] - int(time.monotonic() - room["round_started_at"]))
     else:
         public_question = None
         seconds_remaining = 0
@@ -369,15 +415,18 @@ def _room_response(room, player_id):
             "name": player["name"],
             "team_id": player.get("team_id"),
             "score": player["score"],
+            "exp": player["exp"],
             "status": player["status"],
             "is_you": player["id"] == player_id,
-            "has_recording": player["recording"] is not None and player.get("recording_question") == question_index,
+            "has_recording": player["id"] == player_id and player["recording"] is not None and player.get("recording_question") == question_index,
         })
     return {
         "code": room["code"],
         "format": room["format"],
         "capacity": room["capacity"],
         "mode": {"key": room["mode_key"], "name": mode["name"], "kind": mode["kind"]},
+        "difficulty": room["difficulty"],
+        "category": _hafalan_categories.get(room["category"]),
         "status": room["status"],
         "player_id": player_id,
         "players": players,
@@ -387,7 +436,7 @@ def _room_response(room, player_id):
                 "score": sum(player["score"] for player in room["players"].values() if player.get("team_id") == team),
             }
             for team in ("A", "B")
-        ] if room["mode_key"] == "team-battle" else [],
+        ] if room["format"] == "team" else [],
         "question": public_question,
         "question_index": question_index,
         "total_questions": len(mode["questions"]),
@@ -431,9 +480,7 @@ def _score_submission(code, data):
                 return {"error": "Pilihan jawaban tidak valid."}, 400
             correct = answer == question["answer"]
             if correct:
-                elapsed = max(0.0, time.monotonic() - room["round_started_at"])
-                remaining_ratio = max(0.0, min(1.0, 1.0 - elapsed / _round_seconds))
-                points = 50 + int(round(50 * remaining_ratio))
+                points = 100
             else:
                 points = 0
             player["status"] = "Jawaban tepat" if correct else "Sudah menjawab"
@@ -447,6 +494,7 @@ def _score_submission(code, data):
         else:
             return {"error": "Jenis soal tidak didukung."}, 400
         player["score"] += points
+        player["exp"] += 5
         player["answered_question"] = room["question_index"]
         _advance_if_ready(room)
         response = {
@@ -485,16 +533,27 @@ def matchmaking():
     mode_key = data.get("mode")
     if not name:
         return _error("Nama harus berisi 2–24 karakter.", 400)
-    if game_format != "solo":
-        return _error("Quran Battle hanya tersedia dalam format Solo.", 400)
     if not isinstance(mode_key, str) or mode_key not in MODES:
         return _error("Mode permainan tidak dikenali.", 400)
-    if mode_key not in CHOICE_MODE_KEYS:
-        return _error("Lomba harus berupa soal pilihan ganda.", 400)
+    if mode_key not in AVAILABLE_MODE_KEYS:
+        return _error("Mode permainan belum tersedia.", 400)
+    capacity = _format_sizes.get(game_format) if isinstance(game_format, str) else None
+    if capacity is None:
+        return _error("Format pertandingan tidak valid.", 400)
+    if (game_format == "team") != (mode_key == "team-battle"):
+        return _error("Team Battle hanya tersedia dalam format tim.", 400)
+    difficulty = data.get("difficulty", "menengah")
+    if not isinstance(difficulty, str) or difficulty not in _difficulty_round_seconds:
+        return _error("Tingkat kesulitan tidak valid.", 400)
+    category = data.get("category", "juz-amma") if mode_key == "hafalan-battle" else None
+    if mode_key == "hafalan-battle" and (
+        not isinstance(category, str) or category not in _hafalan_categories
+    ):
+        return _error("Kategori hafalan tidak valid.", 400)
     with _rooms_lock:
         _expire_rooms()
         player_id = _new_player_id()
-        room = _new_room(name, player_id, mode_key, "solo", 1)
+        room = _new_room(name, player_id, mode_key, game_format, capacity, difficulty, category)
         result_player_id = player_id
         response = _room_response(room, result_player_id)
         _notify_room_update(room["code"])
@@ -511,15 +570,25 @@ def create_room():
         return _error("Nama harus berisi 2–24 karakter.", 400)
     if not isinstance(mode_key, str) or mode_key not in MODES:
         return _error("Mode permainan tidak dikenali.", 400)
-    if game_format != "solo":
-        return _error("Quran Battle hanya tersedia dalam format Solo.", 400)
-    if mode_key not in CHOICE_MODE_KEYS:
-        return _error("Lomba harus berupa soal pilihan ganda.", 400)
-    capacity = 1
+    if mode_key not in AVAILABLE_MODE_KEYS:
+        return _error("Mode permainan belum tersedia.", 400)
+    capacity = _format_sizes.get(game_format) if isinstance(game_format, str) else None
+    if capacity is None:
+        return _error("Format pertandingan tidak valid.", 400)
+    if (game_format == "team") != (mode_key == "team-battle"):
+        return _error("Team Battle hanya tersedia dalam format tim.", 400)
+    difficulty = data.get("difficulty", "menengah")
+    if not isinstance(difficulty, str) or difficulty not in _difficulty_round_seconds:
+        return _error("Tingkat kesulitan tidak valid.", 400)
+    category = data.get("category", "juz-amma") if mode_key == "hafalan-battle" else None
+    if mode_key == "hafalan-battle" and (
+        not isinstance(category, str) or category not in _hafalan_categories
+    ):
+        return _error("Kategori hafalan tidak valid.", 400)
     player_id = _new_player_id()
     with _rooms_lock:
         _expire_rooms()
-        room = _new_room(name, player_id, mode_key, game_format, capacity)
+        room = _new_room(name, player_id, mode_key, game_format, capacity, difficulty, category)
         response = _room_response(room, player_id)
         _notify_room_update(room["code"])
         return jsonify(response), 201
@@ -618,12 +687,12 @@ def submit_recording(code):
         player["recording_type"] = recording.mimetype
         player["recording_question"] = room["question_index"]
         player["answered_question"] = room["question_index"]
-        player["score"] += 50
-        player["status"] = "Rekaman terkirim"
+        player["exp"] += 5
+        player["status"] = "Menunggu pemeriksaan pengajar"
         _advance_if_ready(room)
         response = _room_response(room, player_id)
         _notify_room_update(room["code"])
-        return jsonify({"points": 50, "room": response})
+        return jsonify({"points": 0, "room": response, "assessment": "pending_teacher_review"})
 
 
 @quran_battle_api.get("/api/battle/rooms/<code>/recordings/<recording_player_id>")
@@ -633,8 +702,10 @@ def get_recording(code, recording_player_id):
         room, viewer = _room_for_request(code, player_id)
         if not room:
             return _error("Room tidak ditemukan.", 404)
-        if not viewer:
+        if not viewer and not session.get("admin_authenticated"):
             return _error("Pemain tidak terdaftar di room ini.", 403)
+        if player_id != recording_player_id and not session.get("admin_authenticated"):
+            return _error("Rekaman hanya dapat diputar oleh pemilik atau moderator.", 403)
         player = room["players"].get(recording_player_id)
         if not player or not player["recording"]:
             return _error("Rekaman belum tersedia.", 404)
@@ -672,5 +743,119 @@ def list_modes():
     return jsonify([
         {"key": key, "name": mode["name"], "kind": mode["kind"]}
         for key, mode in MODES.items()
-        if mode["kind"] == "choice" and key != "team-battle"
+        if key in AVAILABLE_MODE_KEYS
     ])
+
+
+@quran_battle_api.post("/api/battle/rooms/<code>/report")
+def report_player(code):
+    data = _json_body()
+    reporter_id = data.get("player_id")
+    target_id = data.get("target_id")
+    reason = data.get("reason")
+    details = data.get("details", "")
+    if reason not in ("perilaku", "konten", "lainnya"):
+        return _error("Kategori laporan tidak valid.", 400)
+    if not isinstance(details, str) or not 10 <= len(details.strip()) <= 500:
+        return _error("Keterangan laporan harus berisi 10–500 karakter.", 400)
+    with _rooms_lock:
+        room, reporter = _room_for_request(code, reporter_id)
+        if not room:
+            return _error("Room tidak ditemukan atau sudah kedaluwarsa.", 404)
+        if not reporter:
+            return _error("Pemain tidak terdaftar di room ini.", 403)
+        if not isinstance(target_id, str) or target_id == reporter_id or target_id not in room["players"]:
+            return _error("Pemain yang dilaporkan tidak valid.", 400)
+        report = {
+            "id": secrets.token_urlsafe(12),
+            "code": room["code"],
+            "reporter_id": reporter_id,
+            "reporter_name": reporter["name"],
+            "target_id": target_id,
+            "target_name": room["players"][target_id]["name"],
+            "reason": reason,
+            "details": details.strip(),
+        }
+    connection = _battle_database()
+    try:
+        connection.execute(
+            """
+            INSERT INTO battle_reports
+                (report_id, room_code, reporter_id, reporter_name, target_id, target_name, reason, details, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                report["id"], report["code"], report["reporter_id"], report["reporter_name"],
+                report["target_id"], report["target_name"], report["reason"], report["details"], time.time(),
+            ),
+        )
+        connection.commit()
+    except sqlite3.IntegrityError:
+        return _error("Laporan untuk pemain ini sudah dikirim.", 409)
+    finally:
+        connection.close()
+    return jsonify({
+        "reported": True,
+        "report_id": report["id"],
+        "message": "Laporan diteruskan untuk ditinjau moderator.",
+    }), 201
+
+
+@quran_battle_api.get("/api/battle/admin/reports")
+def battle_report_queue():
+    if not session.get("admin_authenticated"):
+        return _error("Akses admin diperlukan.", 403)
+    connection = _battle_database()
+    try:
+        reports = [
+            dict(report)
+            for report in connection.execute(
+                """
+                SELECT report_id AS id, room_code AS code, reporter_id, reporter_name,
+                       target_id, target_name, reason, details, status, created_at
+                FROM battle_reports
+                WHERE status = 'pending'
+                ORDER BY created_at
+                LIMIT 1000
+                """
+            )
+        ]
+    finally:
+        connection.close()
+    return jsonify({"reports": reports})
+
+
+@quran_battle_api.post("/api/battle/admin/reports/<report_id>")
+def review_battle_report(report_id):
+    if not session.get("admin_authenticated"):
+        return _error("Akses admin diperlukan.", 403)
+    expected = session.get("csrf_token", "")
+    supplied = request.headers.get("X-CSRF-Token", "")
+    if not expected or not supplied or not hmac.compare_digest(expected, supplied):
+        return _error("Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.", 400)
+    decision = _json_body().get("decision")
+    if decision not in ("reviewed", "action_taken", "dismissed"):
+        return _error("Keputusan moderasi tidak valid.", 400)
+    connection = _battle_database()
+    try:
+        result = connection.execute(
+            """
+            UPDATE battle_reports
+            SET status = ?, reviewed_at = ?
+            WHERE report_id = ? AND status = 'pending'
+            """,
+            (decision, time.time(), report_id),
+        )
+        if result.rowcount == 0:
+            exists = connection.execute(
+                "SELECT 1 FROM battle_reports WHERE report_id = ?",
+                (report_id,),
+            ).fetchone()
+            return _error(
+                "Laporan tidak ditemukan." if not exists else "Laporan sudah ditinjau.",
+                404 if not exists else 409,
+            )
+        connection.commit()
+    finally:
+        connection.close()
+    return jsonify({"updated": True, "status": decision})

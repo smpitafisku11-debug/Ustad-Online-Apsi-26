@@ -123,6 +123,17 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline: 3px solid #6
 .lesson-note { border-left: 3px solid #9cad78; margin-top: 14px; background: #f6f8f0; padding: 10px 12px; color: #637451; font-size: .68rem; line-height: 1.6; }
 .lesson-audio-status { min-height: 19px; margin-top: 13px; color: #748176; font-size: .67rem; }
 .lesson-audio-status.error { color: #a14c42; }
+.verified-audio-panel { border: 1px solid #e3eadf; border-radius: 12px; margin-top: 13px; background: #fafcf8; padding: 11px; }
+.verified-audio-panel audio { display: block; width: 100%; margin-top: 9px; }
+.verified-audio-panel audio:not([src]) { display: none; }
+.verified-audio-panel p { margin: 8px 0 0; color: #849087; font-size: .62rem; line-height: 1.5; }
+.makharij-map { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; margin-top: 12px; }
+.makharij-hotspot { min-height: 82px; border: 1px solid #e1e7dc; border-radius: 12px; background: #fbfcf9; padding: 9px 6px; color: #526956; cursor: pointer; text-align: center; transition: .18s ease; }
+.makharij-hotspot:hover,.makharij-hotspot[aria-pressed="true"] { border-color: #85a98a; background: #eef6eb; transform: translateY(-2px); }
+.makharij-hotspot span { display: block; }
+.makharij-hotspot .map-icon { height: 35px; font-size: 1.55rem; }
+.makharij-hotspot strong { font-size: .61rem; }
+.makharij-detail { min-height: 42px; border-left: 3px solid #91a76e; margin-top: 8px; background: #f6f8f0; padding: 9px 11px; color: #637451; font-size: .68rem; line-height: 1.5; }
 .academy-dialog-actions { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid #edf0e9; margin-top: 17px; padding-top: 16px; }
 .academy-primary-button,.academy-secondary-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 12px; border-radius: 10px; padding: 0 14px; font-size: .72rem; font-weight: 700; cursor: pointer; transition: background .2s,border-color .2s,transform .2s; }
 .academy-primary-button { border: 1px solid #17684d; background: #17684d; color: #fff; }
@@ -221,6 +232,8 @@ body.academy-view[data-theme="midnight"] .academy-dialog-close,body.academy-view
     .academy-dialog-header h2 { font-size: 1.08rem; }
     .lesson-examples { grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); }
     .hijaiyah-grid { grid-template-columns: repeat(auto-fit,minmax(77px,1fr)); }
+    .makharij-map { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .makharij-hotspot { min-height: 74px; }
     .academy-dialog-actions { align-items: stretch; }
     .academy-dialog-actions button { min-width: 0; padding: 0 10px; font-size: .65rem; }
 }

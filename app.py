@@ -1,14 +1,17 @@
+import hmac
+import io
 import os
+import sqlite3
 
 import eventlet
 
 eventlet.monkey_patch()
 
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, request, send_file, session
 from auth import auth_api, init_auth_db
 from extensions import socketio
 from quran_battle import quran_battle_api
-from community import community_api
+from community import community_api, init_community_db
 from connect import connect_api, init_connect_db
 
 app = Flask(__name__)
@@ -29,6 +32,39 @@ app.register_blueprint(community_api)
 app.register_blueprint(connect_api)
 init_auth_db(app.config['AUTH_DATABASE'])
 init_connect_db(app.config['AUTH_DATABASE'])
+init_community_db(app.config['AUTH_DATABASE'])
+
+
+def init_tahfidz_db():
+    os.makedirs(os.path.dirname(os.path.abspath(app.config['AUTH_DATABASE'])), exist_ok=True)
+    connection = sqlite3.connect(app.config['AUTH_DATABASE'])
+    try:
+        connection.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS tahfidz_submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                target_title TEXT NOT NULL,
+                target_detail TEXT NOT NULL,
+                audio BLOB NOT NULL,
+                audio_type TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending', 'approved', 'needs_revision')),
+                review_note TEXT NOT NULL DEFAULT '',
+                reviewer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                submitted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                reviewed_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS tahfidz_submissions_student
+                ON tahfidz_submissions(student_id, submitted_at);
+            """
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+init_tahfidz_db()
 
 @app.route('/')
 def home():

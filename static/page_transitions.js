@@ -59,6 +59,11 @@
             destination.search === window.location.search) return;
         if (!motionIsEnabled()) return;
 
+        const destinationIsHome = destination.pathname === '/';
+        const overlayLabel = overlay.querySelector('.page-transition-label');
+        overlayLabel.textContent = destinationIsHome ? 'KEMBALI KE BERANDA' : 'MEMBUKA RUANG BELAJAR';
+        document.body.dataset.transitionDirection = destinationIsHome ? 'home' : 'feature';
+
         event.preventDefault();
         leaving = true;
         document.body.classList.add('page-transition-leaving');

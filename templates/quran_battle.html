@@ -22,6 +22,7 @@
         .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; }
         .brand { display: flex; align-items: center; gap: .7rem; color: var(--navy); font-size: 1rem; font-weight: 700; }
         .brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #cfe0fb; border-radius: 12px; background: #eff6ff; font-size: 1.15rem; }
+        .brand-mark img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
         .back-link, .button-secondary { display: inline-flex; min-height: 41px; align-items: center; justify-content: center; gap: .5rem; border: 1px solid var(--line); border-radius: 11px; background: #fff; padding: 0 .9rem; color: var(--navy); font-size: .82rem; font-weight: 700; transition: .2s ease; }
         .back-link:hover, .button-secondary:hover { border-color: #9de4c8; background: #f0fdf7; }
         main { padding: 30px 0 64px; }
@@ -186,15 +187,14 @@
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
-    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
     {% include "partials/page_transitions.html" %}
 </head>
 <body>
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true">۞</span><span>Ustad <span style="color:#2563a6">Online</span></span></a>
+            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true"><img src="{{ url_for('static', filename='brand-logo.svg') }}" alt=""></span><span>Ustad <span style="color:#2563a6">Online</span></span></a>
             <div class="topbar-actions">
-                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
+                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" data-language-aria="settings.open" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>
                 </button>
                 <a class="back-link" href="{{ url_for('home') }}"><span aria-hidden="true">←</span> Beranda</a>

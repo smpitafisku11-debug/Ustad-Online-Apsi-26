@@ -14,7 +14,7 @@
 <body>
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true">ت</span> Ustad Online <span class="brand-separator">/</span> Connect</a>
+            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true"><img src="{{ url_for('static', filename='brand-logo.svg') }}" alt=""></span> Ustad Online <span class="brand-separator">/</span> Connect</a>
             <div class="topbar-actions">
                 <a class="quiet-link" href="{{ url_for('home') }}">← Beranda</a>
                 <a class="button button-small" href="{{ url_for('home') }}" data-connect-login>Masuk / Daftar</a>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0A192F">
-    <title>AI Tahsin | Ustad Online</title>
+    <title>Latihan Pelafalan | Akademi Tilawah</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -45,6 +45,9 @@
         .transcript { margin-top: 12px; min-height: 48px; direction: rtl; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 10px 14px; font-family: 'Amiri', serif; font-size: 1.3rem; color: #52627a; }
         audio { width: 100%; margin-top: 15px; }
         .notice { margin-top: 15px; border-radius: 12px; background: #f3f7fc; padding: 13px 15px; color: #52627a; font-size: .78rem; line-height: 1.55; }
+        .source-box { margin-top: 14px; border: 1px solid #dce7df; border-radius: 12px; background: #f7faf8; padding: 12px 14px; color: #52627a; font-size: .76rem; line-height: 1.55; }
+        .source-box strong { color: #126343; }
+        .source-box a { color: #17684d; text-decoration: underline; }
         .result-card { margin-top: 18px; border: 1px solid #cfe7da; border-radius: 16px; background: #f5fcf8; padding: 18px; }
         .result-card h3 { margin: 0; color: #126343; }
         .score { margin: 8px 0 0; color: var(--navy); font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 700; }
@@ -63,15 +66,15 @@
 <body>
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}">Ustad Online · AI Tahsin</a>
-            <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
+            <a class="brand" href="{{ url_for('akademi_tilawah') }}">Akademi Tilawah · Pelafalan</a>
+            <a class="back-link" href="{{ url_for('akademi_tilawah') }}">← Kembali ke Akademi</a>
         </div>
     </header>
     <main class="shell">
         <section class="hero" aria-labelledby="page-title">
-            <span class="eyebrow">LATIHAN PELAFALAN</span>
-            <h1 id="page-title">AI Tahsin</h1>
-            <p>Pilih bacaan, rekam, lalu cek kata demi kata apakah bacaanmu sudah sesuai teks. Hasilnya bahan murajaah, bukan pengganti guru.</p>
+            <span class="eyebrow">AKADEMI TILAWAH · LATIHAN DASAR</span>
+            <h1 id="page-title">Latihan Pelafalan</h1>
+            <p>Pilih bacaan, rekam, lalu jalankan pemeriksaan dasar untuk melihat apakah kata-kata terbaca sesuai teks. Hasilnya bahan murajaah dan saran pengulangan, bukan koreksi makhraj atau pengganti ustad.</p>
         </section>
 
         <section class="panel" aria-labelledby="text-title">
@@ -90,6 +93,11 @@
             </div>
             <div class="arabic" id="target-text" lang="ar"></div>
             <p class="legend">Periksa kembali teks dengan mushaf sebelum dipakai sebagai acuan.</p>
+            <div class="source-box">
+                <strong>Sumber teks tercatat:</strong>
+                <a href="https://quran.kemenag.go.id/" target="_blank" rel="noopener noreferrer">Mushaf digital Kementerian Agama RI</a>
+                · Cocokkan ejaan dan tanda mushaf yang digunakan sebelum latihan.
+            </div>
         </section>
 
         <section class="panel" aria-labelledby="record-title">
@@ -112,7 +120,7 @@
                 <div class="words" id="word-result" lang="ar"></div>
                 <p class="legend"><span class="w-ok">hijau</span> terbaca sesuai · <span class="w-miss">merah</span> tidak terdengar atau berbeda</p>
                 <ul id="tips"></ul>
-                <a class="button button-primary" href="{{ url_for('komunitas') }}#discussion-form">Konfirmasi ke ustaz/ustazah</a>
+                <a class="button button-primary" href="{{ url_for('ustad_connect') }}?method=tajwid&amp;mode=audio">Cari ustad untuk koreksi makhraj &amp; tajwid</a>
             </section>
         </section>
 
@@ -143,8 +151,8 @@
             let tick = null, t0 = 0;
 
             $('privacy-note').textContent = SR
-                ? 'Rekaman audio hanya tersimpan di browser-mu dan tidak diunggah oleh situs ini. Pengenalan suara memakai layanan bawaan browser (di Chrome/Edge, audio dikirim ke penyedia browser untuk diubah menjadi teks). Pemeriksaan ini hanya mencocokkan kata, bukan menilai makhraj atau hukum tajwid.'
-                : 'Browser ini belum mendukung pengenalan suara, jadi pemeriksaan otomatis tidak tersedia. Kamu tetap bisa merekam, memutar ulang, dan menilai sendiri. Untuk pemeriksaan kata, gunakan Chrome atau Edge.';
+                ? 'Cakupan pemeriksaan dasar: kecocokan teks/kata yang terdengar. Rekaman hanya tersimpan di browser dan tidak diunggah oleh situs ini. Pengenalan suara memakai layanan bawaan browser (di Chrome/Edge, audio dapat dikirim ke penyedia browser). Sistem belum menilai makhraj, sifat huruf, panjang mad, ghunnah, atau seluruh detail tajwid.'
+                : 'Browser ini belum mendukung pengenalan suara, jadi pemeriksaan otomatis tidak tersedia. Kamu tetap dapat merekam, memutar ulang, dan menilai sendiri. Pemeriksaan makhraj dan tajwid memerlukan ustaz/ustazah.';
 
             function setStatus(message, kind) {
                 status.textContent = message;
@@ -292,7 +300,7 @@
                 result.hidden = false;
                 if (!SR) {
                     scoreEl.hidden = true;
-                    summary.textContent = 'Pemeriksaan otomatis tidak tersedia di browser ini. Putar ulang rekamanmu sambil melihat teks, lalu minta ustaz/ustazah menyimaknya.';
+                    summary.textContent = 'Pemeriksaan otomatis dasar tidak tersedia di browser ini. Putar ulang rekamanmu sambil melihat teks, tandai kata yang kurang jelas, lalu minta ustaz/ustazah menyimak makhraj dan tajwid.';
                     items.forEach((w) => wordsEl.append(w.raw + ' '));
                     return;
                 }
@@ -325,7 +333,7 @@
                 });
                 scoreEl.hidden = false;
                 scoreEl.textContent = score + '%';
-                summary.textContent = matched + ' dari ' + n + ' kata terbaca sesuai teks. Ini mencocokkan kata, bukan menilai makhraj atau tajwid.';
+                summary.textContent = matched + ' dari ' + n + ' kata dasar terbaca sesuai teks. Ini hanya pemeriksaan kecocokan kata; belum menilai makhraj, sifat huruf, mad, ghunnah, atau hukum tajwid secara utuh.';
                 const tips = [];
                 if (score >= 90) tips.push('Bagus. Ulangi sekali lagi, lalu minta ustaz/ustazah menyimak makhraj dan tajwidnya.');
                 else if (score >= 60) tips.push('Cukup baik. Ulangi bagian yang merah secara perlahan, satu potongan pendek demi satu potongan.');

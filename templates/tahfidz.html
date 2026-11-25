@@ -98,6 +98,14 @@
                 <label>Jenis target
                     <input name="target_title" maxlength="120" required placeholder="Contoh: Hafalan baru Surah Al-Mulk">
                 </label>
+                <label>Target yang dibuktikan
+                    <select name="target_key" required>
+                        <option value="">Pilih target</option>
+                        <option value="hafalan-baru">Hafalan baru</option>
+                        <option value="murajaah-terbaru">Murajaah hafalan terbaru</option>
+                        <option value="murajaah-lama">Murajaah hafalan lama</option>
+                    </select>
+                </label>
                 <label>Ayat atau surah yang disetorkan
                     <textarea name="target_detail" maxlength="500" required placeholder="Contoh: Al-Mulk ayat 1–10"></textarea>
                 </label>
@@ -127,7 +135,7 @@
             let recordingStream = null;
             let recordingChunks = [];
             let recordingBlob = null;
-            let approvedSubmissionCount = 0;
+            let approvedTargetKeys = new Set();
             let csrfToken = '';
 
             document.getElementById('target-date').textContent = new Intl.DateTimeFormat('id-ID', {
@@ -177,12 +185,12 @@
                 }
             }
 
-            targets.forEach((target) => target.addEventListener('change', () => {
-                const completedCount = targets.filter((item) => item.checked).length;
-                if (target.checked && approvedSubmissionCount < completedCount) {
+            const targetKeys = ['hafalan-baru', 'murajaah-terbaru', 'murajaah-lama'];
+            targets.forEach((target, index) => target.addEventListener('change', () => {
+                if (target.checked && !approvedTargetKeys.has(targetKeys[index])) {
                     target.checked = false;
                     updateProgress();
-                    setSubmissionStatus('Setiap target selesai membutuhkan rekaman setoran yang telah disetujui pengajar.', 'error');
+                    setSubmissionStatus('Target ini membutuhkan rekaman setoran yang telah disetujui pengajar.', 'error');
                     return;
                 }
                 saveTargets();
@@ -216,10 +224,19 @@
                     const response = await fetch('/api/tahfidz/submissions', { credentials: 'same-origin' });
                     const payload = await response.json();
                     if (!response.ok) throw new Error(payload.error || 'Riwayat setoran tidak dapat dimuat.');
-                    approvedSubmissionCount = payload.submissions.filter((item) => item.status === 'approved').length;
-                    if (approvedSubmissionCount < targets.filter((target) => target.checked).length) {
-                        targets.forEach((target) => { target.checked = false; });
-                        localStorage.removeItem(storageKey);
+                    approvedTargetKeys = new Set(
+                        payload.submissions
+                            .filter((item) => item.status === 'approved')
+                            .map((item) => item.target_key)
+                            .filter((key) => targetKeys.includes(key))
+                    );
+                    targets.forEach((target, index) => {
+                        if (!approvedTargetKeys.has(targetKeys[index])) target.checked = false;
+                    });
+                    localStorage.removeItem(storageKey);
+                    if (targets.some((target) => target.checked)) {
+                        saveTargets();
+                    } else {
                         updateProgress();
                     }
                     submissionList.innerHTML = payload.submissions.length
@@ -317,6 +334,7 @@
                 const payload = new FormData();
                 payload.append('target_title', formData.get('target_title').trim());
                 payload.append('target_detail', formData.get('target_detail').trim());
+                payload.append('target_key', formData.get('target_key'));
                 payload.append('recording', recordingBlob, 'setoran-hafalan.webm');
                 sendSubmission.disabled = true;
                 try {
@@ -340,6 +358,9 @@
             });
 
             loadSubmissionState();
+            window.setInterval(() => {
+                if (!document.hidden) loadSubmissionState();
+            }, 15000);
             updateProgress();
         })();
     </script>

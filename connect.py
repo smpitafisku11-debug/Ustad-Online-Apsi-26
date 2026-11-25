@@ -10,6 +10,12 @@ connect_api = Blueprint("connect_api", __name__)
 
 @connect_api.get("/ustad-dashboard")
 def ustad_dashboard():
+    if session.get("admin_authenticated"):
+        return render_template(
+            "ustad_dashboard.html",
+            teacher_verified=False,
+            admin_preview=True,
+        )
     connection = _database()
     try:
         user, error = _require_user(connection, "teacher")
@@ -18,7 +24,11 @@ def ustad_dashboard():
         verified = _teacher_verified(connection, user["id"])
     finally:
         connection.close()
-    return render_template("ustad_dashboard.html", teacher_verified=verified)
+    return render_template(
+        "ustad_dashboard.html",
+        teacher_verified=verified,
+        admin_preview=False,
+    )
 
 
 def _database():

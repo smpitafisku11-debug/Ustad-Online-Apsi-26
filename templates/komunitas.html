@@ -465,6 +465,14 @@
                     if (!activeGroup || !event || event.group_id !== activeGroup.id) return;
                     appendMessage(event.message);
                     updateGroupPreview(activeGroup.id, event.message);
+                    if (window.UstadNotifications && event.message.sender !== profileName.value.trim()) {
+                        window.UstadNotifications.showNotification(
+                            `Pesan baru · ${activeGroup.name}`,
+                            `${event.message.sender}: ${event.message.text}`,
+                            `chat:${event.message.id}`,
+                            '/komunitas'
+                        );
+                    }
                 });
             }
 

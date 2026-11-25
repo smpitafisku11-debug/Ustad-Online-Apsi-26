@@ -7,7 +7,7 @@ import eventlet
 
 eventlet.monkey_patch()
 
-from flask import Flask, jsonify, render_template, request, send_file, session
+from flask import Flask, jsonify, redirect, render_template, request, send_file, session, url_for
 from auth import auth_api, init_auth_db
 from extensions import socketio
 from quran_battle import quran_battle_api
@@ -178,7 +178,7 @@ def tahfidz_submission_audio(submission_id):
             (submission_id,),
         ).fetchone()
         if not submission:
-            return jsonify(error='Setoran tidak ditemukan.'), 404
+            return jsonify(error='Setoran tidak ditemukan atau sudah ditinjau.'), 409
         if user['role'] != 'teacher' and submission['student_id'] != user['id']:
             return jsonify(error='Rekaman hanya dapat diputar oleh pemilik atau pengajar.'), 403
         return send_file(
@@ -209,16 +209,25 @@ def review_tahfidz(submission_id):
         if not user or user['status'] != 'approved' or user['role'] != 'teacher':
             return jsonify(error='Fitur tinjauan hanya untuk ustad/ustazah.'), 403
         submission = connection.execute(
-            "SELECT id FROM tahfidz_submissions WHERE id = ?",
+            "SELECT id FROM tahfidz_submissions WHERE id = ? AND status = 'pending'",
             (submission_id,),
         ).fetchone()
         if not submission:
-            return jsonify(error='Setoran tidak ditemukan.'), 404
+            return jsonify(error='Setoran tidak ditemukan atau sudah ditinjau.'), 409
+        verification = connection.execute(
+            """
+            SELECT 1 FROM connect_teacher_verifications
+            WHERE teacher_id = ? AND identity_checked = 1 AND competence_checked = 1
+            """,
+            (user['id'],),
+        ).fetchone()
+        if not verification:
+            return jsonify(error='Akun pengajar belum diverifikasi untuk meninjau setoran.'), 403
         connection.execute(
             """
             UPDATE tahfidz_submissions
             SET status = ?, review_note = ?, reviewer_id = ?, reviewed_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            WHERE id = ? AND status = 'pending'
             """,
             (status, note, user['id'], submission_id),
         )
@@ -262,7 +271,7 @@ def ai_tahsin():
 
 @app.route('/tahsin')
 def tahsin():
-    return ai_tahsin()
+    return redirect(url_for('akademi_tilawah'))
 
 @app.route('/tilawah')
 def akademi_tilawah():
@@ -275,6 +284,10 @@ def komunitas():
 @app.route('/tahfidz')
 def tahfidz():
     return render_template('tahfidz.html')
+
+@app.route('/dzikir-doa')
+def dzikir_doa():
+    return render_template('dzikir_doa.html')
 
 @app.route('/fitur')
 @app.route('/fitur-tambahan')

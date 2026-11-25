@@ -1,5 +1,6 @@
 .teacher-dashboard-page { background: radial-gradient(ellipse at 92% 8%,#e6eddf 0,transparent 30rem),#f4f6f0; }
 .dashboard-shell { padding-bottom: 48px; }
+.admin-preview-note { margin: 18px 0; border: 1px solid #e8ddb9; border-radius: 12px; background: #fbf8ed; padding: 12px 15px; color: #625638; font-size: .78rem; }
 .dashboard-welcome { display: flex; align-items: center; justify-content: space-between; gap: 25px; margin: 28px 0 18px; border: 1px solid #dde5d8; border-radius: 24px; background: radial-gradient(ellipse at 88% 8%,rgba(197,213,178,.28),transparent 18rem),#fff; padding: clamp(21px,4vw,38px); }
 .dashboard-welcome h1 { margin: 7px 0 7px; color: #1e3d31; font-size: clamp(1.75rem,4vw,2.65rem); letter-spacing: -.05em; }
 .dashboard-welcome p { max-width: 610px; margin: 0; color: #6b7a70; }

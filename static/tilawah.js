@@ -199,8 +199,37 @@
                     ]
                 },
                 {
-                    title: 'Catatan',
-                    text: 'Panjang mad dan praktik bacaan dapat berbeda menurut riwayat. Dengarkan guru dan ikuti mushaf atau metode belajar yang digunakan.'
+                    title: 'Ghunnah dan lam jalalah',
+                    text: 'Nun atau mim yang bertasydid dibaca dengung (ghunnah). Lam pada lafaz jalalah dibaca tebal setelah fathah atau dammah, dan tipis setelah kasrah.',
+                    examples: [
+                        { arabic: 'إِنَّ', label: 'Ghunnah', detail: 'Nun rangkap dibaca dengung.', audio: 'إِنَّ' },
+                        { arabic: 'مِنَّ', label: 'Ghunnah', detail: 'Mim rangkap dibaca dengung.', audio: 'مِنَّ' },
+                        { arabic: 'اللَّهُ', label: 'Lam tebal', detail: 'Dibaca tafkhim setelah fathah atau dammah sesuai kaidah.', audio: 'اللَّهُ' },
+                        { arabic: 'بِاللَّهِ', label: 'Lam tipis', detail: 'Lam jalalah dibaca tarqiq setelah kasrah.', audio: 'بِاللَّهِ' }
+                    ]
+                },
+                {
+                    title: 'Pembagian mad',
+                    text: 'Mad asli atau mad thabi‘i biasanya dua harakat. Mad far‘i meliputi mad wajib muttasil, jaiz munfasil, silah, aridh lis-sukun, lazim, dan lainnya. Panjang tepatnya perlu dipelajari sesuai riwayat dan mushaf yang digunakan.',
+                    examples: [
+                        { arabic: 'قَالَ', label: 'Mad thabi‘i', detail: 'Alif tanpa hamzah setelah fathah.', audio: 'قَالَ' },
+                        { arabic: 'جَآءَ', label: 'Mad wajib muttasil', detail: 'Mad bertemu hamzah dalam satu kata.', audio: 'جَآءَ' },
+                        { arabic: 'إِنَّآ أَنْزَلْنَا', label: 'Mad jaiz munfasil', detail: 'Mad bertemu hamzah di kata berikutnya.', audio: 'إِنَّآ أَنْزَلْنَا' },
+                        { arabic: 'الْعَالَمِينَ', label: 'Mad aridh lis-sukun', detail: 'Mad di akhir kata ketika diwaqafkan.', audio: 'الْعَالَمِينَ' }
+                    ]
+                },
+                {
+                    title: 'Ra dan lam',
+                    text: 'Ra dibaca tebal atau tipis tergantung harakat, posisi sukun, dan huruf sebelum atau sesudahnya. Lafaz Allah mengikuti kaidah tafkhim atau tarqiq sesuai konteks.',
+                    examples: [
+                        { arabic: 'رَحْمَةٌ', label: 'Ra tebal', detail: 'Contoh ra berfathah.', audio: 'رَحْمَةٌ' },
+                        { arabic: 'رِزْقٌ', label: 'Ra tipis', detail: 'Contoh ra berkasrah.', audio: 'رِزْقٌ' },
+                        { arabic: 'أَنْعَمْتَ', label: 'Peringatan', detail: 'Mad, ghunnah, dan sifat huruf dapat berubah saat disambung atau diwaqafkan.', audio: 'أَنْعَمْتَ' }
+                    ]
+                },
+                {
+                    title: 'Penggunaan yang aman',
+                    text: 'Materi ini memberi fondasi, bukan keputusan akhir atas bacaan seseorang. Perbedaan riwayat, waqaf, makhraj, dan kadar ghunnah perlu dikonfirmasi kepada ustaz atau ustazah.'
                 }
             ]
         },
@@ -377,28 +406,96 @@
 
     function renderMakhrajMap(container) {
         const points = [
-            ['mulut', '◯', 'Rongga mulut · Al-Jauf', 'Tempat aliran suara untuk huruf mad dan vokal panjang.'],
-            ['tenggorokan', '⌁', 'Tenggorokan · Al-Halq', 'Kelompok huruf: ا, ه, ع, ح, غ, خ pada titik yang berbeda.'],
-            ['lidah', '⌇', 'Lidah · Al-Lisan', 'Huruf dibedakan oleh pangkal, tengah, tepi, atau ujung lidah.'],
-            ['bibir', '○', 'Bibir · Asy-Syafatain', 'Fathah pada ف, rapatan bibir pada ب dan م, serta lipatan pada و.'],
-            ['hidung', '≋', 'Rongga hidung · Al-Khaisyum', 'Tempat dengung pada nun atau mim yang bertasydid.']
+            { key: 'jauf', label: 'Rongga mulut · Al-Jauf', detail: 'Rongga mulut dan tenggorokan menjadi aliran huruf mad: alif mad, waw sukun setelah dammah, dan ya sukun setelah kasrah.', x: 190, y: 174 },
+            { key: 'halq', label: 'Tenggorokan · Al-Halq', detail: 'Enam huruf tenggorokan: ء ه di bagian terdalam, ع ح di tengah, dan غ خ di bagian yang lebih dekat ke mulut.', x: 235, y: 224 },
+            { key: 'lisan', label: 'Lidah · Al-Lisan', detail: 'Banyak huruf menggunakan bagian lidah yang berbeda—pangkal, tengah, sisi, atau ujung. Titik setiap huruf perlu dipelajari satu per satu.', x: 198, y: 192 },
+            { key: 'syafatain', label: 'Dua bibir · Asy-Syafatain', detail: 'ف melibatkan bibir bawah dan ujung gigi atas; ب dan م menggunakan pertemuan dua bibir, sedangkan و melibatkan pembulatan bibir.', x: 148, y: 174 },
+            { key: 'khaisyum', label: 'Rongga hidung · Al-Khaisyum', detail: 'Jalur dengung (ghunnah) pada ن dan م, terutama saat bertasydid. Ilustrasi ini menunjukkan wilayahnya secara sederhana.', x: 178, y: 127 }
         ];
+        const svgNamespace = 'http://www.w3.org/2000/svg';
+        const svgNode = (tag, attributes) => {
+            const element = document.createElementNS(svgNamespace, tag);
+            Object.entries(attributes).forEach(([name, value]) => element.setAttribute(name, value));
+            return element;
+        };
+        const figure = create('figure', 'makharij-figure');
+        const illustration = svgNode('svg', {
+            class: 'makharij-illustration',
+            viewBox: '0 0 480 300',
+            role: 'img',
+            'aria-labelledby': 'makharij-illustration-title makharij-illustration-description'
+        });
+        const title = svgNode('title', { id: 'makharij-illustration-title' });
+        title.textContent = 'Ilustrasi tampak samping kepala dan tempat keluarnya huruf';
+        const description = svgNode('desc', { id: 'makharij-illustration-description' });
+        description.textContent = 'Gambar sederhana rongga hidung, mulut, lidah, bibir, dan tenggorokan dengan titik bernomor yang sesuai dengan pilihan di bawah.';
+        illustration.append(title, description);
+        illustration.append(
+            svgNode('path', {
+                class: 'makharij-head',
+                d: 'M254 26 C196 26 157 66 151 115 L143 143 L124 157 L142 164 L133 174 L151 181 C151 205 164 227 187 241 L186 278 L304 278 L304 245 C339 222 357 184 357 131 C357 70 313 26 254 26 Z'
+            }),
+            svgNode('path', {
+                class: 'makharij-airway',
+                d: 'M151 127 C171 116 194 117 210 128 C199 139 179 143 154 141 M153 164 C177 158 207 162 230 179 C218 190 194 196 161 187 M230 177 C236 193 239 217 238 249'
+            }),
+            svgNode('path', {
+                class: 'makharij-tongue',
+                d: 'M158 189 C174 188 193 187 216 181 C211 194 194 201 171 199'
+            }),
+            svgNode('path', {
+                class: 'makharij-detail-line',
+                d: 'M285 112 C299 124 299 145 284 155 M157 165 C164 163 170 163 176 164 M155 180 C161 181 166 182 171 183'
+            }),
+            svgNode('circle', { class: 'makharij-eye', cx: '222', cy: '89', r: '4' }),
+            svgNode('path', { class: 'makharij-ear', d: 'M310 128 C322 121 328 130 324 143 C321 153 312 153 311 143 M314 136 C319 133 321 138 317 142' }),
+            svgNode('path', { class: 'makharij-teeth', d: 'M151 165 L160 165 L159 172 L151 171 M151 177 L158 178 L157 183 L151 181' })
+        );
+
+        points.forEach((point, index) => {
+            const marker = svgNode('g', {
+                class: `makharij-marker${index === 0 ? ' is-active' : ''}`,
+                'data-makhraj-point': point.key,
+                'aria-hidden': 'true'
+            });
+            marker.append(
+                svgNode('circle', { class: 'makharij-marker-halo', cx: point.x, cy: point.y, r: '14' }),
+                svgNode('circle', { class: 'makharij-marker-dot', cx: point.x, cy: point.y, r: '10' })
+            );
+            const number = svgNode('text', { class: 'makharij-marker-number', x: point.x, y: point.y + 3.5 });
+            number.textContent = String(index + 1);
+            marker.appendChild(number);
+            illustration.appendChild(marker);
+        });
+
+        const caption = create('figcaption', 'makharij-figure-caption', 'Tampak samping sederhana · pilih nomor untuk melihat keterangannya.');
+        figure.append(illustration, caption);
         const map = create('div', 'makharij-map');
-        const detail = create('div', 'makharij-detail', points[0][3]);
+        const detail = create('div', 'makharij-detail');
+        detail.setAttribute('role', 'status');
+        detail.setAttribute('aria-live', 'polite');
+        const detailTitle = create('strong', 'makharij-detail-title', points[0].label);
+        const detailText = create('span', 'makharij-detail-text', points[0].detail);
+        detail.append(detailTitle, detailText);
         points.forEach((point, index) => {
             const button = create('button', 'makharij-hotspot');
             button.type = 'button';
             button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
-            button.innerHTML = `<span class="map-icon" aria-hidden="true">${point[1]}</span><strong>${point[2]}</strong>`;
+            const number = create('span', 'makharij-number', String(index + 1));
+            number.setAttribute('aria-hidden', 'true');
+            button.append(number, create('strong', '', point.label));
             button.addEventListener('click', () => {
                 map.querySelectorAll('.makharij-hotspot').forEach((item) => item.setAttribute('aria-pressed', 'false'));
                 button.setAttribute('aria-pressed', 'true');
-                detail.textContent = point[3];
+                illustration.querySelectorAll('.makharij-marker').forEach((marker) => {
+                    marker.classList.toggle('is-active', marker.dataset.makhrajPoint === point.key);
+                });
+                detailTitle.textContent = point.label;
+                detailText.textContent = point.detail;
             });
             map.appendChild(button);
         });
-        container.appendChild(map);
-        container.appendChild(detail);
+        container.append(figure, map, detail);
     }
 
     function renderExamples(container, examples, isHijaiyah) {

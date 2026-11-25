@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#153d32">
+    <title>Dzikir &amp; Doa | Ustad Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dzikir_doa.css') }}">
+    {% include "partials/page_transitions.html" %}
+</head>
+<body>
+    <header class="prayer-topbar">
+        <div class="prayer-shell prayer-topbar-inner">
+            <a class="prayer-brand" href="{{ url_for('home') }}">
+                <span class="brand-mark" aria-hidden="true">ذ</span>
+                <span>Ustad Online <small>/ Dzikir &amp; Doa</small></span>
+            </a>
+            <a class="prayer-back" href="{{ url_for('home') }}">Kembali ke Beranda</a>
+        </div>
+    </header>
+    <main class="prayer-shell">
+        <section class="prayer-hero" aria-labelledby="page-title">
+            <span class="prayer-eyebrow">JEDA SEJENAK, INGAT ALLAH</span>
+            <h1 id="page-title">Dzikir &amp; Doa</h1>
+            <p>Kumpulan dzikir pilihan pagi-petang, setelah salat, dan doa sehari-hari. Baca dengan tenang, pahami maknanya, dan ikuti jumlah pengulangan yang tertera.</p>
+            <div class="prayer-hero-note"><span aria-hidden="true">۞</span> Progres bacaan tersimpan di perangkat ini.</div>
+        </section>
+
+        <section class="prayer-progress" aria-label="Progres bacaan hari ini">
+            <div><span class="prayer-eyebrow">PROGRES HARI INI</span><strong id="daily-progress">0 dzikir selesai</strong></div>
+            <button type="button" id="reset-progress">Atur ulang</button>
+        </section>
+
+        <section class="prayer-library" aria-labelledby="library-title">
+            <div class="library-heading">
+                <div><span class="prayer-eyebrow">PILIH AMALAN</span><h2 id="library-title">Panduan dzikir dan doa</h2></div>
+                <label class="prayer-search-label" for="prayer-search">Cari dzikir atau doa</label>
+            </div>
+            <input id="prayer-search" class="prayer-search" type="search" placeholder="Contoh: doa orang tua, setelah salat..." autocomplete="off">
+            <div class="prayer-filters" role="group" aria-label="Filter kategori dzikir dan doa">
+                <button type="button" class="is-active" data-prayer-filter="all" aria-pressed="true">Semua</button>
+                <button type="button" data-prayer-filter="pagi-petang" aria-pressed="false">Al-Ma’tsurat · Pagi/Petang</button>
+                <button type="button" data-prayer-filter="setelah-salat" aria-pressed="false">Setelah salat</button>
+                <button type="button" data-prayer-filter="harian" aria-pressed="false">Doa harian</button>
+            </div>
+            <p class="selection-note">Bagian Al-Ma’tsurat di sini adalah pilihan dzikir pagi-petang, bukan keseluruhan susunan wirid Al-Ma’tsurat.</p>
+            <div id="prayer-list" class="prayer-list" aria-live="polite"></div>
+            <p id="prayer-empty" class="prayer-empty" hidden>Tidak ditemukan. Coba kata kunci atau kategori lain.</p>
+        </section>
+
+        <p class="prayer-source-note">Rujukan dicantumkan per bacaan. Untuk hafalan dan ketepatan pelafalan, cocokkan dengan mushaf atau guru. Terjemahan disajikan sebagai makna ringkas.</p>
+    </main>
+    <script src="{{ url_for('static', filename='dzikir_doa.js') }}" defer></script>
+</body>
+</html>

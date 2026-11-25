@@ -1,0 +1,63 @@
+.qibla-trigger { display: inline-flex; width: 40px; height: 40px; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid #dce5e8; border-radius: 11px; background: #fff; color: #167c72; cursor: pointer; transition: background .2s ease,border-color .2s ease,transform .2s ease; }
+.qibla-trigger:hover { transform: translateY(-1px); border-color: #81c7b5; background: #eef9f5; }
+.qibla-trigger:focus-visible,.qibla-close:focus-visible,.qibla-locate:focus-visible { outline: 3px solid #39a88d; outline-offset: 3px; }
+.qibla-trigger svg { width: 20px; height: 20px; }
+.qibla-dialog { width: min(420px,calc(100% - 24px)); max-height: min(90vh,760px); overflow: auto; border: 1px solid #dce8e4; border-radius: 22px; margin: auto; background: #fff; padding: 0; color: #203b38; box-shadow: 0 26px 90px rgba(13,40,52,.28); }
+.qibla-dialog::backdrop { background: rgba(11,26,42,.58); backdrop-filter: blur(5px); }
+.qibla-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid #e8efeb; padding: 19px 21px; }
+.qibla-kicker { margin: 0; color: #278575; font-size: .62rem; font-weight: 800; letter-spacing: .16em; }
+.qibla-header h2 { margin: 5px 0 0; color: #1a3b4e; font: 700 1.22rem 'Space Grotesk',sans-serif; }
+.qibla-close { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #e1e9e5; border-radius: 10px; background: #fff; color: #65756e; font-size: 1.35rem; line-height: 1; cursor: pointer; }
+.qibla-content { display: grid; justify-items: center; padding: 18px 22px 22px; }
+.qibla-intro { margin: 0 auto 15px; color: #71817a; font-size: .76rem; line-height: 1.65; text-align: center; }
+.qibla-compass { display: grid; width: 220px; height: 220px; place-items: center; border: 1px solid #e2eee7; border-radius: 50%; background: radial-gradient(circle,#fff 54%,#f2f8f3 55%,#e6f0e9 100%); box-shadow: 0 12px 30px rgba(25,75,65,.1),inset 0 0 0 8px rgba(255,255,255,.82); }
+.qibla-dial { position: relative; width: 190px; height: 190px; border: 1px solid #d9e7df; border-radius: 50%; background: repeating-conic-gradient(from 0deg,#a4b9ad 0deg 1deg,transparent 1deg 15deg); transition: transform .24s ease-out; }
+.qibla-dial::before { position: absolute; inset: 9px; border: 1px solid rgba(164,185,173,.43); border-radius: 50%; background: #fbfdfb; content: ""; }
+.qibla-dial::after { position: absolute; inset: 20px; border: 1px dashed #dce8e1; border-radius: 50%; content: ""; }
+.qibla-cardinal { position: absolute; z-index: 1; color: #73867c; font-size: .57rem; font-weight: 800; }
+.qibla-north { top: 13px; left: 50%; color: #c04c49; transform: translateX(-50%); }
+.qibla-east { top: 50%; right: 14px; transform: translateY(-50%); }
+.qibla-south { bottom: 13px; left: 50%; transform: translateX(-50%); }
+.qibla-west { top: 50%; left: 14px; transform: translateY(-50%); }
+.qibla-needle { position: absolute; z-index: 2; top: 50%; left: 50%; width: 40px; height: 150px; overflow: visible; transform: translate(-50%,-50%) rotate(var(--qibla-bearing,0deg)); transition: transform .24s ease-out; }
+.qibla-center { position: absolute; z-index: 3; top: 50%; left: 50%; width: 11px; height: 11px; border: 2px solid #fff; border-radius: 50%; background: #173b63; box-shadow: 0 1px 5px rgba(16,54,69,.28); transform: translate(-50%,-50%); }
+.qibla-reading { display: grid; justify-items: center; gap: 2px; margin-top: 13px; }
+.qibla-reading strong { color: #11786e; font: 700 1.75rem 'Space Grotesk',sans-serif; letter-spacing: -.04em; }
+.qibla-reading span { color: #5f7469; font-size: .72rem; font-weight: 700; }
+.qibla-status { min-height: 35px; margin: 12px 0 9px; color: #71817a; font-size: .67rem; line-height: 1.55; text-align: center; }
+.qibla-status.is-error { color: #a64b46; }
+.qibla-locate { min-height: 43px; border: 1px solid #126d68; border-radius: 11px; background: linear-gradient(110deg,#17476a,#0b8174); padding: 0 17px; color: #fff; font-size: .73rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 15px rgba(18,107,102,.17); }
+.qibla-locate:hover { background: linear-gradient(110deg,#123b5b,#086b62); }
+.qibla-locate:disabled { opacity: .65; cursor: wait; }
+.qibla-note { max-width: 315px; margin: 12px 0 0; color: #89968f; font-size: .61rem; line-height: 1.55; text-align: center; }
+body[data-theme="midnight"] .qibla-trigger { border-color: #2b394f; background: #131f33; color: #79cfb8; }
+body[data-theme="midnight"] .qibla-dialog { border-color: #2b394f; background: #121d30; color: #d6e0ef; }
+body[data-theme="midnight"] .qibla-header { border-color: #2b394f; }
+body[data-theme="midnight"] .qibla-header h2 { color: #d6e0ef; }
+body[data-theme="midnight"] .qibla-close { border-color: #324158; background: #152238; color: #c5d2e4; }
+body[data-theme="midnight"] .qibla-compass { border-color: #2b394f; background: radial-gradient(circle,#17253a 54%,#152b36 55%,#132b32 100%); }
+body[data-theme="midnight"] .qibla-dial { border-color: #40564f; }
+body[data-theme="midnight"] .qibla-dial::before { border-color: #40564f; background: #17253a; }
+body[data-theme="midnight"] .qibla-dial::after { border-color: #34495a; }
+body[data-theme="midnight"] .qibla-cardinal,body[data-theme="midnight"] .qibla-intro,body[data-theme="midnight"] .qibla-status,body[data-theme="midnight"] .qibla-note { color: #a7b5ca; }
+body[data-theme="midnight"] .qibla-reading span { color: #b7c8c0; }
+body[data-theme="mushaf"] .qibla-dialog { border-color: #e4d9c4; background: #fffaf0; color: #4b4030; }
+body[data-theme="mushaf"] .qibla-header { border-color: #e4d9c4; }
+body[data-theme="mushaf"] .qibla-header h2 { color: #554329; }
+body[data-theme="mushaf"] .qibla-compass { border-color: #e4d9c4; background: radial-gradient(circle,#fffdf7 54%,#f8f1df 55%,#efe9d7 100%); }
+@media (max-width: 420px) {
+    .qibla-trigger { width: 36px; height: 36px; }
+    .qibla-dialog { width: calc(100% - 16px); }
+    .qibla-compass { width: 200px; height: 200px; }
+    .qibla-dial { width: 172px; height: 172px; }
+    .qibla-needle { height: 136px; }
+}
+@media (max-width: 390px) {
+    body.home-view header > div { padding-right: .75rem; padding-left: .75rem; }
+    body.home-view header > div > a { gap: .5rem; }
+    body.home-view header > div > a img { width: 36px; height: 36px; }
+    body.home-view header > div > a .brand-name { font-size: 15px; }
+    body.home-view header > div > div:last-child { gap: .25rem; }
+    body.home-view #notification-button,body.home-view .settings-button,body.home-view #profile-button { width: 36px; height: 36px; }
+    .qibla-trigger { width: 34px; height: 34px; }
+}

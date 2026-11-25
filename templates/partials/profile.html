@@ -2,9 +2,7 @@
     <div class="profile-login-layout">
         <div class="profile-login-brand">
             <div class="profile-brand-top">
-                <span class="profile-brand-icon" aria-hidden="true">
-                    <svg viewBox="0 0 32 32" fill="none"><path d="M7 25V10.5C7 8.57 8.57 7 10.5 7h11C23.43 7 25 8.57 25 10.5V25M12 25V13l8 12V13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 25h22" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                </span>
+                <img class="profile-brand-icon" src="{{ url_for('static', filename='brand-logo.svg') }}" alt="">
                 <span class="profile-brand-wordmark">USTAD <b>ONLINE</b></span>
             </div>
             <div class="profile-orbit-art" aria-hidden="true">
@@ -31,6 +29,7 @@
             <div class="auth-role-switch" role="tablist" aria-label="Pilih jenis akun">
                 <button class="auth-role-option" type="button" role="tab" data-account-role="student" aria-selected="true"><span aria-hidden="true">◉</span><span><strong>Siswa</strong><small>Belajar &amp; berkembang</small></span></button>
                 <button class="auth-role-option" type="button" role="tab" data-account-role="teacher" aria-selected="false"><span aria-hidden="true">✦</span><span><strong>Ustad</strong><small>Ajukan sebagai pengajar</small></span></button>
+                <button class="auth-role-option" type="button" role="tab" data-account-role="admin" aria-selected="false"><span aria-hidden="true">⌘</span><span><strong>Admin</strong><small>Review &amp; pratinjau</small></span></button>
             </div>
             <div class="auth-mode-switch" role="group" aria-label="Pilih proses akun">
                 <button type="button" data-auth-mode="login" aria-pressed="true">Masuk</button>
@@ -45,10 +44,12 @@
                         <input id="login-name" name="name" type="text" minlength="2" maxlength="60" autocomplete="name" placeholder="Nama lengkap">
                     </div>
                 </div>
-                <label for="login-email">Email</label>
-                <div class="profile-input-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="m5 7 7 5.5L19 7"/></svg>
-                    <input id="login-email" name="email" type="email" maxlength="120" autocomplete="email" placeholder="nama@email.com" required>
+                <div data-account-email>
+                    <label for="login-email">Email</label>
+                    <div class="profile-input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="m5 7 7 5.5L19 7"/></svg>
+                        <input id="login-email" name="email" type="email" maxlength="120" autocomplete="email" placeholder="nama@email.com" required>
+                    </div>
                 </div>
                 <div data-register-only data-teacher-only>
                     <label for="login-phone">Nomor WhatsApp aktif</label>
@@ -61,7 +62,7 @@
                     <label for="login-experience">Pengalaman mengajar</label>
                     <textarea id="login-experience" name="experience" minlength="20" maxlength="1000" rows="2" placeholder="Ceritakan pengalaman dan bidang yang diajarkan"></textarea>
                 </div>
-                <label for="login-password">Kata sandi</label>
+                <label id="login-password-label" for="login-password">Kata sandi</label>
                 <div class="profile-input-wrap">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10m-4 4v2"/></svg>
                     <input id="login-password" name="password" type="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Minimal 8 karakter" required>

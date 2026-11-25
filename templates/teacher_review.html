@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Verifikasi Ustad | Ustad Online</title>
+    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; background: #f3f5ef; color: #23352c; font: 15px/1.6 "Segoe UI", sans-serif; }
@@ -48,7 +49,7 @@
     {% elif not authenticated %}
         <section class="card">
             <h2>Masuk sebagai admin</h2>
-            <p>Gunakan kata sandi admin dari konfigurasi server. Kata sandi ini tidak sama dengan akun siswa atau ustad.</p>
+            <p>Gunakan kata sandi admin dari konfigurasi server. Kata sandi ini tidak sama dengan akun siswa atau ustad. Admin juga dapat masuk dari tab Admin di halaman Beranda untuk membuka mode siswa, pratinjau Ustad, dan panel review.</p>
             {% if login_error %}<p class="error" role="alert">{{ login_error }}</p>{% endif %}
             <form method="post" action="{{ url_for('auth_api.review_login') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

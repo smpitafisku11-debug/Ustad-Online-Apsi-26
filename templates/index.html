@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0A192F">
+    <meta name="theme-color" content="#173B63">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='brand-logo.svg') }}">
     <title>{{ page_title|default('Beranda | Ustad Online') }}</title>
     <script>
         tailwind = { config: { theme: { extend: { colors: { ink: '#f8fafc', panel: '#ffffff', navy: '#1e3a8a', emerald: '#059669' } } } } };
@@ -36,9 +37,9 @@
         .mobile-nav { padding-bottom: max(.6rem, env(safe-area-inset-bottom)); }
         .mobile-nav a[aria-current="page"] { color: var(--navy); }
         .mobile-nav, header { background: rgba(255, 255, 255, .94); border-color: #e2e8f0; }
-        body.home-view { background: radial-gradient(ellipse at 92% 9%, rgba(216, 232, 216, .5), transparent 28rem), radial-gradient(ellipse at 3% 35%, rgba(229, 235, 246, .55), transparent 26rem), #f6f7f3; }
+        body.home-view { background: radial-gradient(ellipse at 94% 7%, rgba(142, 226, 205, .32), transparent 29rem), radial-gradient(ellipse at 5% 29%, rgba(195, 205, 255, .3), transparent 27rem), radial-gradient(ellipse at 88% 83%, rgba(246, 220, 167, .22), transparent 24rem), #f6f7fb; background-attachment: fixed; }
         body.home-view > header { box-shadow: 0 8px 26px rgba(27, 48, 41, .055); }
-        body.home-view .hero-panel { position: relative; border-color: #34584b; background: radial-gradient(ellipse at 89% 13%, rgba(174, 193, 148, .22), transparent 25rem), linear-gradient(118deg, #12382f 0%, #174638 58%, #1c5141 100%); box-shadow: 0 18px 38px rgba(22, 62, 47, .16); }
+        body.home-view .hero-panel { position: relative; border-color: #315a6c; background: radial-gradient(ellipse at 84% 8%, rgba(117, 218, 197, .28), transparent 24rem), radial-gradient(ellipse at 8% 100%, rgba(111, 134, 219, .18), transparent 23rem), linear-gradient(118deg, #142d50 0%, #145064 55%, #13715f 100%); box-shadow: 0 20px 46px rgba(25, 61, 93, .2); }
         body.home-view .hero-panel > div { border-color: rgba(238, 224, 185, .2); }
         body.home-view .hero-panel > div > div > p { color: #d3c497; }
         body.home-view .hero-panel > div > div > p > span { background: #d4bd7d; }
@@ -58,15 +59,16 @@
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
-    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='qibla.css') }}">
     <script src="{{ url_for('static', filename='profile.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='qibla.js') }}" defer></script>
     {% include "partials/page_transitions.html" %}
 </head>
 <body class="antialiased home-view">
     <header class="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-xl">
         <div class="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <a href="{{ url_for('home') }}" class="flex items-center gap-3" aria-label="Ustad Online, beranda">
-                <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-800"><i data-lucide="book-open-check" class="h-5 w-5"></i></span>
+                <img src="{{ url_for('static', filename='brand-logo.svg') }}" alt="" class="h-10 w-10 rounded-xl shadow-sm transition duration-300 hover:-rotate-3 hover:scale-105">
                 <span class="brand-name text-[17px] font-bold tracking-normal text-blue-950">Ustad <span class="text-blue-700">Online</span></span>
             </a>
 
@@ -93,8 +95,11 @@
                         </ul>
                     </div>
                 </div>
-                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
+                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" data-language-aria="settings.open" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>
+                </button>
+                <button id="qibla-button" type="button" class="qibla-trigger" aria-label="Kompas arah kiblat" aria-haspopup="dialog" aria-controls="qibla-dialog">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2 5.2-2.4Z"/><path d="M12 3v2M21 12h-2M12 21v-2M3 12h2"/></svg>
                 </button>
                 <button id="profile-button" type="button" class="profile-avatar flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 font-semibold text-blue-900 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100" aria-label="Profil pengguna" aria-haspopup="dialog" data-profile-open><span data-profile-avatar>U</span></button>
             </div>
@@ -102,6 +107,32 @@
     </header>
     {% include "partials/ui_customization.html" %}
     {% include "partials/profile.html" %}
+    <dialog class="qibla-dialog" id="qibla-dialog" aria-labelledby="qibla-title">
+        <header class="qibla-header">
+            <div><p class="qibla-kicker">PENUNJUK ARAH</p><h2 id="qibla-title">Kompas Kiblat</h2></div>
+            <button type="button" class="qibla-close" data-close-qibla aria-label="Tutup kompas kiblat">×</button>
+        </header>
+        <div class="qibla-content">
+            <p class="qibla-intro">Arah dihitung dari lokasimu menuju Ka'bah. Aktifkan lokasi dan sensor kompas agar penunjuk mengikuti arah perangkat.</p>
+            <div class="qibla-compass" aria-label="Penunjuk arah kiblat">
+                <div class="qibla-dial" id="qibla-dial">
+                    <span class="qibla-cardinal qibla-north">U</span>
+                    <span class="qibla-cardinal qibla-east">T</span>
+                    <span class="qibla-cardinal qibla-south">S</span>
+                    <span class="qibla-cardinal qibla-west">B</span>
+                    <svg class="qibla-needle" id="qibla-needle" viewBox="0 0 40 150" aria-hidden="true"><path d="M20 5 31 76 20 67 9 76 20 5Z" fill="#087f78"/><path d="m20 145 11-69-11 9-11-9 11 69Z" fill="#d9e3dd"/><circle cx="20" cy="75" r="5" fill="#173b63" stroke="#fff" stroke-width="2"/></svg>
+                    <span class="qibla-center" aria-hidden="true"></span>
+                </div>
+            </div>
+            <div class="qibla-reading">
+                <strong id="qibla-bearing">--°</strong>
+                <span id="qibla-direction">Menunggu lokasi</span>
+            </div>
+            <p class="qibla-status" id="qibla-status" role="status" aria-live="polite">Lokasimu hanya dipakai di perangkat ini untuk menghitung arah kiblat.</p>
+            <button type="button" class="qibla-locate" id="qibla-locate">◎ Aktifkan lokasi &amp; kompas</button>
+            <p class="qibla-note">Akurasi bergantung pada sensor perangkat dan kondisi sekitar. Cocokkan kembali dengan kompas fisik bila perlu.</p>
+        </div>
+    </dialog>
 
     <main class="mx-auto max-w-6xl px-4 pb-28 pt-7 sm:px-6 sm:pt-10 md:pb-12 lg:px-8">
         <section class="glass hero-panel relative isolate overflow-hidden rounded-2xl p-5 sm:p-8 lg:p-9" aria-labelledby="welcome-title">
@@ -150,10 +181,6 @@
                     <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="book-open-check" class="h-5 w-5"></i></span>
                     <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Akademi Tilawah</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Belajar dasar &amp; tajwid</span>
                 </a>
-                <a href="{{ url_for('tahsin') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5">
-                    <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="audio-lines" class="h-5 w-5"></i></span>
-                    <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">AI Tahsin</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Latihan pelafalan dengan AI</span>
-                </a>
                 <a href="{{ url_for('connect') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5">
                     <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="messages-square" class="h-5 w-5"></i></span>
                     <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Ustad Connect</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Bimbingan dengan ustaz/ustazah</span>
@@ -162,9 +189,17 @@
                     <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-emerald-800"><i data-lucide="layout-dashboard" class="h-5 w-5"></i></span>
                     <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Panel Ustad</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Jadwal, permintaan, dan evaluasi siswa</span>
                 </a>
+                <a href="{{ url_for('auth_api.review_teachers') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5" data-admin-feature hidden>
+                    <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-emerald-800"><i data-lucide="shield-check" class="h-5 w-5"></i></span>
+                    <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Panel Admin</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Review pengajuan dan moderasi</span>
+                </a>
                 <a href="{{ url_for('tahfidz') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5">
                     <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="brain" class="h-5 w-5"></i></span>
                     <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Tahfidz &amp; Murajaah</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Target hafalan &amp; murajaah</span>
+                </a>
+                <a href="{{ url_for('dzikir_doa') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5">
+                    <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="heart-handshake" class="h-5 w-5"></i></span>
+                    <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Dzikir &amp; Doa</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Al-Ma’tsurat, dzikir salat, dan doa harian</span>
                 </a>
                 <a href="{{ url_for('battle') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5">
                     <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="swords" class="h-5 w-5"></i></span>
@@ -263,6 +298,25 @@
                     <button id="play-full-surah" type="button" disabled class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
                         <i data-lucide="play" class="h-4 w-4 fill-current"></i>Putar seluruh surah
                     </button>
+                </div>
+                <div class="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 sm:p-4">
+                    <label class="block text-xs font-semibold text-slate-700" for="ambience-select">
+                        Suara latar murottal
+                        <select id="ambience-select" class="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
+                            <option value="off">Tanpa suara latar</option>
+                            <option value="rain">Hujan lembut</option>
+                            <option value="wind">Angin sepoi-sepoi</option>
+                            <option value="waves">Ombak tenang</option>
+                        </select>
+                    </label>
+                    <div class="mt-3 flex flex-wrap items-center gap-3">
+                        <label class="min-w-40 flex-1 text-xs font-semibold text-slate-700" for="ambience-volume">
+                            Volume suara latar <span id="ambience-volume-value">12%</span>
+                            <input id="ambience-volume" class="mt-2 h-2 w-full cursor-pointer accent-emerald-700" type="range" min="0" max="25" step="1" value="12">
+                        </label>
+                        <span id="ambience-status" class="text-xs text-slate-500" role="status" aria-live="polite">Nonaktif</span>
+                    </div>
+                    <p class="mt-2 text-[11px] leading-relaxed text-slate-500">Suara latar lembut dibuat di perangkat, hanya aktif saat murottal diputar, dan tidak menggantikan suara qari.</p>
                 </div>
                 <audio id="reader-audio" class="mb-4 hidden w-full" controls preload="none" aria-label="Pemutar audio murottal"></audio>
                 <p id="reader-status" class="mb-4 text-sm text-slate-500" role="status" aria-live="polite">Memuat ayat dan audio...</p>
@@ -389,6 +443,7 @@
             <a href="{{ url_for('baca_alquran') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="book-open" class="h-5 w-5"></i><span class="text-[10px] font-medium">Al-Qur'an</span></a>
             <a href="{{ url_for('fitur_tambahan') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="grid-2x2" class="h-5 w-5"></i><span class="text-[10px] font-medium">Fitur</span></a>
             <a href="{{ url_for('akademi_tilawah') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="graduation-cap" class="h-5 w-5"></i><span class="text-[10px] font-medium">Akademi</span></a>
+            <a href="{{ url_for('dzikir_doa') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="heart-handshake" class="h-5 w-5"></i><span class="text-[10px] font-medium">Dzikir &amp; Doa</span></a>
         </div>
     </nav>
 
@@ -633,6 +688,18 @@
         const reciterSelect = document.getElementById('reciter-select');
         const playFullSurah = document.getElementById('play-full-surah');
         const audioPlayer = document.getElementById('reader-audio');
+        const ambienceSelect = document.getElementById('ambience-select');
+        const ambienceVolumeControl = document.getElementById('ambience-volume');
+        const ambienceVolumeValue = document.getElementById('ambience-volume-value');
+        const ambienceStatus = document.getElementById('ambience-status');
+        const ambienceStorageKey = 'ustadOnline.quranReader.ambience.v1';
+        const ambienceProfiles = {
+            rain: { label: 'Hujan lembut aktif', highpass: 120, lowpass: 1450, modulation: 0.12, rate: 0.18 },
+            wind: { label: 'Angin sepoi-sepoi aktif', highpass: 45, lowpass: 340, modulation: 0.32, rate: 0.07 },
+            waves: { label: 'Ombak tenang aktif', highpass: 70, lowpass: 760, modulation: 0.44, rate: 0.1 }
+        };
+        let ambienceType = 'off';
+        let ambienceVolume = 0.12;
         let allSurahs = [];
         let readerRequest;
         let audioQueue = [];
@@ -640,6 +707,31 @@
         let currentVerses = [];
         let currentSurahAudio = {};
         let surahsLoading = false;
+        let lastOpenedSurahNumber = 0;
+        let recitationIsPlaying = false;
+        let ambienceContext;
+        let ambienceBuffer;
+        let ambienceSource;
+        let ambienceHighpass;
+        let ambienceLowpass;
+        let ambienceGain;
+        let ambienceOscillator;
+        let ambienceModulationGain;
+
+        try {
+            const preferences = JSON.parse(localStorage.getItem(ambienceStorageKey) || '{}');
+            if (preferences && Object.prototype.hasOwnProperty.call(ambienceProfiles, preferences.type)) {
+                ambienceType = preferences.type;
+            }
+            if (preferences && Number.isFinite(preferences.volume)) {
+                ambienceVolume = Math.max(0, Math.min(0.25, preferences.volume));
+            }
+        } catch (error) {
+            console.warn('Pengaturan suara latar tidak dapat dibaca:', error);
+        }
+        ambienceSelect.value = ambienceType;
+        ambienceVolumeControl.value = String(Math.round(ambienceVolume * 100));
+        ambienceVolumeValue.textContent = `${ambienceVolumeControl.value}%`;
 
         function setSurahStatus(message, isError) {
             surahStatus.textContent = message;
@@ -665,7 +757,7 @@
                     translation: surah.arti,
                     ayahCount: surah.jumlahAyat,
                     revelation: surah.tempatTurun
-                }));
+                })).sort((first, second) => first.number - second.number);
                 surahsLoading = false;
                 renderSurahs();
             } catch (error) {
@@ -751,6 +843,134 @@
             audioPlayer.classList.add('hidden');
         }
 
+        function setRainStatus(message, isError = false) {
+            ambienceStatus.textContent = message;
+            ambienceStatus.className = isError ? 'text-xs text-rose-700' : 'text-xs text-slate-500';
+        }
+
+        function saveAmbienceSettings() {
+            try {
+                localStorage.setItem(ambienceStorageKey, JSON.stringify({
+                    type: ambienceType,
+                    volume: ambienceVolume
+                }));
+            } catch (error) {
+                console.warn('Pengaturan suara latar tidak dapat disimpan:', error);
+            }
+        }
+
+        function createAmbienceBuffer(context) {
+            const sampleCount = Math.floor(context.sampleRate * 8);
+            const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
+            const samples = buffer.getChannelData(0);
+            let b0 = 0;
+            let b1 = 0;
+            let b2 = 0;
+            let b3 = 0;
+            let b4 = 0;
+            let b5 = 0;
+            let b6 = 0;
+            for (let index = 0; index < sampleCount; index += 1) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.969 * b2 + white * 0.153852;
+                b3 = 0.8665 * b3 + white * 0.3104856;
+                b4 = 0.55 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.016898;
+                samples[index] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                b6 = white * 0.115926;
+            }
+            const crossfadeSamples = Math.min(240, Math.floor(sampleCount / 4));
+            for (let index = 0; index < crossfadeSamples; index += 1) {
+                const blend = index / crossfadeSamples;
+                const seamlessSample = samples[sampleCount - crossfadeSamples + index] * (1 - blend)
+                    + samples[index] * blend;
+                samples[index] = seamlessSample;
+                samples[sampleCount - crossfadeSamples + index] = seamlessSample;
+            }
+            return buffer;
+        }
+
+        function stopRainAmbience() {
+            if (ambienceSource) {
+                ambienceSource.stop();
+                ambienceSource.disconnect();
+                ambienceHighpass.disconnect();
+                ambienceLowpass.disconnect();
+                ambienceGain.disconnect();
+                ambienceOscillator.stop();
+                ambienceOscillator.disconnect();
+                ambienceModulationGain.disconnect();
+                ambienceSource = null;
+                ambienceHighpass = null;
+                ambienceLowpass = null;
+                ambienceGain = null;
+                ambienceOscillator = null;
+                ambienceModulationGain = null;
+            }
+            if (ambienceType === 'off') setRainStatus('Nonaktif');
+            else setRainStatus('Aktif saat murottal diputar');
+        }
+
+        async function startRainAmbience() {
+            if (ambienceType === 'off') return;
+            if (ambienceVolume === 0) {
+                setRainStatus('Volume suara latar 0%');
+                return;
+            }
+            if (!recitationIsPlaying) {
+                setRainStatus('Aktif saat murottal diputar');
+                return;
+            }
+            if (ambienceSource) return;
+            const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextConstructor) {
+                setRainStatus('Browser ini tidak mendukung suara latar.', true);
+                return;
+            }
+
+            try {
+                if (!ambienceContext) ambienceContext = new AudioContextConstructor();
+                if (ambienceContext.state === 'suspended') await ambienceContext.resume();
+                if (ambienceType === 'off' || !recitationIsPlaying || ambienceSource) return;
+
+                const profile = ambienceProfiles[ambienceType];
+                if (!ambienceBuffer) ambienceBuffer = createAmbienceBuffer(ambienceContext);
+                ambienceSource = ambienceContext.createBufferSource();
+                ambienceSource.buffer = ambienceBuffer;
+                ambienceSource.loop = true;
+                ambienceHighpass = ambienceContext.createBiquadFilter();
+                ambienceHighpass.type = 'highpass';
+                ambienceHighpass.frequency.value = profile.highpass;
+                ambienceHighpass.Q.value = 0.55;
+                ambienceLowpass = ambienceContext.createBiquadFilter();
+                ambienceLowpass.type = 'lowpass';
+                ambienceLowpass.frequency.value = profile.lowpass;
+                ambienceLowpass.Q.value = 0.55;
+                ambienceGain = ambienceContext.createGain();
+                ambienceGain.gain.value = ambienceVolume;
+                ambienceOscillator = ambienceContext.createOscillator();
+                ambienceOscillator.type = 'sine';
+                ambienceOscillator.frequency.value = profile.rate;
+                ambienceModulationGain = ambienceContext.createGain();
+                ambienceModulationGain.gain.value = ambienceVolume * profile.modulation;
+                ambienceSource.connect(ambienceHighpass);
+                ambienceHighpass.connect(ambienceLowpass);
+                ambienceLowpass.connect(ambienceGain);
+                ambienceGain.connect(ambienceContext.destination);
+                ambienceOscillator.connect(ambienceModulationGain);
+                ambienceModulationGain.connect(ambienceGain.gain);
+                ambienceSource.start();
+                ambienceOscillator.start();
+                setRainStatus(profile.label);
+            } catch (error) {
+                console.error('Suara latar tidak dapat dijalankan:', error);
+                stopRainAmbience();
+                setRainStatus('Suara latar tidak dapat dijalankan. Coba pilih suara lain atau muat ulang halaman.', true);
+            }
+        }
+
         function playAudioQueue(queue, startIndex) {
             audioQueue = queue;
             audioQueueIndex = startIndex;
@@ -767,19 +987,64 @@
         }
 
         audioPlayer.addEventListener('ended', () => {
+            recitationIsPlaying = false;
             audioQueueIndex += 1;
             if (audioQueueIndex < audioQueue.length) {
                 playAudioQueue(audioQueue, audioQueueIndex);
             } else {
                 audioQueue = [];
+                stopRainAmbience();
                 setReaderStatus('Audio selesai diputar.', false);
             }
         });
+        audioPlayer.addEventListener('playing', () => {
+            recitationIsPlaying = true;
+            startRainAmbience();
+        });
+        ['pause', 'waiting'].forEach((eventName) => {
+            audioPlayer.addEventListener(eventName, () => {
+                recitationIsPlaying = false;
+                stopRainAmbience();
+            });
+        });
         audioPlayer.addEventListener('error', () => {
+            recitationIsPlaying = false;
+            stopRainAmbience();
             if (audioQueue.length) setReaderStatus('Audio gagal dimuat. Coba putar kembali saat koneksi tersedia.', true);
+        });
+        ambienceSelect.addEventListener('change', () => {
+            ambienceType = ambienceSelect.value;
+            saveAmbienceSettings();
+            stopRainAmbience();
+            if (ambienceType !== 'off') startRainAmbience();
+        });
+        ambienceVolumeControl.addEventListener('input', () => {
+            ambienceVolume = Number(ambienceVolumeControl.value) / 100;
+            ambienceVolumeValue.textContent = `${ambienceVolumeControl.value}%`;
+            if (ambienceVolume === 0) {
+                stopRainAmbience();
+                setRainStatus('Volume suara latar 0%');
+                saveAmbienceSettings();
+                return;
+            }
+            if (ambienceGain && ambienceModulationGain) {
+                const profile = ambienceProfiles[ambienceType];
+                const now = ambienceContext.currentTime;
+                ambienceGain.gain.setTargetAtTime(ambienceVolume, now, 0.12);
+                ambienceModulationGain.gain.setTargetAtTime(ambienceVolume * profile.modulation, now, 0.12);
+            } else if (ambienceType !== 'off' && recitationIsPlaying) {
+                startRainAmbience();
+            } else {
+                setRainStatus(ambienceType === 'off' ? 'Nonaktif' : 'Aktif saat murottal diputar');
+            }
+            saveAmbienceSettings();
         });
 
         async function openSurah(surah) {
+            if (window.UstadPageTransition && typeof window.UstadPageTransition.playQuranSurah === 'function') {
+                await window.UstadPageTransition.playQuranSurah(lastOpenedSurahNumber, surah.number);
+            }
+            lastOpenedSurahNumber = surah.number;
             if (readerRequest) readerRequest.abort();
             readerRequest = new AbortController();
             stopAudio();

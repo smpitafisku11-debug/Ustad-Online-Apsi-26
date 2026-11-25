@@ -2,6 +2,17 @@
     'use strict';
     const root = document.querySelector('.dashboard-shell');
     if (!root) return;
+    if (root.dataset.adminPreview === 'true') {
+        document.querySelectorAll('[data-dashboard-tab]').forEach((tab) => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('[data-dashboard-tab]').forEach((item) => item.classList.remove('is-active'));
+                document.querySelectorAll('[data-dashboard-panel]').forEach((panel) => panel.classList.remove('is-active'));
+                tab.classList.add('is-active');
+                document.querySelector(`[data-dashboard-panel="${tab.dataset.dashboardTab}"]`).classList.add('is-active');
+            });
+        });
+        return;
+    }
     let csrfToken = '';
     let profile = null;
     let bookings = [];

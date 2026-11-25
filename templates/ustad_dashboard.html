@@ -15,22 +15,28 @@
 <body class="teacher-dashboard-page">
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true">ت</span> Ustad Online <span class="brand-separator">/</span> Panel Ustad</a>
+            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true"><img src="{{ url_for('static', filename='brand-logo.svg') }}" alt=""></span> Ustad Online <span class="brand-separator">/</span> Panel Ustad</a>
             <div class="topbar-actions">
+                {% if admin_preview %}<a class="quiet-link" href="{{ url_for('auth_api.review_teachers') }}">Panel Admin</a>{% endif %}
                 <a class="quiet-link" href="{{ url_for('connect') }}">Ustad Connect</a>
                 <a class="button button-small" href="{{ url_for('home') }}">Beranda</a>
             </div>
         </div>
     </header>
-    <main class="shell dashboard-shell">
+    <main class="shell dashboard-shell" data-admin-preview="{{ 'true' if admin_preview else 'false' }}">
+        {% if admin_preview %}
+            <p class="admin-preview-note" role="status">Mode pratinjau Admin. Data akun Ustad dan tindakan pengelolaan dinonaktifkan.</p>
+        {% endif %}
         <section class="dashboard-welcome" aria-labelledby="dashboard-title">
             <div>
-                <span class="eyebrow">KHUSUS AKUN USTAD</span>
-                <h1 id="dashboard-title">Assalamu'alaikum, <span data-dashboard-name>Ustad</span></h1>
-                <p>Pusat pengajaran untuk mengelola profil, jadwal, permintaan siswa, dan evaluasi belajar.</p>
+                <span class="eyebrow">{% if admin_preview %}PRATINJAU MODE USTAD{% else %}KHUSUS AKUN USTAD{% endif %}</span>
+                <h1 id="dashboard-title">Assalamu'alaikum, <span data-dashboard-name>{% if admin_preview %}Admin{% else %}Ustad{% endif %}</span></h1>
+                <p>{% if admin_preview %}Periksa tampilan panel pengajar tanpa membuka data siswa atau mengubah pengaturan.{% else %}Pusat pengajaran untuk mengelola profil, jadwal, permintaan siswa, dan evaluasi belajar.{% endif %}</p>
             </div>
             <div class="teacher-status" data-verification-status>
-                {% if teacher_verified %}
+                {% if admin_preview %}
+                    <span class="status-dot"></span><strong>Pratinjau saja</strong><small>Masuk sebagai akun Ustad untuk mengelola data</small>
+                {% elif teacher_verified %}
                     <span class="status-dot is-approved"></span><strong>Pengajar terverifikasi</strong><small>Identitas & kompetensi telah diperiksa admin</small>
                 {% else %}
                     <span class="status-dot"></span><strong>Verifikasi belum selesai</strong><small>Profil belum dapat menerima pemesanan</small>
@@ -57,67 +63,75 @@
             <div class="dashboard-content">
                 <section class="dashboard-panel is-active" data-dashboard-panel="requests" aria-labelledby="requests-title">
                     <div class="panel-heading"><div><span class="eyebrow">MANAJEMEN SESI</span><h2 id="requests-title">Permintaan siswa</h2></div></div>
-                    <div class="request-list" data-request-list><div class="dashboard-empty">Memuat permintaan…</div></div>
+                    <div class="request-list" data-request-list><div class="dashboard-empty">{% if admin_preview %}Data permintaan hanya tersedia untuk akun Ustad terkait.{% else %}Memuat permintaan…{% endif %}</div></div>
                 </section>
 
                 <section class="dashboard-panel" data-dashboard-panel="tahfidz" aria-labelledby="tahfidz-title">
                     <div class="panel-heading"><div><span class="eyebrow">VALIDASI TARGET SISWA</span><h2 id="tahfidz-title">Setoran hafalan</h2></div></div>
-                    <div class="request-list" data-tahfidz-review-list><div class="dashboard-empty">Memuat setoran hafalan…</div></div>
+                    <div class="request-list" data-tahfidz-review-list><div class="dashboard-empty">{% if admin_preview %}Data setoran hanya tersedia untuk akun Ustad terkait.{% else %}Memuat setoran hafalan…{% endif %}</div></div>
                 </section>
 
                 <section class="dashboard-panel" data-dashboard-panel="schedule" aria-labelledby="schedule-title">
                     <div class="panel-heading"><div><span class="eyebrow">JADWAL BERSAMA SISWA</span><h2 id="schedule-title">Kelola jadwal mengajar</h2></div></div>
-                    <form class="availability-form dashboard-availability" data-dashboard-availability>
-                        <h3>Tambahkan jadwal tersedia</h3>
-                        <label>Mulai sesi <input name="starts_at" type="datetime-local" required></label>
-                        <button class="button button-primary" type="submit">Tambah jadwal</button>
-                    </form>
-                    <div class="schedule-list" data-schedule-list></div>
+                    {% if not admin_preview %}
+                        <form class="availability-form dashboard-availability" data-dashboard-availability>
+                            <h3>Tambahkan jadwal tersedia</h3>
+                            <label>Mulai sesi <input name="starts_at" type="datetime-local" required></label>
+                            <button class="button button-primary" type="submit">Tambah jadwal</button>
+                        </form>
+                    {% endif %}
+                    <div class="schedule-list" data-schedule-list>{% if admin_preview %}<div class="dashboard-empty">Jadwal hanya tersedia untuk akun Ustad terkait.</div>{% endif %}</div>
                 </section>
 
                 <section class="dashboard-panel" data-dashboard-panel="profile" aria-labelledby="profile-title">
                     <div class="panel-heading"><div><span class="eyebrow">PROFIL PUBLIK PENGAJAR</span><h2 id="profile-title">Kelola profil Ustad Connect</h2></div></div>
-                    <form class="profile-form dashboard-profile-form" data-dashboard-profile-form>
-                        <label>Bidang utama
-                            <select name="method" required>
-                                <option value="tahsin">Tahsin</option><option value="tajwid">Tajwid</option>
-                                <option value="tahfidz">Tahfidz</option><option value="tilawah">Tilawah</option>
-                                <option value="dasar">Dasar Al-Qur'an</option>
-                            </select>
-                        </label>
-                        <label>Keahlian & pengalaman relevan
-                            <textarea name="expertise" minlength="5" maxlength="300" rows="4" required></textarea>
-                        </label>
-                        <fieldset class="mode-options"><legend>Metode sesi</legend>
-                            <label><input type="checkbox" name="modes" value="audio"> Audio</label>
-                            <label><input type="checkbox" name="modes" value="video"> Video</label>
-                            <label><input type="checkbox" name="modes" value="chat"> Chat</label>
-                        </fieldset>
-                        <div class="form-pair">
-                            <label>Biaya per sesi (Rp)<input name="fee" type="number" min="0" max="10000000" step="1000" required></label>
-                            <label>Durasi<select name="duration"><option value="30">30 menit</option><option value="45">45 menit</option><option value="60">60 menit</option></select></label>
-                        </div>
-                        <button class="button button-primary" type="submit">Simpan profil</button>
-                    </form>
+                    {% if admin_preview %}
+                        <p class="dashboard-empty">Pengaturan profil tidak dapat diubah dari pratinjau Admin.</p>
+                    {% else %}
+                        <form class="profile-form dashboard-profile-form" data-dashboard-profile-form>
+                            <label>Bidang utama
+                                <select name="method" required>
+                                    <option value="tahsin">Tahsin</option><option value="tajwid">Tajwid</option>
+                                    <option value="tahfidz">Tahfidz</option><option value="tilawah">Tilawah</option>
+                                    <option value="dasar">Dasar Al-Qur'an</option>
+                                </select>
+                            </label>
+                            <label>Keahlian & pengalaman relevan
+                                <textarea name="expertise" minlength="5" maxlength="300" rows="4" required></textarea>
+                            </label>
+                            <fieldset class="mode-options"><legend>Metode sesi</legend>
+                                <label><input type="checkbox" name="modes" value="audio"> Audio</label>
+                                <label><input type="checkbox" name="modes" value="video"> Video</label>
+                                <label><input type="checkbox" name="modes" value="chat"> Chat</label>
+                            </fieldset>
+                            <div class="form-pair">
+                                <label>Biaya per sesi (Rp)<input name="fee" type="number" min="0" max="10000000" step="1000" required></label>
+                                <label>Durasi<select name="duration"><option value="30">30 menit</option><option value="45">45 menit</option><option value="60">60 menit</option></select></label>
+                            </div>
+                            <button class="button button-primary" type="submit">Simpan profil</button>
+                        </form>
+                    {% endif %}
                 </section>
 
                 <section class="dashboard-panel" data-dashboard-panel="evaluations" aria-labelledby="evaluations-title">
                     <div class="panel-heading"><div><span class="eyebrow">CATATAN PEMBELAJARAN</span><h2 id="evaluations-title">Evaluasi selesai</h2></div></div>
-                    <div class="evaluation-list" data-evaluation-list><div class="dashboard-empty">Memuat evaluasi…</div></div>
+                    <div class="evaluation-list" data-evaluation-list><div class="dashboard-empty">{% if admin_preview %}Evaluasi hanya tersedia untuk akun Ustad terkait.{% else %}Memuat evaluasi…{% endif %}</div></div>
                 </section>
             </div>
         </div>
     </main>
-    <dialog class="connect-dialog evaluation-dialog" data-evaluation-dialog aria-labelledby="evaluation-dialog-title">
-        <form method="dialog" class="dialog-close-row"><button class="dialog-close" aria-label="Tutup">×</button></form>
-        <h2 id="evaluation-dialog-title">Selesaikan sesi</h2>
-        <form class="report-form" data-evaluation-form>
-            <label>Catatan materi & rekomendasi latihan (10–1000 karakter)
-                <textarea name="evaluation" minlength="10" maxlength="1000" rows="5" required></textarea>
-            </label>
-            <button class="button button-primary" type="submit">Simpan evaluasi</button>
-        </form>
-    </dialog>
+    {% if not admin_preview %}
+        <dialog class="connect-dialog evaluation-dialog" data-evaluation-dialog aria-labelledby="evaluation-dialog-title">
+            <form method="dialog" class="dialog-close-row"><button class="dialog-close" aria-label="Tutup">×</button></form>
+            <h2 id="evaluation-dialog-title">Selesaikan sesi</h2>
+            <form class="report-form" data-evaluation-form>
+                <label>Catatan materi & rekomendasi latihan (10–1000 karakter)
+                    <textarea name="evaluation" minlength="10" maxlength="1000" rows="5" required></textarea>
+                </label>
+                <button class="button button-primary" type="submit">Simpan evaluasi</button>
+            </form>
+        </dialog>
+    {% endif %}
     <div class="connect-toast" data-dashboard-toast role="status" aria-live="polite"></div>
     <script src="{{ url_for('static', filename='ustad_dashboard.js') }}" defer></script>
 </body>

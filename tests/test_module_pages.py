@@ -26,7 +26,7 @@ class ModulePageTests(unittest.TestCase):
 
     def test_ai_tahsin_and_community_routes_render(self):
         for path, title in (
-            ("/ai-tahsin", b"AI Tahsin"),
+            ("/ai-tahsin", b"Latihan Pelafalan"),
             ("/komunitas", b"Komunitas"),
             ("/quran-battle", b"Quran Battle Arena"),
         ):
@@ -34,6 +34,14 @@ class ModulePageTests(unittest.TestCase):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(title, response.data)
+        self.assertIn(b"Latihan Pelafalan", self.client.get("/ai-tahsin").data)
+        legacy_redirect = self.client.get("/tahsin")
+        self.assertEqual(legacy_redirect.status_code, 302)
+        self.assertIn("/tilawah", legacy_redirect.headers["Location"])
+        tahsin = self.client.get("/ai-tahsin")
+        self.assertIn(b"Cakupan pemeriksaan dasar", tahsin.data)
+        self.assertIn(b"quran.kemenag.go.id", tahsin.data)
+        self.assertIn(b"Cari ustad untuk koreksi makhraj", tahsin.data)
 
     def test_home_links_to_new_modules(self):
         response = self.client.get("/")
@@ -43,6 +51,14 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b'data-profile-open', response.data)
         self.assertIn(b'data-account-role="student"', response.data)
         self.assertIn(b'data-account-role="teacher"', response.data)
+        self.assertIn(b'data-account-role="admin"', response.data)
+        self.assertIn(b'id="ui-language-select"', response.data)
+        for language in (
+            b'value="id" lang="id">Bahasa Indonesia',
+            b'value="en" lang="en">English',
+            b'value="ar" lang="ar" dir="rtl">\xd8\xa7\xd9\x84\xd8\xb9\xd8\xb1\xd8\xa8\xd9\x8a\xd8\xa9',
+        ):
+            self.assertIn(language, response.data)
         for expected in (
             b"Profil &amp; Dashboard Perkembangan",
             b'data-gamification-xp',
@@ -65,25 +81,58 @@ class ModulePageTests(unittest.TestCase):
             self.assertIn(expected, response.data)
         for href in (
             b'href="/battle"',
-            b'href="/tahsin"',
             b'href="/komunitas"',
             b'href="/tilawah"',
             b'href="/baca"',
             b'href="/connect"',
             b'href="/tahfidz"',
+            b'href="/dzikir-doa"',
         ):
             self.assertIn(href, response.data)
         for href in (
             b'href="/baca" class="menu-card',
             b'href="/tilawah" class="menu-card',
-            b'href="/tahsin" class="menu-card',
             b'href="/connect" class="menu-card',
             b'href="/tahfidz" class="menu-card',
             b'href="/battle" class="menu-card',
             b'href="/komunitas" class="menu-card',
+            b'href="/dzikir-doa" class="menu-card',
         ):
             self.assertIn(href, response.data)
         self.assertIn(b'href="/tilawah" class="flex min-h-11', response.data)
+
+    def test_home_includes_interactive_qibla_compass(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'id="qibla-button"', response.data)
+        self.assertIn(b'id="qibla-dialog"', response.data)
+        self.assertIn(b'aria-label="Kompas arah kiblat"', response.data)
+        for path in ("/static/qibla.css", "/static/qibla.js"):
+            asset = self.client.get(path)
+            self.assertEqual(asset.status_code, 200)
+            asset.close()
+        script = self.client.get("/static/qibla.js")
+        self.assertIn(b"getQiblaBearing", script.data)
+        self.assertIn(b"getCurrentPosition", script.data)
+        script.close()
+
+    def test_quran_reader_has_mellow_background_choices_and_volume_settings(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'id="ambience-select"', response.data)
+        self.assertIn(b'value="off">Tanpa suara latar', response.data)
+        self.assertIn(b'value="rain">Hujan lembut', response.data)
+        self.assertIn(b'value="wind">Angin sepoi-sepoi', response.data)
+        self.assertIn(b'value="waves">Ombak tenang', response.data)
+        self.assertIn(b'id="ambience-volume"', response.data)
+        self.assertIn(b'id="ambience-status"', response.data)
+        self.assertLess(
+            response.data.index(b'for="reciter-select"'),
+            response.data.index(b'for="ambience-select"'),
+        )
+        self.assertIn(b'createAmbienceBuffer', response.data)
+        self.assertIn(b'lowpass', response.data)
+        self.assertIn(b'ustadOnline.quranReader.ambience.v1', response.data)
 
     def test_baca_quran_route_opens_reader_from_home_template(self):
         response = self.client.get("/baca-quran")
@@ -211,6 +260,42 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b"'/ustad-dashboard'", dashboard_service_worker.data)
         self.assertIn(b"'/static/ustad_dashboard.js'", dashboard_service_worker.data)
         dashboard_service_worker.close()
+
+    def test_admin_can_preview_student_and_teacher_modes_without_teacher_access(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = "test-admin-password"
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        invalid = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "password": "wrong-password"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(invalid.status_code, 401)
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        login = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "password": "test-admin-password"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(login.status_code, 200)
+        self.assertEqual(login.json["user"]["role"], "admin")
+        self.assertEqual(self.client.get("/api/auth/session").json["user"]["role"], "admin")
+
+        home = self.client.get("/")
+        self.assertIn(b'data-admin-feature hidden', home.data)
+        preview = self.client.get("/ustad-dashboard")
+        self.assertEqual(preview.status_code, 200)
+        for expected in (
+            b"data-admin-preview=\"true\"",
+            b"Mode pratinjau Admin",
+            b"Data permintaan hanya tersedia",
+            b"Panel Admin",
+        ):
+            self.assertIn(expected, preview.data)
+        self.assertNotIn(b'data-dashboard-profile-form', preview.data)
+        self.assertNotIn(b'data-dashboard-availability', preview.data)
+        self.assertEqual(self.client.get("/api/connect/me").status_code, 401)
+        self.assertEqual(self.client.get("/review/teachers").status_code, 200)
 
     def test_connect_booking_evaluation_moderation_and_safety(self):
         student = app.test_client()
@@ -433,8 +518,9 @@ class ModulePageTests(unittest.TestCase):
         for path, content in (
             ("/baca", b"Daftar Surah Al-Qur'an"),
             ("/tilawah", b"Akademi Tilawah"),
-            ("/tahsin", b"AI Tahsin"),
+            ("/ai-tahsin", b"Latihan Pelafalan"),
             ("/tahfidz", b"Tahfidz &amp; Murajaah"),
+            ("/dzikir-doa", b"Dzikir &amp; Doa"),
             ("/battle", b"Quran Battle Arena"),
             ("/connect", b"Ustad Connect"),
         ):
@@ -443,10 +529,30 @@ class ModulePageTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(content, response.data)
 
+    def test_dzikir_doa_page_has_daily_categories_and_progress(self):
+        response = self.client.get("/dzikir-doa")
+        self.assertEqual(response.status_code, 200)
+        for expected in (
+            b"Al-Ma\xe2\x80\x99tsurat",
+            b"Setelah salat",
+            b"Doa harian",
+            b"daily-progress",
+            b"dzikir_doa.js",
+        ):
+            self.assertIn(expected, response.data)
+        script = self.client.get("/static/dzikir_doa.js")
+        self.assertEqual(script.status_code, 200)
+        for expected in (b"Doa untuk kedua orang tua", b"HR. Muslim 591", b"Surah Al-Isra"):
+            self.assertIn(expected, script.data)
+        script.close()
+
     def test_tilawah_academy_has_seven_modules_levels_and_evaluation(self):
         response = self.client.get("/tilawah")
         self.assertEqual(response.status_code, 200)
         for expected in (
+            b"Sumber rujukan materi",
+            b"quran.kemenag.go.id",
+            b"Cari ustad untuk koreksi langsung",
             b'data-learning-level="pemula"',
             b'data-learning-level="menengah"',
             b'data-learning-level="lanjutan"',
@@ -456,6 +562,7 @@ class ModulePageTests(unittest.TestCase):
             b'data-lesson-id="sifat"',
             b'data-lesson-id="tajwid"',
             b'data-lesson-id="waqaf"',
+            b'id="latihan-pelafalan"',
             b'data-lesson-id="evaluasi"',
             b'id="quiz-dialog"',
             b'id="lesson-dialog"',
@@ -466,16 +573,24 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b"equran.id/api/v2/surat/1", script.data)
         self.assertIn(b"Misyari Rasyid Al-Afasi", script.data)
         self.assertIn(b"renderMakhrajMap", script.data)
+        for expected in (
+            b"makharij-illustration",
+            b"Ilustrasi tampak samping kepala",
+            b"makharij-marker",
+            b"Al-Khaisyum",
+        ):
+            self.assertIn(expected, script.data)
         script.close()
 
     def test_feature_pages_include_shared_page_transitions(self):
-        for path in ("/", "/baca", "/tilawah", "/battle", "/tahsin", "/connect", "/komunitas", "/tahfidz"):
+        for path in ("/", "/baca", "/tilawah", "/battle", "/ai-tahsin", "/connect", "/komunitas", "/tahfidz", "/dzikir-doa"):
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(b"page_transitions.css", response.data)
                 self.assertIn(b"page_transitions.js", response.data)
-        for asset in ("/static/page_transitions.css", "/static/page_transitions.js"):
+                self.assertIn(b"ui_customization.js", response.data)
+        for asset in ("/static/page_transitions.css", "/static/page_transitions.js", "/static/ui_customization.js", "/static/dzikir_doa.css", "/static/dzikir_doa.js"):
             with self.subTest(asset=asset):
                 response = self.client.get(asset)
                 self.assertEqual(response.status_code, 200)

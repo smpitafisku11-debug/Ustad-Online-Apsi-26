@@ -71,6 +71,19 @@ def _user_dict(row):
     }
 
 
+def _admin_user():
+    return {
+        "id": None,
+        "name": "Admin",
+        "email": "",
+        "role": "admin",
+        "status": "approved",
+        "phone": "",
+        "username": "",
+        "bio": "",
+    }
+
+
 def _current_user():
     user_id = session.get("user_id")
     if not user_id:
@@ -112,7 +125,8 @@ def _admin_required(view):
 
 @auth_api.get("/api/auth/session")
 def auth_session():
-    return jsonify(user=_current_user(), csrf_token=_csrf_token())
+    user = _admin_user() if session.get("admin_authenticated") else _current_user()
+    return jsonify(user=user, csrf_token=_csrf_token())
 
 
 @auth_api.post("/api/auth/register")
@@ -186,6 +200,17 @@ def login():
         return _csrf_error()
     data = request.get_json(silent=True) or {}
     role = data.get("role")
+    if role == "admin":
+        configured_password = current_app.config.get("USTAD_ADMIN_PASSWORD")
+        if not configured_password:
+            return jsonify(error="Login admin belum dikonfigurasi."), 503
+        password = data.get("password", "")
+        if not isinstance(password, str) or not hmac.compare_digest(password, configured_password):
+            return jsonify(error="Kata sandi admin tidak cocok."), 401
+        session.clear()
+        session["admin_authenticated"] = True
+        return jsonify(user=_admin_user(), csrf_token=_csrf_token())
+
     email = data.get("email", "").strip().lower() if isinstance(data.get("email"), str) else ""
     password = data.get("password", "") if isinstance(data.get("password"), str) else ""
     if role not in ("student", "teacher") or not email or not password:

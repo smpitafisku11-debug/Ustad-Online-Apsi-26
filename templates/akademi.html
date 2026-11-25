@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#123c31">
     <title>Akademi Tilawah | Ustad Online</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='brand-logo.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='tilawah.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
-    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
     <script src="{{ url_for('static', filename='tilawah.js') }}" defer></script>
     {% include "partials/page_transitions.html" %}
 </head>
@@ -18,12 +18,12 @@
     <header class="academy-topbar">
         <div class="academy-topbar-inner">
             <a class="academy-brand" href="{{ url_for('home') }}" aria-label="Kembali ke Ustad Online">
-                <span class="academy-brand-mark" aria-hidden="true">ت</span>
+                <img class="academy-brand-mark" src="{{ url_for('static', filename='brand-logo.svg') }}" alt="">
                 <span>USTAD <b>ONLINE</b></span>
             </a>
             <div class="academy-top-actions">
                 <a class="academy-back-link" href="{{ url_for('home') }}"><span aria-hidden="true">←</span> Beranda</a>
-                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
+                <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" data-language-aria="settings.open" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>
                 </button>
             </div>
@@ -109,8 +109,11 @@
                         <button class="materi-card academy-lesson-card" type="button" data-lesson-id="waqaf">
                             <span class="lesson-index">06</span><span class="materi-icon">۝</span><span class="materi-info"><strong class="materi-title">Waqaf &amp; Ibtida</strong><span class="materi-desc">Memahami kapan berhenti dan memulai kembali bacaan.</span></span><span class="lesson-state" data-lesson-state="waqaf">Mulai <b>↗</b></span>
                         </button>
+                        <a class="materi-card academy-lesson-card academy-practice-card" href="{{ url_for('ai_tahsin') }}" id="latihan-pelafalan">
+                            <span class="lesson-index">07</span><span class="materi-icon">◉</span><span class="materi-info"><strong class="materi-title">Latihan Pelafalan Dasar</strong><span class="materi-desc">Rekam bacaan dan bandingkan kata dengan teks mushaf.</span></span><span class="lesson-state">Buka latihan <b>↗</b></span>
+                        </a>
                         <button class="materi-card academy-lesson-card academy-evaluation-card" type="button" data-lesson-id="evaluasi">
-                            <span class="lesson-index">07</span><span class="materi-icon">✧</span><span class="materi-info"><strong class="materi-title">Latihan &amp; Evaluasi</strong><span class="materi-desc">Ukur pemahaman dan dapatkan saran materi berikutnya.</span></span><span class="lesson-state">Latihan <b>↗</b></span>
+                            <span class="lesson-index">08</span><span class="materi-icon">✧</span><span class="materi-info"><strong class="materi-title">Evaluasi Pemahaman</strong><span class="materi-desc">Ukur pemahaman dan dapatkan saran materi berikutnya.</span></span><span class="lesson-state">Evaluasi <b>↗</b></span>
                         </button>
                     </div>
                 </div>
@@ -142,6 +145,15 @@
                 <audio id="verified-audio-player" controls preload="none" aria-label="Contoh bacaan Mushaf"></audio>
                 <p>Sumber bacaan: Mushaf digital Equran.id dengan murottal Misyari Rasyid Al-Afasi.</p>
             </div>
+            <aside class="verified-source-panel" aria-label="Sumber materi kredibel">
+                <strong>Sumber rujukan materi</strong>
+                <ul>
+                    <li><a href="https://quran.kemenag.go.id/" target="_blank" rel="noopener noreferrer">Mushaf dan digital Al-Qur'an Kementerian Agama RI</a></li>
+                    <li><a href="https://equran.id/" target="_blank" rel="noopener noreferrer">Equran.id · teks mushaf dan audio murottal terverifikasi</a></li>
+                </ul>
+                <p>Kaidah berfungsi sebagai fondasi belajar. Pengucapan makhraj dan panjang bacaan yang meragukan harus dikonfirmasi kepada ustaz/ustazah.</p>
+                <a class="academy-secondary-button" href="{{ url_for('ustad_connect') }}?method=tajwid&amp;mode=video">Cari ustad untuk koreksi langsung</a>
+            </aside>
             <div class="academy-dialog-actions">
                 <button type="button" class="academy-secondary-button" data-close-lesson>Kembali ke materi</button>
                 <button type="button" class="academy-primary-button" id="lesson-complete">Tandai selesai <span aria-hidden="true">✓</span></button>

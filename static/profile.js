@@ -11,6 +11,9 @@
     const passwordInput = document.getElementById('login-password');
     const phoneInput = document.getElementById('login-phone');
     const experienceInput = document.getElementById('login-experience');
+    const emailFields = document.querySelector('[data-account-email]');
+    const authModeSwitch = document.querySelector('.auth-mode-switch');
+    const passwordLabel = document.getElementById('login-password-label');
     let user = null;
     let csrfToken = '';
     let authRole = 'student';
@@ -431,7 +434,7 @@
     }
 
     function roleLabel(role) {
-        return role === 'teacher' ? 'Ustad' : 'Siswa';
+        return role === 'teacher' ? 'Ustad' : role === 'admin' ? 'Admin' : 'Siswa';
     }
 
     function setStatus(element, message, kind) {
@@ -487,12 +490,16 @@
 
     function applyProfile() {
         const name = user ? user.name : 'Pengguna';
-        const isTeacher = Boolean(user && user.role === 'teacher');
+        const isTeacher = Boolean(user && ['teacher', 'admin'].includes(user.role));
+        const isAdmin = Boolean(user && user.role === 'admin');
         document.querySelectorAll('[data-teacher-feature]').forEach((element) => {
             element.hidden = !isTeacher;
         });
+        document.querySelectorAll('[data-admin-feature]').forEach((element) => {
+            element.hidden = !isAdmin;
+        });
         document.querySelectorAll('[data-feature-count]').forEach((element) => {
-            element.textContent = `${isTeacher ? 9 : 8} fitur tersedia`;
+            element.textContent = `${isAdmin ? 10 : isTeacher ? 9 : 8} fitur tersedia`;
         });
         document.querySelectorAll('[data-profile-name]').forEach((element) => {
             element.textContent = name;
@@ -512,15 +519,16 @@
     }
 
     function setMode(mode) {
-        authMode = mode;
+        authMode = authRole === 'admin' ? 'login' : mode;
         document.querySelectorAll('[data-auth-mode]').forEach((button) => {
-            button.setAttribute('aria-pressed', String(button.dataset.authMode === mode));
+            button.setAttribute('aria-pressed', String(button.dataset.authMode === authMode));
         });
         updateAuthForm();
     }
 
     function updateAuthForm() {
-        const registering = authMode === 'register';
+        const isAdminLogin = authRole === 'admin';
+        const registering = authMode === 'register' && !isAdminLogin;
         const teacherRegistration = registering && authRole === 'teacher';
         document.querySelectorAll('[data-register-only]').forEach((group) => {
             group.hidden = !registering;
@@ -528,18 +536,25 @@
         document.querySelectorAll('[data-teacher-only]').forEach((group) => {
             group.hidden = !teacherRegistration;
         });
+        if (emailFields) emailFields.hidden = isAdminLogin;
+        const emailInput = document.getElementById('login-email');
+        if (emailInput) emailInput.required = !isAdminLogin;
+        if (authModeSwitch) authModeSwitch.hidden = isAdminLogin;
         if (nameInput) nameInput.required = registering;
         if (phoneInput) phoneInput.required = teacherRegistration;
         if (experienceInput) experienceInput.required = teacherRegistration;
         if (passwordInput) {
             passwordInput.autocomplete = registering ? 'new-password' : 'current-password';
-            passwordInput.placeholder = registering ? 'Buat kata sandi, minimal 8 karakter' : 'Kata sandi akun';
+            passwordInput.minLength = isAdminLogin ? 1 : 8;
+            passwordInput.placeholder = isAdminLogin ? 'Kata sandi admin server' : registering ? 'Buat kata sandi, minimal 8 karakter' : 'Kata sandi akun';
         }
+        if (passwordLabel) passwordLabel.textContent = isAdminLogin ? 'Kata sandi admin' : 'Kata sandi';
         const reviewNote = document.getElementById('auth-review-note');
         if (reviewNote) reviewNote.hidden = !teacherRegistration;
         const intro = document.getElementById('auth-intro');
         if (intro) {
-            if (teacherRegistration) intro.textContent = 'Ajukan akun pengajar. Admin akan meninjau kelayakan melalui kontak Anda.';
+            if (isAdminLogin) intro.textContent = 'Masuk untuk membuka pratinjau mode Siswa dan Ustad serta panel review admin.';
+            else if (teacherRegistration) intro.textContent = 'Ajukan akun pengajar. Admin akan meninjau kelayakan melalui kontak Anda.';
             else if (registering) intro.textContent = 'Buat akun siswa untuk menyimpan profil dan perjalanan belajarmu.';
             else intro.textContent = `Masuk dengan akun ${roleLabel(authRole)} yang sudah terdaftar.`;
         }
@@ -551,6 +566,10 @@
     }
 
     function openProfile() {
+        if (user && user.role === 'admin') {
+            window.location.assign('/review/teachers');
+            return;
+        }
         if (!user) {
             if (loginDialog && !loginDialog.open) loginDialog.showModal();
             return;
@@ -568,6 +587,7 @@
 
     document.querySelectorAll('[data-account-role]').forEach((button) => {
         button.addEventListener('click', () => {
+            if (button.dataset.accountRole === 'admin') setMode('login');
             setRole(button.dataset.accountRole);
             setStatus(document.getElementById('login-status'), '', '');
         });
@@ -600,9 +620,9 @@
         const formData = new FormData(authForm);
         const data = {
             role: authRole,
-            email: String(formData.get('email') || '').trim(),
             password: String(formData.get('password') || '')
         };
+        if (authRole !== 'admin') data.email = String(formData.get('email') || '').trim();
         if (authMode === 'register') {
             data.name = String(formData.get('name') || '').trim();
             if (authRole === 'teacher') {

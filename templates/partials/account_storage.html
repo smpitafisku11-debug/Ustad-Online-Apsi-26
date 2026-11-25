@@ -1,0 +1,23 @@
+<script>
+    window.UstadOnlineStorage = (() => {
+        let accountId = {{ session.get('user_id')|tojson }};
+        function key(name) {
+            return `ustadOnline.account.${accountId || 'guest'}.${name}`;
+        }
+        return {
+            key,
+            getItem(name) {
+                return localStorage.getItem(key(name));
+            },
+            setItem(name, value) {
+                localStorage.setItem(key(name), value);
+            },
+            removeItem(name) {
+                localStorage.removeItem(key(name));
+            },
+            setAccount(id) {
+                accountId = id || null;
+            }
+        };
+    })();
+</script>

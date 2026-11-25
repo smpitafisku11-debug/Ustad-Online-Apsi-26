@@ -2,96 +2,165 @@
     position: fixed;
     z-index: 9999;
     inset: 0;
-    display: grid;
     overflow: hidden;
-    place-items: center;
-    background:
-        radial-gradient(ellipse at 50% 45%, rgba(114, 151, 110, .2), transparent 28rem),
-        linear-gradient(145deg, #102e2a, #174536 62%, #1c503b);
+    perspective: 1100px;
     color: #f3ead0;
-    opacity: 0;
     pointer-events: none;
-    transform: translateY(102%);
-    transform-origin: center bottom;
-    will-change: transform, opacity;
+    visibility: hidden;
 }
 
-.page-transition-overlay::before,
-.page-transition-overlay::after {
+.page-transition-door {
     position: absolute;
-    width: min(56vw, 430px);
-    aspect-ratio: 1;
+    top: 0;
+    bottom: 0;
+    width: calc(50% + 1px);
+    overflow: hidden;
+    background: linear-gradient(145deg, #102e2a, #174536 62%, #1c503b);
+    backface-visibility: hidden;
+    contain: paint;
+}
+
+.page-transition-door::before {
+    position: absolute;
+    inset: clamp(12px, 2.4vw, 36px);
     border: 1px solid rgba(233, 215, 169, .2);
-    border-radius: 50%;
     content: "";
 }
 
-.page-transition-overlay::before {
-    box-shadow: 0 0 0 18px rgba(233, 215, 169, .035), 0 0 0 42px rgba(233, 215, 169, .025);
+.page-transition-door::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(transparent, rgba(233, 215, 169, .42), transparent);
+    content: "";
 }
 
-.page-transition-overlay::after {
-    width: min(38vw, 290px);
-    border-color: rgba(233, 215, 169, .32);
+.page-transition-door-left {
+    left: 0;
+    transform-origin: right center;
+}
+
+.page-transition-door-left::after {
+    right: 0;
+}
+
+.page-transition-door-right {
+    right: 0;
+    transform-origin: left center;
+}
+
+.page-transition-door-right::after {
+    left: 0;
 }
 
 .page-transition-emblem {
-    position: relative;
+    position: absolute;
     z-index: 1;
+    top: 50%;
+    left: 50%;
     display: grid;
-    width: 76px;
-    height: 76px;
+    width: 58px;
+    height: 58px;
     place-items: center;
-    border: 1px solid rgba(233, 215, 169, .5);
-    border-radius: 24px;
-    background: linear-gradient(145deg, rgba(233, 215, 169, .15), rgba(255, 255, 255, .035));
-    box-shadow: 0 0 42px rgba(233, 215, 169, .12), inset 0 1px rgba(255, 255, 255, .16);
+    border: 1px solid rgba(233, 215, 169, .4);
+    border-radius: 17px;
+    background: rgba(233, 215, 169, .08);
     color: #ead9aa;
-    font: 600 2.2rem/1 'Noto Naskh Arabic', serif;
+    font: 600 1.8rem/1 'Noto Naskh Arabic', serif;
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0);
 }
 
 .page-transition-label {
     position: absolute;
-    top: calc(50% + 63px);
-    color: rgba(241, 231, 205, .84);
-    font: 700 .61rem/1.5 'DM Sans', sans-serif;
-    letter-spacing: .22em;
-    text-align: center;
+    z-index: 1;
+    top: calc(50% + 45px);
+    left: 50%;
+    color: rgba(241, 231, 205, .78);
+    font: 700 .56rem/1.5 'DM Sans', sans-serif;
+    letter-spacing: .18em;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(-50%);
 }
 
-.page-transition-label::after {
-    display: block;
-    width: 30px;
-    height: 1px;
-    margin: 11px auto 0;
-    background: #d7c58e;
-    content: "";
-    transform-origin: left;
-    animation: page-transition-rule .42s .13s ease-out both;
+@keyframes page-door-open-left {
+    from { transform: translate3d(0, 0, 0) rotateY(0); }
+    to { transform: translate3d(-105%, 0, 0) rotateY(8deg); }
 }
 
-@keyframes page-enter {
-    from { opacity: 0; transform: translate3d(0, 9px, 0); }
-    to { opacity: 1; transform: translate3d(0, 0, 0); }
+@keyframes page-door-open-right {
+    from { transform: translate3d(0, 0, 0) rotateY(0); }
+    to { transform: translate3d(105%, 0, 0) rotateY(-8deg); }
 }
 
-@keyframes page-cover {
-    0% { opacity: 0; transform: translateY(102%); }
-    12% { opacity: 1; }
-    100% { opacity: 1; transform: translateY(0); }
+@keyframes page-door-close-left {
+    from { transform: translate3d(-105%, 0, 0) rotateY(8deg); }
+    to { transform: translate3d(0, 0, 0) rotateY(0); }
 }
 
-@keyframes page-transition-rule {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
+@keyframes page-door-close-right {
+    from { transform: translate3d(105%, 0, 0) rotateY(-8deg); }
+    to { transform: translate3d(0, 0, 0) rotateY(0); }
 }
 
-body.page-transition-ready {
-    animation: page-enter .42s cubic-bezier(.2, .75, .25, 1) both;
+@keyframes page-transition-emblem-in {
+    to { opacity: 1; }
+}
+
+@keyframes page-transition-emblem-out {
+    to { opacity: 0; }
 }
 
 body.page-transition-ready .page-transition-overlay {
-    animation: page-cover .4s cubic-bezier(.75, 0, .2, 1) reverse forwards;
+    visibility: visible;
+}
+
+body.page-transition-ready .page-transition-door {
+    will-change: transform;
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(.68, 0, .24, 1);
+    animation-fill-mode: both;
+}
+
+body.page-transition-ready .page-transition-door-left {
+    animation-name: page-door-open-left;
+}
+
+body.page-transition-ready .page-transition-door-right {
+    animation-name: page-door-open-right;
+}
+
+body.page-transition-ready .page-transition-emblem,
+body.page-transition-ready .page-transition-label {
+    animation: page-transition-emblem-in 180ms 100ms ease-out both;
+}
+
+body.page-transition-ready.page-transition-leaving .page-transition-door {
+    animation-duration: 360ms;
+}
+
+body.page-transition-ready.page-transition-leaving .page-transition-door-left {
+    animation-name: page-door-close-left;
+}
+
+body.page-transition-ready.page-transition-leaving .page-transition-door-right {
+    animation-name: page-door-close-right;
+}
+
+body.page-transition-ready.page-transition-leaving .page-transition-emblem,
+body.page-transition-ready.page-transition-leaving .page-transition-label {
+    animation: page-transition-emblem-out 100ms ease-in both;
+}
+
+body.quran-reader-page:not(.page-transition-leaving) .page-transition-overlay {
+    visibility: hidden;
+}
+
+body.quran-reader-page:not(.page-transition-leaving) .page-transition-door {
+    animation: none;
+    will-change: auto;
 }
 
 body.page-transition-ready.page-transition-leaving {
@@ -385,12 +454,17 @@ body[data-effects="off"] {
 }
 
 body[data-page-motion="off"] .page-transition-overlay,
-body[data-page-motion="off"].page-transition-ready .page-transition-overlay,
 body[data-effects="off"] .page-transition-overlay,
-body.page-transition-reduced,
 body.page-transition-reduced .page-transition-overlay {
+    visibility: hidden !important;
     animation: none !important;
-    transition: none !important;
+}
+
+body[data-page-motion="off"] .page-transition-door,
+body[data-effects="off"] .page-transition-door,
+body.page-transition-reduced .page-transition-door {
+    animation: none !important;
+    will-change: auto;
 }
 
 body {
@@ -443,7 +517,12 @@ body[data-effects="off"]::before {
     body,
     body .page-transition-overlay,
     body::before {
+        visibility: hidden !important;
         animation: none !important;
-        transition: none !important;
+    }
+
+    body .page-transition-door {
+        animation: none !important;
+        will-change: auto;
     }
 }

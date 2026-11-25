@@ -21,7 +21,7 @@
     let pendingPhoto = '';
     let deferredInstallPrompt = null;
     let gamificationStorageAvailable = true;
-    let gamification = readGamification();
+    let gamification = emptyGamification();
 
     function emptyGamification() {
         return {
@@ -43,7 +43,7 @@
 
     function readGamification() {
         try {
-            const stored = localStorage.getItem(gamificationStorageKey);
+            const stored = window.UstadOnlineStorage.getItem(gamificationStorageKey);
             if (stored === null) return emptyGamification();
             const value = JSON.parse(stored);
             if (
@@ -77,7 +77,7 @@
     function saveGamification() {
         if (!gamificationStorageAvailable) return false;
         try {
-            localStorage.setItem(gamificationStorageKey, JSON.stringify(gamification));
+            window.UstadOnlineStorage.setItem(gamificationStorageKey, JSON.stringify(gamification));
             return true;
         } catch (error) {
             gamificationStorageAvailable = false;
@@ -124,10 +124,10 @@
         const taskInputs = Array.from(document.querySelectorAll('[data-hafalan-task]'));
         const completedToday = taskInputs.filter((input) => input.checked).length;
         const streak = activeDayStreak();
-        const level = Math.floor(gamification.totalXp / 100) + 1;
+        const level = gamification.totalXp === 0 ? 0 : Math.floor(gamification.totalXp / 100) + 1;
         const levelXp = gamification.totalXp % 100;
         const rankNames = ['Penjelajah Ilmu', 'Sahabat Ilmu', 'Penjaga Konsistensi', 'Ahli Tilawah', 'Cahaya Ilmu'];
-        const rank = rankNames[Math.min(level - 1, rankNames.length - 1)];
+        const rank = level === 0 ? 'Belum ada' : rankNames[Math.min(level - 1, rankNames.length - 1)];
         const formattedXp = new Intl.NumberFormat('id-ID').format(gamification.totalXp);
 
         document.querySelectorAll('[data-gamification-level], [data-home-level]').forEach((element) => {
@@ -193,7 +193,7 @@
     function readAcademyProgress() {
         const storageKey = 'ustadOnline.tilawah.progress.v1';
         try {
-            const stored = localStorage.getItem(storageKey);
+            const stored = window.UstadOnlineStorage.getItem(storageKey);
             if (!stored) return null;
             const value = JSON.parse(stored);
             if (!value || typeof value !== 'object' || !value.byLevel || typeof value.byLevel !== 'object') {
@@ -465,7 +465,7 @@
 
     function readPhoto() {
         try {
-            const photo = localStorage.getItem(photoStorageKey);
+            const photo = window.UstadOnlineStorage.getItem(photoStorageKey);
             return typeof photo === 'string' ? photo : '';
         } catch (error) {
             console.error('Foto profil tidak dapat dibaca:', error);
@@ -646,6 +646,7 @@
                 return;
             }
             user = result.user;
+            window.UstadOnlineStorage.setAccount(user.id);
             pendingPhoto = readPhoto();
             applyProfile();
             if (user.role === 'admin') {
@@ -653,6 +654,7 @@
                 return;
             }
             loginDialog?.close();
+            window.location.reload();
         } catch (error) {
             if (!error.status || error.status >= 500) console.error('Akun tidak dapat diproses:', error);
             setStatus(document.getElementById('login-status'), error.message, 'error');
@@ -697,8 +699,8 @@
             });
             user = result.user;
             try {
-                if (pendingPhoto) localStorage.setItem(photoStorageKey, pendingPhoto);
-                else localStorage.removeItem(photoStorageKey);
+                if (pendingPhoto) window.UstadOnlineStorage.setItem(photoStorageKey, pendingPhoto);
+                else window.UstadOnlineStorage.removeItem(photoStorageKey);
             } catch (storageError) {
                 console.error('Foto profil tidak dapat disimpan:', storageError);
                 setStatus(document.getElementById('profile-status'), 'Profil tersimpan, tetapi foto tidak dapat disimpan di browser ini.', 'error');
@@ -717,9 +719,10 @@
         try {
             const result = await postJson('/api/auth/logout', {});
             csrfToken = result.csrf_token || '';
+            window.UstadOnlineStorage.removeItem(photoStorageKey);
             user = null;
+            window.UstadOnlineStorage.setAccount(null);
             pendingPhoto = '';
-            localStorage.removeItem(photoStorageKey);
             applyProfile();
             profileDialog?.close();
             authForm?.reset();
@@ -727,6 +730,7 @@
             setMode('login');
             setStatus(document.getElementById('login-status'), '', '');
             if (openLogin && loginDialog) loginDialog.showModal();
+            window.location.reload();
         } catch (error) {
             console.error('Sesi akun tidak dapat diakhiri:', error);
             setStatus(document.getElementById('profile-status'), `Tidak dapat mengakhiri sesi: ${error.message}`, 'error');
@@ -760,10 +764,7 @@
 
     document.querySelectorAll('[data-hafalan-task]').forEach((input) => {
         input.addEventListener('change', () => recordMission(input));
-        if (input.checked) recordMission(input);
     });
-    updateGamification();
-    initializeReflectionNotes();
 
     async function initializeAuth() {
         updateAuthForm();
@@ -773,8 +774,21 @@
             const result = await response.json();
             csrfToken = result.csrf_token || '';
             user = result.user;
+            window.UstadOnlineStorage.setAccount(user ? user.id : null);
             pendingPhoto = readPhoto();
             applyProfile();
+            gamificationStorageAvailable = true;
+            gamification = readGamification();
+            document.querySelectorAll('[data-hafalan-task]').forEach((input) => {
+                if (input.checked) recordMission(input);
+            });
+            document.querySelectorAll('[data-achievement]').forEach((achievement) => {
+                achievement.classList.remove('is-earned');
+                achievement.setAttribute('aria-label', `${achievement.querySelector('strong').textContent}, belum diraih`);
+                achievement.querySelector('b').textContent = '·';
+            });
+            updateGamification();
+            initializeReflectionNotes();
             if (!user && loginDialog && !loginDialog.open) loginDialog.showModal();
         } catch (error) {
             console.error('Status login tidak dapat diperiksa:', error);

@@ -30,7 +30,7 @@
     function motionIsEnabled() {
         if (motionPreference.matches) return false;
         try {
-            const saved = JSON.parse(localStorage.getItem(preferenceKey));
+            const saved = JSON.parse(window.UstadOnlineStorage.getItem(preferenceKey));
             return !(saved && saved.animations === false);
         } catch (error) {
             console.error('Preferensi transisi halaman tidak dapat dibaca:', error);
@@ -44,19 +44,39 @@
     const overlay = document.createElement('div');
     overlay.className = 'page-transition-overlay';
     overlay.setAttribute('aria-hidden', 'true');
-    overlay.innerHTML = '<span class="page-transition-emblem">ت</span><span class="page-transition-label">ILMU · ADAB · AMAL</span>';
+    overlay.innerHTML = '<div class="page-transition-door page-transition-door-left"></div><div class="page-transition-door page-transition-door-right"></div><span class="page-transition-emblem">ت</span><span class="page-transition-label">ILMU · ADAB · AMAL</span>';
     document.body.appendChild(overlay);
     document.body.classList.add('page-transition-ready');
+    let openDoorsFinished = 0;
 
-    window.addEventListener('pageshow', () => {
+    overlay.addEventListener('animationend', (event) => {
+        if (event.animationName !== 'page-door-open-left' &&
+            event.animationName !== 'page-door-open-right') return;
+        event.target.style.willChange = 'auto';
+        openDoorsFinished += 1;
+        if (openDoorsFinished === 2 && !leaving) {
+            overlay.style.visibility = 'hidden';
+        }
+    });
+
+    window.addEventListener('pageshow', (event) => {
+        if (!event.persisted) return;
         leaving = false;
+        openDoorsFinished = 0;
         document.body.classList.remove('page-transition-leaving');
+        overlay.style.visibility = 'visible';
+        overlay.querySelectorAll('.page-transition-door').forEach((door) => {
+            door.style.willChange = 'transform';
+        });
     });
 
     const handleMotionChange = (event) => {
         if (event.matches) {
             document.body.dataset.pageMotion = 'off';
             document.body.classList.add('page-transition-reduced');
+            overlay.querySelectorAll('.page-transition-door').forEach((door) => {
+                door.style.willChange = 'auto';
+            });
         } else {
             document.body.classList.remove('page-transition-reduced');
             document.body.dataset.pageMotion = motionIsEnabled() ? 'on' : 'off';
@@ -89,6 +109,10 @@
 
         event.preventDefault();
         leaving = true;
+        overlay.querySelectorAll('.page-transition-door').forEach((door) => {
+            door.style.willChange = 'transform';
+        });
+        overlay.style.visibility = 'visible';
         document.body.classList.add('page-transition-leaving');
         const navigationDelay = tabTransition.key === 'quran'
             && window.UstadPageTransition

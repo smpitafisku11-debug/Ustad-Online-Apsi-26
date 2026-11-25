@@ -90,7 +90,7 @@
 
     function loadPreferences() {
         try {
-            const serialized = localStorage.getItem(storageKey);
+            const serialized = window.UstadOnlineStorage.getItem(storageKey);
             if (!serialized) return { ...defaults };
             const saved = JSON.parse(serialized);
             if (!saved || typeof saved !== 'object' || Array.isArray(saved)) {
@@ -143,7 +143,7 @@
 
     function savePreferences() {
         try {
-            localStorage.setItem(storageKey, JSON.stringify(preferences));
+            window.UstadOnlineStorage.setItem(storageKey, JSON.stringify(preferences));
             setStatus(translations[preferences.language]['status.saved'], 'success');
         } catch (error) {
             console.error('Preferensi tampilan tidak dapat disimpan:', error);
@@ -196,7 +196,7 @@
         });
     }
     window.addEventListener('storage', (event) => {
-        if (event.key !== storageKey) return;
+        if (event.key !== window.UstadOnlineStorage.key(storageKey)) return;
         preferences = loadPreferences();
         applyPreferences();
     });

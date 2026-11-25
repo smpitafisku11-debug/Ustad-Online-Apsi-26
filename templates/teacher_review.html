@@ -108,25 +108,7 @@
             <p class="error" data-moderation-error role="status" hidden></p>
         </section>
 
-        <!-- Script untuk menangani interaksi moderasi secara dinamis -->
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const csrfToken = document.querySelector('[data-admin-csrf]')?.value;
-                const reviewsContainer = document.querySelector('[data-pending-reviews]');
-                const reportsContainer = document.querySelector('[data-pending-reports]');
-                const errorBox = document.querySelector('[data-moderation-error]');
-
-                // Simulasi data fetch atau interaksi dasar untuk panel moderasi
-                setTimeout(() => {
-                    if (reviewsContainer) {
-                        reviewsContainer.innerHTML = '<p style="font-size: 0.85rem; color: #273c30;">✅ Tidak ada ulasan baru yang menolak moderasi saat ini.</p>';
-                    }
-                    if (reportsContainer) {
-                        reportsContainer.innerHTML = '<p style="font-size: 0.85rem; color: #273c30;">🛡️ Sistem keamanan aman, tidak ada laporan pelanggaran aktif.</p>';
-                    }
-                }, 500);
-            });
-        </script>
+        <script src="{{ url_for('static', filename='connect_admin.js') }}"></script>
     {% endif %}
 </main>
 </body>

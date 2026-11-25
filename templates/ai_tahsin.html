@@ -89,7 +89,7 @@
             </select>
             <div id="custom-wrap" hidden>
                 <label for="custom-text">Tempel teks Arab yang akan dibaca</label>
-                <textarea id="custom-text" placeholder="الصق النص هنا"></textarea>
+                <textarea id="custom-text" maxlength="4000" placeholder="الصق النص هنا (maks. 4000 karakter)"></textarea>
             </div>
             <div class="arabic" id="target-text" lang="ar"></div>
             <p class="legend">Periksa kembali teks dengan mushaf sebelum dipakai sebagai acuan.</p>
@@ -146,9 +146,12 @@
             const status = $('recording-status'), timerEl = $('timer'), preview = $('audio-preview'), live = $('transcript');
             const result = $('analysis-result'), scoreEl = $('score'), wordsEl = $('word-result'), summary = $('analysis-summary'), tipsEl = $('tips');
             const histEl = $('history'), histEmpty = $('history-empty'), clearB = $('clear-history');
-            let recorder = null, stream = null, chunks = [], audioUrl = null;
+            const maxAnalysisWords = 250;
+            const maxRecordingMs = 3 * 60 * 1000;
+            let recorder = null, stream = null, audioUrl = null, recordingSession = 0;
             let rec = null, recording = false, committed = '', curFinal = '', curInterim = '';
-            let tick = null, t0 = 0;
+            let recognitionUnavailable = !SR;
+            let tick = null, recordingTimeout = null, t0 = 0;
 
             $('privacy-note').textContent = SR
                 ? 'Cakupan pemeriksaan dasar: kecocokan teks/kata yang terdengar. Rekaman hanya tersimpan di browser dan tidak diunggah oleh situs ini. Pengenalan suara memakai layanan bawaan browser (di Chrome/Edge, audio dapat dikirim ke penyedia browser). Sistem belum menilai makhraj, sifat huruf, panjang mad, ghunnah, atau seluruh detail tajwid.'
@@ -172,18 +175,30 @@
                     .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
                     .replace(/[^\u0621-\u064A\s]/g, ' ').replace(/\s+/g, ' ').trim();
             }
-            function lev(a, b) {
-                const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
-                for (let j = 1; j <= b.length; j++) d[0][j] = j;
-                for (let i = 1; i <= a.length; i++) {
-                    for (let j = 1; j <= b.length; j++) {
-                        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+            function differsByAtMostOneCharacter(a, b) {
+                if (Math.abs(a.length - b.length) > 1) return false;
+                let i = 0, j = 0, edits = 0;
+                while (i < a.length && j < b.length) {
+                    if (a[i] === b[j]) {
+                        i++;
+                        j++;
+                        continue;
                     }
+                    if (++edits > 1) return false;
+                    if (a.length === b.length) {
+                        i++;
+                        j++;
+                    } else if (a.length > b.length) i++;
+                    else j++;
                 }
-                return d[a.length][b.length];
+                return edits + Number(i < a.length || j < b.length) <= 1;
             }
             function same(a, b) {
-                return a === b || lev(a, b) <= (Math.min(a.length, b.length) > 4 ? 1 : 0);
+                if (a === b) return true;
+                return Math.min(a.length, b.length) > 4 &&
+                    Math.max(a.length, b.length) <= 32 &&
+                    Math.abs(a.length - b.length) <= 1 &&
+                    differsByAtMostOneCharacter(a, b);
             }
             function fullText() {
                 return (committed + ' ' + curFinal + ' ' + curInterim).replace(/\s+/g, ' ').trim();
@@ -192,45 +207,68 @@
                 return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
             }
 
-            function startRecognition() {
-                rec = new SR();
-                rec.lang = 'ar-SA';
-                rec.continuous = true;
-                rec.interimResults = true;
-                rec.onresult = (event) => {
-                    let f = '', i = '';
-                    for (let k = 0; k < event.results.length; k++) {
-                        if (event.results[k].isFinal) f += event.results[k][0].transcript + ' ';
-                        else i += event.results[k][0].transcript + ' ';
-                    }
-                    curFinal = f.trim();
-                    curInterim = i.trim();
-                    live.textContent = fullText() || '…';
-                };
-                rec.onerror = (event) => {
-                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                        recording = false;
-                        setStatus('Izin pengenalan suara ditolak. Aktifkan izin mikrofon lalu coba lagi.', 'error');
-                    } else if (event.error === 'network') {
-                        setStatus('Pengenalan suara membutuhkan koneksi internet.', 'error');
-                    } else if (event.error === 'language-not-supported') {
-                        setStatus('Browser ini tidak mendukung pengenalan suara bahasa Arab.', 'error');
-                    }
-                };
-                rec.onend = () => {
-                    committed = (committed + ' ' + curFinal + ' ' + curInterim).trim();
-                    curFinal = '';
-                    curInterim = '';
-                    if (recording) { try { rec.start(); } catch (e) { /* sudah berjalan */ } }
-                };
-                try { rec.start(); } catch (e) { rec = null; }
+            function startRecognition(sessionId) {
+                try {
+                    const recognition = new SR();
+                    rec = recognition;
+                    recognition.lang = 'ar-SA';
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.onresult = (event) => {
+                        if (sessionId !== recordingSession) return;
+                        let f = '', i = '';
+                        for (let k = 0; k < event.results.length; k++) {
+                            if (event.results[k].isFinal) f += event.results[k][0].transcript + ' ';
+                            else i += event.results[k][0].transcript + ' ';
+                        }
+                        curFinal = f.trim();
+                        curInterim = i.trim();
+                        live.textContent = fullText() || '…';
+                    };
+                    recognition.onerror = (event) => {
+                        if (sessionId !== recordingSession) return;
+                        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                            recognitionUnavailable = true;
+                            finishRecording();
+                            checkB.disabled = false;
+                            setStatus('Izin pengenalan suara ditolak. Rekaman dihentikan dan mikrofon dilepas.', 'error');
+                        } else if (event.error === 'network') {
+                            recognitionUnavailable = true;
+                            setStatus('Pengenalan suara membutuhkan koneksi internet.', 'error');
+                        } else if (event.error === 'language-not-supported') {
+                            recognitionUnavailable = true;
+                            setStatus('Browser ini tidak mendukung pengenalan suara bahasa Arab.', 'error');
+                        }
+                    };
+                    recognition.onend = () => {
+                        if (sessionId !== recordingSession) return;
+                        committed = (committed + ' ' + curFinal + ' ' + curInterim).trim();
+                        curFinal = '';
+                        curInterim = '';
+                        if (recording && !recognitionUnavailable) {
+                            try { recognition.start(); } catch (error) { console.error('Pengenalan suara tidak dapat dilanjutkan:', error); }
+                        }
+                    };
+                    recognition.start();
+                    return true;
+                } catch (error) {
+                    console.error('Pengenalan suara tidak dapat dimulai:', error);
+                    rec = null;
+                    return false;
+                }
             }
 
             function finishRecording() {
                 recording = false;
                 clearInterval(tick);
+                clearTimeout(recordingTimeout);
+                tick = null;
+                recordingTimeout = null;
                 timerEl.classList.remove('live');
                 if (rec) { try { rec.stop(); } catch (e) { /* abaikan */ } }
+                if (recorder && recorder.state === 'recording') {
+                    try { recorder.stop(); } catch (error) { console.error('Rekaman audio tidak dapat dihentikan:', error); }
+                }
                 if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
                 startB.disabled = false;
                 stopB.disabled = true;
@@ -244,10 +282,18 @@
                     setStatus('Perekaman tidak didukung. Buka halaman melalui HTTPS atau gunakan browser yang lebih baru.', 'error');
                     return;
                 }
+                const sessionId = ++recordingSession;
                 startB.disabled = true;
                 checkB.disabled = true;
                 result.hidden = true;
+                if (audioUrl) URL.revokeObjectURL(audioUrl);
+                audioUrl = null;
+                preview.pause();
+                preview.removeAttribute('src');
+                preview.load();
+                preview.hidden = true;
                 committed = ''; curFinal = ''; curInterim = '';
+                recognitionUnavailable = !SR;
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 } catch (error) {
@@ -257,24 +303,55 @@
                         : 'Mikrofon tidak dapat digunakan. Periksa perangkat lalu coba lagi.', 'error');
                     return;
                 }
-                chunks = [];
+                const recordedChunks = [];
                 if (window.MediaRecorder) {
-                    recorder = new MediaRecorder(stream);
-                    recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
-                    recorder.addEventListener('stop', () => {
-                        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-                        if (!blob.size) return;
-                        if (audioUrl) URL.revokeObjectURL(audioUrl);
-                        audioUrl = URL.createObjectURL(blob);
-                        preview.src = audioUrl;
-                        preview.hidden = false;
-                    }, { once: true });
-                    recorder.start();
+                    try {
+                        const activeRecorder = new MediaRecorder(stream);
+                        recorder = activeRecorder;
+                        activeRecorder.addEventListener('dataavailable', (event) => {
+                            if (sessionId === recordingSession && event.data.size) recordedChunks.push(event.data);
+                        });
+                        activeRecorder.addEventListener('stop', () => {
+                            if (sessionId !== recordingSession) return;
+                            const blob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
+                            if (!blob.size) return;
+                            if (audioUrl) URL.revokeObjectURL(audioUrl);
+                            audioUrl = URL.createObjectURL(blob);
+                            preview.src = audioUrl;
+                            preview.hidden = false;
+                        }, { once: true });
+                        activeRecorder.addEventListener('error', () => {
+                            if (sessionId !== recordingSession) return;
+                            recognitionUnavailable = true;
+                            finishRecording();
+                            checkB.disabled = false;
+                            setStatus('Perekaman audio gagal. Mikrofon telah dilepas; coba lagi atau gunakan rekaman sebelumnya.', 'error');
+                        }, { once: true });
+                        activeRecorder.start();
+                    } catch (error) {
+                        console.error('Perekam audio tidak dapat dimulai:', error);
+                        recordingSession += 1;
+                        if (recorder && recorder.state === 'recording') {
+                            try { recorder.stop(); } catch (stopError) { console.error('Perekam gagal dihentikan:', stopError); }
+                        }
+                        recorder = null;
+                        stream.getTracks().forEach((track) => track.stop());
+                        stream = null;
+                        startB.disabled = false;
+                        setStatus('Perekam audio gagal dimulai. Periksa dukungan browser dan coba lagi.', 'error');
+                        return;
+                    }
                 } else {
                     recorder = null;
                 }
                 recording = true;
-                if (SR) { live.hidden = false; live.textContent = '…'; startRecognition(); }
+                let recognitionStarted = false;
+                if (SR) {
+                    live.hidden = false;
+                    live.textContent = '…';
+                    recognitionStarted = startRecognition(sessionId);
+                    recognitionUnavailable = !recognitionStarted;
+                }
                 sel.disabled = true;
                 custom.disabled = true;
                 stopB.disabled = false;
@@ -282,7 +359,15 @@
                 timerEl.textContent = '00:00';
                 timerEl.classList.add('live');
                 tick = setInterval(() => { timerEl.textContent = fmt(Math.floor((Date.now() - t0) / 1000)); }, 500);
-                setStatus('Sedang merekam. Bacalah dengan jelas dan perlahan.');
+                recordingTimeout = window.setTimeout(() => {
+                    if (!recording) return;
+                    finishRecording();
+                    checkB.disabled = false;
+                    setStatus('Batas rekaman 3 menit tercapai. Putar ulang atau periksa hasilnya.', 'error');
+                }, maxRecordingMs);
+                setStatus(recognitionStarted || !SR
+                    ? 'Sedang merekam. Bacalah dengan jelas dan perlahan.'
+                    : 'Audio direkam, tetapi pengenalan teks tidak dapat dimulai. Putar ulang rekaman untuk menilai sendiri.');
             });
 
             stopB.addEventListener('click', () => {
@@ -298,7 +383,15 @@
                 tipsEl.textContent = '';
                 wordsEl.textContent = '';
                 result.hidden = false;
-                if (!SR) {
+                if (!items.length || items.length > maxAnalysisWords) {
+                    scoreEl.hidden = true;
+                    summary.textContent = items.length
+                        ? `Teks terlalu panjang untuk diperiksa sekaligus. Gunakan maksimal ${maxAnalysisWords} kata.`
+                        : 'Teks latihan tidak berisi kata Arab yang dapat diperiksa.';
+                    setStatus(summary.textContent, 'error');
+                    return;
+                }
+                if (!SR || recognitionUnavailable) {
                     scoreEl.hidden = true;
                     summary.textContent = 'Pemeriksaan otomatis dasar tidak tersedia di browser ini. Putar ulang rekamanmu sambil melihat teks, tandai kata yang kurang jelas, lalu minta ustaz/ustazah menyimak makhraj dan tajwid.';
                     items.forEach((w) => wordsEl.append(w.raw + ' '));
@@ -308,6 +401,12 @@
                 if (!spoken.length) {
                     scoreEl.hidden = true;
                     summary.textContent = 'Tidak ada suara yang terdeteksi. Dekatkan mikrofon, bacalah lebih jelas, lalu rekam ulang.';
+                    return;
+                }
+                if (spoken.length > maxAnalysisWords) {
+                    scoreEl.hidden = true;
+                    summary.textContent = `Hasil pengenalan terlalu panjang. Rekam ulang bagian yang lebih pendek (maksimal ${maxAnalysisWords} kata).`;
+                    setStatus(summary.textContent, 'error');
                     return;
                 }
                 const n = items.length, m = spoken.length;
@@ -347,12 +446,23 @@
             });
 
             function loadHistory() {
-                try { return JSON.parse(localStorage.getItem('tahsin_history') || '[]'); } catch (e) { return []; }
+                try {
+                    const history = JSON.parse(window.UstadOnlineStorage.getItem('tahsin_history') || '[]');
+                    return Array.isArray(history)
+                        ? history.filter((item) =>
+                            item && Number.isFinite(item.t) &&
+                            typeof item.name === 'string' &&
+                            Number.isFinite(item.score))
+                        : [];
+                } catch (error) {
+                    console.error('Riwayat latihan tidak dapat dibaca:', error);
+                    return [];
+                }
             }
             function saveHistory(score) {
                 const list = loadHistory();
                 list.unshift({ t: Date.now(), name: targetName(), score });
-                try { localStorage.setItem('tahsin_history', JSON.stringify(list.slice(0, 10))); } catch (e) { /* penyimpanan tidak tersedia */ }
+                try { window.UstadOnlineStorage.setItem('tahsin_history', JSON.stringify(list.slice(0, 10))); } catch (e) { /* penyimpanan tidak tersedia */ }
                 renderHistory();
             }
             function renderHistory() {
@@ -367,7 +477,7 @@
                 clearB.hidden = list.length === 0;
             }
             clearB.addEventListener('click', () => {
-                try { localStorage.removeItem('tahsin_history'); } catch (e) { /* abaikan */ }
+                try { window.UstadOnlineStorage.removeItem('tahsin_history'); } catch (e) { /* abaikan */ }
                 renderHistory();
             });
 
@@ -375,7 +485,13 @@
             custom.addEventListener('input', renderTarget);
             window.addEventListener('pagehide', () => {
                 recording = false;
+                recordingSession += 1;
                 if (rec) { try { rec.abort(); } catch (e) { /* abaikan */ } }
+                if (recorder && recorder.state === 'recording') {
+                    try { recorder.stop(); } catch (error) { console.error('Rekaman audio tidak dapat dibersihkan:', error); }
+                }
+                clearInterval(tick);
+                clearTimeout(recordingTimeout);
                 if (stream) stream.getTracks().forEach((t) => t.stop());
                 if (audioUrl) URL.revokeObjectURL(audioUrl);
             });

@@ -165,7 +165,7 @@
 
     function loadProgress() {
         try {
-            const stored = localStorage.getItem(storageKey);
+            const stored = window.UstadOnlineStorage.getItem(storageKey);
             if (!stored) return {};
             const value = JSON.parse(stored);
             if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Format progres dzikir tidak valid.');
@@ -178,7 +178,7 @@
 
     function saveProgress() {
         try {
-            localStorage.setItem(storageKey, JSON.stringify(progress));
+            window.UstadOnlineStorage.setItem(storageKey, JSON.stringify(progress));
         } catch (error) {
             console.error('Progres dzikir tidak dapat disimpan:', error);
         }

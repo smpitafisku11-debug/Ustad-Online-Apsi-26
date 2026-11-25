@@ -147,6 +147,46 @@ class ModulePageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"<title>Baca Al-Qur&#39;an | Ustad Online</title>", response.data)
         self.assertIn(b"quranLibraryModal.showModal();", response.data)
+        for expected in (
+            b'id="quran-book-viewer"',
+            b'id="quran-translation-verses"',
+            b'id="quran-arabic-verses"',
+            b'id="reader-juz-select"',
+            b'id="reader-bookmark"',
+            b'id="reader-theme-toggle"',
+            b'id="reader-audio-toggle"',
+            b'id="reader-page-indicator"',
+            b"window.QuranBookViewer.openSurah(surah.number)",
+        ):
+            self.assertIn(expected, response.data)
+        for path in ("/static/quran_book_viewer.css", "/static/quran_book_viewer.js"):
+            asset = self.client.get(path)
+            self.assertEqual(asset.status_code, 200)
+            asset.close()
+
+    def test_account_storage_namespace_isolated_per_user(self):
+        clients = [app.test_client(), app.test_client()]
+        account_ids = []
+        for index, client in enumerate(clients):
+            csrf_token = client.get("/api/auth/session").json["csrf_token"]
+            response = client.post(
+                "/api/auth/register",
+                json={
+                    "role": "student",
+                    "name": f"Siswa Baru {index}",
+                    "email": f"siswa-baru-{index}@example.test",
+                    "password": "rahasia-123",
+                },
+                headers={"X-CSRF-Token": csrf_token},
+            )
+            self.assertEqual(response.status_code, 201)
+            with client.session_transaction() as browser_session:
+                account_ids.append(browser_session["user_id"])
+
+        self.assertNotEqual(account_ids[0], account_ids[1])
+        for client, account_id in zip(clients, account_ids):
+            page = client.get("/")
+            self.assertIn(f"let accountId = {account_id};".encode(), page.data)
 
     def test_ustad_connect_route_renders_guidance_page(self):
         response = self.client.get("/ustad-connect")
@@ -265,7 +305,7 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b'data-teacher-feature hidden', home.data)
         self.assertIn(b"Panel Ustad", home.data)
         dashboard_service_worker = self.client.get("/static/service-worker.js")
-        self.assertIn(b"'/ustad-dashboard'", dashboard_service_worker.data)
+        self.assertNotIn(b"'/ustad-dashboard'", dashboard_service_worker.data)
         self.assertIn(b"'/static/ustad_dashboard.js'", dashboard_service_worker.data)
         dashboard_service_worker.close()
 

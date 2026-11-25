@@ -310,7 +310,7 @@
 
     function loadState() {
         try {
-            const stored = localStorage.getItem(storageKey);
+            const stored = window.UstadOnlineStorage.getItem(storageKey);
             if (!stored) return defaultState();
             const parsed = JSON.parse(stored);
             if (!parsed || typeof parsed !== 'object') throw new Error('Format progres tidak valid.');
@@ -340,7 +340,7 @@
 
     function saveState() {
         try {
-            localStorage.setItem(storageKey, JSON.stringify(state));
+            window.UstadOnlineStorage.setItem(storageKey, JSON.stringify(state));
             return true;
         } catch (error) {
             console.error('Progres Akademi Tilawah tidak dapat disimpan:', error);

@@ -44,6 +44,7 @@
         input:focus,select:focus,textarea:focus { border-color:#54a887; box-shadow:0 0 0 3px #e7f4ee; }
         .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
         .button { min-height:40px; border:1px solid #d7e2dc; border-radius:10px; background:#fff; padding:0 12px; color:var(--navy); cursor:pointer; font-size:.78rem; font-weight:800; }
+        .button:disabled { cursor:wait; opacity:.65; }
         .button.primary { border-color:var(--green); background:var(--green); color:#fff; }
         .switch-row { display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid #edf2ef; padding-top:12px; }
         .switch-row:first-child { border-top:0; padding-top:0; }
@@ -91,10 +92,10 @@
 
         <section class="feature-grid" id="feature-grid" aria-label="Daftar fitur tambahan">
             <article class="feature-card" data-feature-search="pengingat waktu belajar notifikasi rutinitas reminder">
-                <div class="feature-head"><span class="feature-icon">◷</span><div><h2>Pengingat Waktu Belajar</h2><p>Jaga rutinitas harian.</p></div></div>
+                <div class="feature-head"><span class="feature-icon">◷</span><div><h2>Pengingat Waktu Belajar</h2><p>Simpan waktu pilihanmu di perangkat.</p></div></div>
                 <div class="feature-body">
                     <div class="field-row"><label class="field">Waktu<input id="reminder-time" type="time" value="16:00"></label><label class="field">Aktivitas<select id="reminder-activity"><option>Belajar Al-Qur'an</option><option>Setoran hafalan</option><option>Murajaah Juz 30</option></select></label></div>
-                    <div class="actions"><button class="button primary" id="save-reminder" type="button">Aktifkan Pengingat</button></div>
+                    <div class="actions"><button class="button primary" id="save-reminder" type="button">Simpan Catatan</button></div>
                     <p class="status" id="reminder-status" role="status"></p>
                 </div>
             </article>
@@ -124,6 +125,7 @@
                     <div class="field"><label for="text-size">Ukuran teks</label><select id="text-size"><option value="normal">Normal</option><option value="large">Besar</option><option value="xlarge">Ekstra Besar</option></select></div>
                     <div class="switch-row" style="margin-top:12px"><div><strong>Mode keterbacaan tinggi</strong><span>Kontras dan garis tepi lebih jelas.</span></div><button class="switch" type="button" role="switch" aria-label="Mode keterbacaan tinggi" aria-checked="false" data-preference="accessibility"></button></div>
                     <div class="switch-row"><div><strong>Kontras tinggi</strong><span>Meningkatkan pembeda warna pada antarmuka.</span></div><button class="switch" type="button" role="switch" aria-label="Kontras tinggi" aria-checked="false" data-preference="highContrast"></button></div>
+                    <p class="status" id="accessibility-status" role="status"></p>
                 </div>
             </article>
 
@@ -133,6 +135,7 @@
                     <div class="field-row"><label class="field">Nama kegiatan<input id="class-name" placeholder="Kelas Tahsin Pekanan"></label><label class="field">Waktu<input id="class-time" type="datetime-local"></label></div>
                     <div class="actions"><button class="button primary" id="save-class" type="button">Simpan Jadwal</button></div>
                     <div class="saved-list" id="class-list"></div>
+                    <p class="status" id="class-status" role="status"></p>
                 </div>
             </article>
 
@@ -147,7 +150,7 @@
             <article class="feature-card" data-feature-search="lapor konten kesalahan perilaku tidak pantas report">
                 <div class="feature-head"><span class="feature-icon">!</span><div><h2>Pelaporan Konten</h2><p>Kirim laporan kesalahan atau pelanggaran.</p></div></div>
                 <div class="feature-body">
-                    <div class="field-row"><label class="field">Jenis laporan<select id="report-type"><option>Kesalahan materi</option><option>Konten tidak pantas</option><option>Perilaku pengguna</option><option>Masalah teknis</option></select></label><label class="field">Detail<textarea id="report-detail" placeholder="Tulis informasi yang dapat ditinjau"></textarea></label></div>
+                    <div class="field-row"><label class="field">Jenis laporan<select id="report-type"><option>Kesalahan materi</option><option>Konten tidak pantas</option><option>Perilaku pengguna</option><option>Masalah teknis</option></select></label><label class="field">Detail<textarea id="report-detail" maxlength="1000" placeholder="Tulis informasi yang dapat ditinjau (maks. 1000 karakter)"></textarea></label></div>
                     <div class="actions"><button class="button primary" id="send-report" type="button">Buat Laporan</button></div>
                     <p class="status" id="report-status" role="status"></p>
                 </div>
@@ -167,6 +170,7 @@
                     <div class="field-row"><label class="field">Periode<select id="planner-period"><option value="harian">Harian</option><option value="mingguan">Mingguan</option><option value="bulanan">Bulanan</option></select></label><label class="field">Target hafalan<input id="planner-target" placeholder="Contoh: 5 ayat atau Surah Al-Mulk"></label></div>
                     <div class="actions"><button class="button primary" id="save-planner" type="button">Simpan Target</button></div>
                     <div class="saved-list" id="planner-list"></div>
+                    <p class="status" id="planner-status" role="status"></p>
                 </div>
             </article>
 
@@ -180,6 +184,7 @@
             </article>
         </section>
     </main>
+    {% include "partials/account_storage.html" %}
     <script src="{{ url_for('static', filename='fitur_tambahan.js') }}" defer></script>
 </body>
 </html>

@@ -1,8 +1,9 @@
 import io
 import unittest
+from unittest.mock import patch
 
 from app import app, socketio
-from quran_battle import _rooms, _rooms_lock
+from quran_battle import MODES, _rooms, _rooms_lock
 
 
 class QuranBattleTests(unittest.TestCase):
@@ -36,6 +37,74 @@ class QuranBattleTests(unittest.TestCase):
             json={"name": "Aminah", "format": "duo", "mode": "nama-surat"},
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_correct_streak_adds_combo_bonus_without_speed_scoring(self):
+        room = self.start_solo(mode="tajwid-battle")
+        with _rooms_lock:
+            _rooms[room["code"]]["round_started_at"] -= 10
+        answers = []
+        for question_index, question in enumerate(MODES["tajwid-battle"]["questions"]):
+            response = self.client.post(
+                f"/api/battle/rooms/{room['code']}/answer",
+                json={
+                    "player_id": room["player_id"],
+                    "question_id": question_index,
+                    "answer": question["answer"],
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            answers.append(response.get_json())
+
+        self.assertEqual([answer["points"] for answer in answers], [100, 100, 110])
+        self.assertEqual([answer["streak"] for answer in answers], [1, 2, 3])
+        self.assertEqual(answers[-1]["combo_bonus"], 10)
+        player = next(player for player in answers[-1]["room"]["players"] if player["is_you"])
+        self.assertEqual(player["best_streak"], 3)
+
+    def test_wrong_answer_resets_combo_streak(self):
+        room = self.start_solo(mode="tajwid-battle")
+        questions = MODES["tajwid-battle"]["questions"]
+        answers = (
+            questions[0]["answer"],
+            (questions[1]["answer"] + 1) % len(questions[1]["options"]),
+            questions[2]["answer"],
+        )
+        responses = []
+        for question_index, answer in enumerate(answers):
+            response = self.client.post(
+                f"/api/battle/rooms/{room['code']}/answer",
+                json={
+                    "player_id": room["player_id"],
+                    "question_id": question_index,
+                    "answer": answer,
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            responses.append(response.get_json())
+
+        self.assertEqual([response["streak"] for response in responses], [1, 0, 1])
+        self.assertEqual(responses[1]["points"], 0)
+        self.assertEqual(responses[2]["combo_bonus"], 0)
+
+    def test_combo_bonus_has_a_server_side_cap(self):
+        original_mode = MODES["tajwid-battle"]
+        extended_mode = {**original_mode, "questions": original_mode["questions"] * 4}
+        with patch.dict(MODES, {"tajwid-battle": extended_mode}):
+            room = self.start_solo(mode="tajwid-battle")
+            last_response = None
+            for question_index, question in enumerate(extended_mode["questions"]):
+                last_response = self.client.post(
+                    f"/api/battle/rooms/{room['code']}/answer",
+                    json={
+                        "player_id": room["player_id"],
+                        "question_id": question_index,
+                        "answer": question["answer"],
+                    },
+                )
+                self.assertEqual(last_response.status_code, 200)
+
+        self.assertEqual(last_response.get_json()["combo_bonus"], 30)
+        self.assertEqual(last_response.get_json()["points"], 130)
 
     def test_correct_answers_get_fixed_points_not_speed_bonus(self):
         fast = self.start_solo("Pemain")
@@ -203,7 +272,7 @@ class QuranBattleTests(unittest.TestCase):
         )
         self.assertEqual(reviewed.status_code, 200)
 
-    def test_socket_score_submission_uses_server_answer_and_fixed_points(self):
+    def test_socket_score_submission_uses_server_answer_and_combo_score(self):
         room = self.start_solo("Aminah")
         socket_client = socketio.test_client(app, flask_test_client=self.client)
         try:

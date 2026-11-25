@@ -152,7 +152,7 @@
             <h2>Gabung ke Grup</h2>
             <p class="status">Minta kode undangan dari pemilik atau anggota grup.</p>
             <label>Kode undangan
-                <input id="join-code" maxlength="12" required autocomplete="off" placeholder="Contoh: TJ7K2M">
+                <input id="join-code" maxlength="6" minlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" placeholder="Contoh: TJ7K2M">
             </label>
             <p class="status" id="join-status" role="status"></p>
             <div class="modal-actions">
@@ -185,9 +185,9 @@
             let searchTimer = null;
 
             try {
-                const savedProfile = localStorage.getItem(profileKey);
+                const savedProfile = window.UstadOnlineStorage.getItem(profileKey);
                 if (savedProfile) profileName.value = savedProfile;
-                memberIds = JSON.parse(localStorage.getItem(memberKey) || '{}');
+                memberIds = JSON.parse(window.UstadOnlineStorage.getItem(memberKey) || '{}');
                 if (!memberIds || typeof memberIds !== 'object') memberIds = {};
             } catch (error) {
                 memberIds = {};
@@ -218,7 +218,7 @@
             function saveProfile() {
                 try {
                     const name = cleanName();
-                    localStorage.setItem(profileKey, name);
+                    window.UstadOnlineStorage.setItem(profileKey, name);
                     return name;
                 } catch (error) {
                     alert(error.message);
@@ -381,6 +381,12 @@
             });
             document.getElementById('close-create').addEventListener('click', () => { createModal.hidden = true; });
             createModal.addEventListener('click', (event) => { if (event.target === createModal) createModal.hidden = true; });
+            document.getElementById('open-join').addEventListener('click', () => {
+                joinModal.hidden = false;
+                document.getElementById('join-code').focus();
+            });
+            document.getElementById('close-join').addEventListener('click', () => { joinModal.hidden = true; });
+            joinModal.addEventListener('click', (event) => { if (event.target === joinModal) joinModal.hidden = true; });
 
             document.getElementById('join-form').addEventListener('submit', async (event) => {
                 event.preventDefault();
@@ -395,7 +401,31 @@
                         name
                     }));
                     memberIds[joined.group.id] = joined.member_id;
-                    localStorage.setItem(memberKey, JSON.stringify(memberIds));
+                    window.UstadOnlineStorage.setItem(memberKey, JSON.stringify(memberIds));
+                    joinModal.hidden = true;
+                    document.getElementById('join-form').reset();
+                    await loadGroups('');
+                    await openGroup(joined.group.id);
+                } catch (error) {
+                    status.className = 'status error';
+                    status.textContent = error.message;
+                }
+            });
+
+            document.getElementById('join-form').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const status = document.getElementById('join-status');
+                status.className = 'status';
+                status.textContent = '';
+                try {
+                    const name = saveProfile();
+                    if (!name) return;
+                    const joined = await api('/join', jsonOptions({
+                        code:document.getElementById('join-code').value,
+                        name
+                    }));
+                    memberIds[joined.group.id] = joined.member_id;
+                    window.UstadOnlineStorage.setItem(memberKey, JSON.stringify(memberIds));
                     joinModal.hidden = true;
                     document.getElementById('join-form').reset();
                     await loadGroups('');
@@ -420,7 +450,7 @@
                         creator:name
                     }));
                     memberIds[created.group.id] = created.member_id;
-                    localStorage.setItem(memberKey, JSON.stringify(memberIds));
+                    window.UstadOnlineStorage.setItem(memberKey, JSON.stringify(memberIds));
                     createModal.hidden = true;
                     document.getElementById('create-form').reset();
                     await loadGroups('');

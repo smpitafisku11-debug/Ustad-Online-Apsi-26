@@ -17,6 +17,8 @@ quran_battle_api = Blueprint("quran_battle_api", __name__)
 _rooms = {}
 _rooms_lock = threading.RLock()
 _room_ttl = 3600
+_combo_bonus_step = 10
+_combo_bonus_cap = 30
 
 
 def _notify_room_update(code):
@@ -342,6 +344,8 @@ def _new_room(name, player_id, mode_key, game_format, capacity, difficulty, cate
                 "team_id": None,
                 "score": 0,
                 "exp": 0,
+                "streak": 0,
+                "best_streak": 0,
                 "status": "Bersiap",
                 "answered_question": None,
                 "recording": None,
@@ -365,6 +369,8 @@ def _join_room(room, name):
         "team_id": None,
         "score": 0,
         "exp": 0,
+        "streak": 0,
+        "best_streak": 0,
         "status": "Bersiap",
         "answered_question": None,
         "recording": None,
@@ -431,6 +437,8 @@ def _room_response(room, player_id):
             "team_id": player.get("team_id"),
             "score": player["score"],
             "exp": player["exp"],
+            "streak": player["streak"],
+            "best_streak": player["best_streak"],
             "status": player["status"],
             "is_you": player["id"] == player_id,
             "has_recording": player["id"] == player_id and player["recording"] is not None and player.get("recording_question") == question_index,
@@ -449,6 +457,7 @@ def _room_response(room, player_id):
         "question": public_question,
         "question_index": question_index,
         "total_questions": len(mode["questions"]),
+        "round_duration": room["round_seconds"],
         "seconds_remaining": seconds_remaining,
         "buzzer_player_id": room["buzzer_player_id"],
     }
@@ -489,9 +498,16 @@ def _score_submission(code, data):
                 return {"error": "Pilihan jawaban tidak valid."}, 400
             correct = answer == question["answer"]
             if correct:
-                points = 100
+                player["streak"] += 1
+                player["best_streak"] = max(player["best_streak"], player["streak"])
+                combo_bonus = min(
+                    (player["streak"] // 3) * _combo_bonus_step,
+                    _combo_bonus_cap,
+                )
+                points = 100 + combo_bonus
             else:
                 points = 0
+                player["streak"] = 0
             player["status"] = "Jawaban tepat" if correct else "Sudah menjawab"
         elif question_kind == "essay":
             answer = data.get("answer")
@@ -509,6 +525,8 @@ def _score_submission(code, data):
         response = {
             "correct": correct,
             "points": points,
+            "streak": player["streak"],
+            "combo_bonus": points - 100 if correct else 0,
             "room": _room_response(room, player_id),
         }
         socketio.emit(
@@ -518,6 +536,8 @@ def _score_submission(code, data):
                 "player_id": player_id,
                 "correct": correct,
                 "points": points,
+                "streak": player["streak"],
+                "combo_bonus": points - 100 if correct else 0,
             },
             to=room["code"],
         )

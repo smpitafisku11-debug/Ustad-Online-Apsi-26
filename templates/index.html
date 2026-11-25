@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { color-scheme: light; --ink: #f8fafc; --panel: #ffffff; --line: #e2e8f0; --navy: #1e3a8a; --emerald: #059669; }
         * { box-sizing: border-box; }
@@ -55,16 +55,35 @@
         body.home-view #fitur .menu-card:nth-child(3n + 2) .icon-box { background: #edf4ef; border-color: #d9e8dc; color: #387052; }
         body.home-view #fitur .menu-card:nth-child(3n) .icon-box { background: #f3f0e7; border-color: #e9e1ce; color: #897449; }
         body.home-view footer { border-color: #e1e6dc; color: #778477; }
+        .mushaf-dialog { width: min(96vw, 1180px); max-width: none; max-height: 96vh; border-color: #d7c9a9; background: #f4eddd; }
+        .mushaf-dialog > div { max-height: 96vh; }
+        .mushaf-dialog > div > header { border-color: #e4d8bf; background: #fffaf0; }
+        .mushaf-dialog > div > header h2 { color: #183c31; }
+        .mushaf-toolbar { border: 1px solid #e2d4b8; border-radius: 12px; background: #fffaf0; padding: 9px; }
+        .mushaf-control { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #ded2b8; border-radius: 9px; background: #fffdf7; padding: 0 12px; color: #28523f; font-size: .75rem; font-weight: 700; }
+        .mushaf-control:hover:not(:disabled) { border-color: #9baa78; background: #f5f2e7; }
+        .mushaf-control:disabled { cursor: not-allowed; opacity: .45; }
+        .mushaf-book { position: relative; max-width: 1000px; margin: 0 auto; border: 1px solid #d5c6a5; border-radius: 8px; background: #fffdf5; padding: clamp(18px, 4vw, 42px); box-shadow: 0 12px 30px rgba(86, 66, 31, .12), inset 0 0 0 5px #f7f0df, inset 0 0 0 6px #e8dcc2; }
+        .mushaf-book::before { position: absolute; top: 16px; right: 16px; bottom: 16px; left: 16px; border: 1px solid rgba(161, 139, 94, .22); content: ""; pointer-events: none; }
+        .mushaf-page-heading { position: relative; margin-bottom: 20px; border-bottom: 1px solid #e4d8bf; padding-bottom: 12px; color: #60704e; text-align: center; }
+        .mushaf-page-heading p:first-child { color: #234b39; font-family: 'Noto Naskh Arabic', serif; font-size: 1.65rem; line-height: 1.5; }
+        #ayah-list { position: relative; column-count: 2; column-gap: clamp(28px, 5vw, 64px); column-rule: 1px solid #ece3d2; }
+        #ayah-list > li { display: inline-block; width: 100%; break-inside: avoid; border: 0; border-bottom: 1px solid #eee6d8; border-radius: 0; padding: 14px 0; }
+        #ayah-list > li > div:first-child { margin-bottom: 8px; }
+        #ayah-list > li > p:first-of-type { color: #243f34; font-family: 'Noto Naskh Arabic', serif; font-size: clamp(1.45rem, 2.8vw, 2rem); line-height: 2.15; }
+        #ayah-list > li > p:last-child { border-color: #eee6d8; color: #685f4d; font-size: .8rem; line-height: 1.85; }
+        @media (max-width: 640px) { #ayah-list { column-count: 1; } .mushaf-book { padding: 24px 20px; } .mushaf-book::before { inset: 10px; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='qibla.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='quran_book_viewer.css') }}">
     <script src="{{ url_for('static', filename='profile.js') }}" defer></script>
     <script src="{{ url_for('static', filename='qibla.js') }}" defer></script>
     {% include "partials/page_transitions.html" %}
 </head>
-<body class="antialiased home-view">
+<body class="antialiased home-view{% if open_quran_library|default(false) %} quran-reader-page{% endif %}">
     <header class="sticky top-0 z-30 border-b bg-white/90 backdrop-blur-xl">
         <div class="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <a href="{{ url_for('home') }}" class="flex items-center gap-3" aria-label="Ustad Online, beranda">
@@ -173,7 +192,7 @@
                 <span class="pb-1 text-xs text-slate-500" data-feature-count>8 fitur tersedia</span>
             </div>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                <a href="{{ url_for('baca_alquran') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5">
+                <a href="{{ url_for('baca_alquran') }}" class="menu-card glass group rounded-2xl p-4 sm:p-5" data-no-page-transition>
                     <span class="icon-box flex h-10 w-10 items-center justify-center rounded-lg text-blue-800"><i data-lucide="book-open" class="h-5 w-5"></i></span>
                     <span class="mt-4 block text-sm font-semibold leading-snug text-slate-800">Baca Al-Qur'an</span><span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Membaca &amp; mendengarkan audio</span>
                 </a>
@@ -270,35 +289,33 @@
         </div>
     </dialog>
 
-    <dialog id="surah-modal" class="m-auto max-h-[92vh] w-[calc(100%-1rem)] max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl backdrop:bg-slate-950/60">
-        <div class="flex max-h-[92vh] flex-col">
-            <header class="flex items-start justify-between gap-4 border-b border-slate-200 bg-white p-4 sm:p-6">
+    <dialog id="surah-modal" class="mushaf-dialog m-auto overflow-hidden rounded-2xl p-0 text-slate-800 shadow-2xl backdrop:bg-slate-950/60" aria-labelledby="reader-title">
+        <div class="flex max-h-[96vh] flex-col">
+            <header class="flex items-start justify-between gap-4 border-b p-4 sm:p-5">
                 <div class="min-w-0">
-                    <p id="reader-subtitle" class="text-[10px] font-bold tracking-[.15em] text-blue-800">PEMBACA AL-QUR'AN</p>
+                    <p id="reader-subtitle" class="text-[10px] font-bold tracking-[.15em] text-emerald-800">MUSHAF DIGITAL</p>
                     <h2 id="reader-title" class="mt-1 text-xl font-semibold text-blue-950 sm:text-2xl">Memuat surah...</h2>
                     <p id="reader-meta" class="mt-1 text-xs text-slate-500"></p>
                 </div>
-                <button id="close-reader" type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-blue-300 hover:text-blue-900" aria-label="Tutup pembaca">
-                    <i data-lucide="x" class="h-5 w-5"></i>
-                </button>
-            </header>
-            <div class="overflow-y-auto p-4 sm:p-6">
-                <div class="mb-4 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-3 sm:p-4">
-                    <label class="min-w-40 flex-1 text-xs font-semibold text-slate-700" for="reciter-select">
-                        Qari murottal
-                        <select id="reciter-select" class="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
-                            <option value="01">Abdullah Al-Juhany</option>
-                            <option value="02">Abdul Muhsin Al-Qasim</option>
-                            <option value="03">Abdurrahman as-Sudais</option>
-                            <option value="04">Ibrahim Al-Dossari</option>
-                            <option value="05" selected>Misyari Rasyid Al-Afasi</option>
-                            <option value="06">Yasser Al-Dosari</option>
-                        </select>
-                    </label>
-                    <button id="play-full-surah" type="button" disabled class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
-                        <i data-lucide="play" class="h-4 w-4 fill-current"></i>Putar seluruh surah
+                <div class="flex shrink-0 items-center gap-2">
+                    <button id="open-surah-library" type="button" class="mushaf-control" aria-label="Buka daftar surah"><i data-lucide="list" class="h-4 w-4"></i><span class="hidden sm:inline">Daftar surah</span></button>
+                    <button id="close-reader" type="button" class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-blue-300 hover:text-blue-900" aria-label="Tutup mushaf">
+                        <i data-lucide="x" class="h-5 w-5"></i>
                     </button>
                 </div>
+            </header>
+            <div id="reader-scroll" class="overflow-y-auto p-3 sm:p-6">
+                <label class="mb-4 block max-w-xs text-xs font-semibold text-slate-700" for="reciter-select">
+                    Qari murottal
+                    <select id="reciter-select" class="quran-book-select mt-1.5">
+                        <option value="01">Abdullah Al-Juhany</option>
+                        <option value="02">Abdul Muhsin Al-Qasim</option>
+                        <option value="03">Abdurrahman as-Sudais</option>
+                        <option value="04">Ibrahim Al-Dossari</option>
+                        <option value="05" selected>Misyari Rasyid Al-Afasi</option>
+                        <option value="06">Yasser Al-Dosari</option>
+                    </select>
+                </label>
                 <div class="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 sm:p-4">
                     <label class="block text-xs font-semibold text-slate-700" for="ambience-select">
                         Suara latar murottal
@@ -318,9 +335,70 @@
                     </div>
                     <p class="mt-2 text-[11px] leading-relaxed text-slate-500">Suara latar lembut dibuat di perangkat, hanya aktif saat murottal diputar, dan tidak menggantikan suara qari.</p>
                 </div>
-                <audio id="reader-audio" class="mb-4 hidden w-full" controls preload="none" aria-label="Pemutar audio murottal"></audio>
-                <p id="reader-status" class="mb-4 text-sm text-slate-500" role="status" aria-live="polite">Memuat ayat dan audio...</p>
-                <ol id="ayah-list" class="space-y-3"></ol>
+                <div class="sr-only" aria-hidden="true">
+                    <p id="reader-status" role="status"></p>
+                    <ol id="ayah-list"></ol>
+                    <button id="play-full-surah" type="button"></button>
+                </div>
+                <section id="quran-book-viewer" class="quran-book-shell" aria-label="Pembaca mushaf dua halaman">
+                    <div class="quran-book-toolbar">
+                        <label for="reader-surah-select">Surah
+                            <select id="reader-surah-select" aria-label="Lompat ke surah">
+                                <option value="">Pilih surah</option>
+                            </select>
+                        </label>
+                        <label for="reader-juz-select">Juz
+                            <select id="reader-juz-select" aria-label="Lompat ke juz">
+                                <option value="">Pilih juz</option>
+                            </select>
+                        </label>
+                        <label for="reader-font-size">Ukuran Arab
+                            <select id="reader-font-size" aria-label="Ukuran teks Arab">
+                                <option value="1.7rem">Normal</option>
+                                <option value="2rem" selected>Besar</option>
+                                <option value="2.35rem">Sangat besar</option>
+                            </select>
+                        </label>
+                        <button id="reader-bookmark" class="quran-book-button" type="button" aria-pressed="false" aria-label="Simpan bookmark halaman">
+                            <span aria-hidden="true">☆</span><span>Bookmark</span>
+                        </button>
+                        <button id="reader-theme-toggle" class="quran-book-button" type="button" aria-pressed="false" aria-label="Aktifkan mode malam">
+                            <span aria-hidden="true">☾</span><span>Mode malam</span>
+                        </button>
+                    </div>
+                    <div id="quran-book-spread" class="quran-book-spread" role="region" aria-label="Halaman mushaf">
+                        <article class="quran-book-page quran-book-page-left" id="quran-translation-page" aria-label="Nama surah dan terjemahan Indonesia">
+                            <button class="quran-book-bookmark" type="button" aria-label="Simpan bookmark halaman" aria-pressed="false">☆</button>
+                            <header class="quran-book-page-heading">
+                                <strong id="quran-surah-heading">Al-Qur'an</strong>
+                                <span id="quran-surah-subheading">Terjemahan Bahasa Indonesia</span>
+                            </header>
+                            <div id="quran-translation-verses" class="quran-book-verses"></div>
+                            <footer id="quran-translation-page-label" class="quran-book-page-label">Halaman 1</footer>
+                        </article>
+                        <article class="quran-book-page quran-book-page-right" id="quran-arabic-page" aria-label="Teks Arab Al-Qur'an">
+                            <header class="quran-book-page-heading">
+                                <strong lang="ar" dir="rtl" id="quran-arabic-heading">الْقُرْآنُ الْكَرِيمُ</strong>
+                                <span id="quran-arabic-subheading">النص العثماني · Uthmani</span>
+                            </header>
+                            <div id="quran-arabic-verses" class="quran-book-verses" lang="ar" dir="rtl"></div>
+                            <footer id="quran-arabic-page-label" class="quran-book-page-label">Halaman 1</footer>
+                        </article>
+                    </div>
+                    <p id="quran-book-status" class="quran-book-status" role="status" aria-live="polite">Memuat halaman mushaf...</p>
+                    <div class="quran-book-controls" aria-label="Kontrol halaman dan murottal">
+                        <button id="reader-page-previous" class="quran-book-button" type="button" aria-label="Halaman sebelumnya">← Sebelumnya</button>
+                        <span id="reader-page-indicator" aria-live="polite">Halaman 1 dari 604</span>
+                        <button id="reader-page-next" class="quran-book-button" type="button" aria-label="Halaman selanjutnya">Selanjutnya →</button>
+                        <label for="reader-page-jump">Halaman
+                            <input id="reader-page-jump" type="number" min="1" max="604" value="1" aria-label="Nomor halaman">
+                        </label>
+                        <button id="reader-audio-toggle" class="quran-book-button" type="button" aria-label="Putar murottal">
+                            <span aria-hidden="true">▶</span><span>Putar murottal</span>
+                        </button>
+                    </div>
+                    <audio id="reader-audio" class="hidden" preload="none" aria-label="Pemutar audio murottal"></audio>
+                </section>
             </div>
         </div>
     </dialog>
@@ -440,7 +518,7 @@
     <nav class="mobile-nav fixed inset-x-0 bottom-0 z-40 border-t px-5 pt-2.5 backdrop-blur-xl md:hidden" aria-label="Navigasi mobile">
         <div class="mx-auto flex max-w-md items-center justify-around">
             <a href="{{ url_for('home') }}" aria-current="page" class="flex min-w-14 flex-col items-center gap-1 py-1 text-blue-900"><i data-lucide="house" class="h-5 w-5"></i><span class="text-[10px] font-medium">Beranda</span></a>
-            <a href="{{ url_for('baca_alquran') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="book-open" class="h-5 w-5"></i><span class="text-[10px] font-medium">Al-Qur'an</span></a>
+            <a href="{{ url_for('baca_alquran') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800" data-no-page-transition><i data-lucide="book-open" class="h-5 w-5"></i><span class="text-[10px] font-medium">Al-Qur'an</span></a>
             <a href="{{ url_for('fitur_tambahan') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="grid-2x2" class="h-5 w-5"></i><span class="text-[10px] font-medium">Fitur</span></a>
             <a href="{{ url_for('akademi_tilawah') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="graduation-cap" class="h-5 w-5"></i><span class="text-[10px] font-medium">Akademi</span></a>
             <a href="{{ url_for('dzikir_doa') }}" class="flex min-w-14 flex-col items-center gap-1 py-1 text-slate-500 transition hover:text-blue-800"><i data-lucide="heart-handshake" class="h-5 w-5"></i><span class="text-[10px] font-medium">Dzikir &amp; Doa</span></a>
@@ -448,6 +526,7 @@
     </nav>
 
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="{{ url_for('static', filename='quran_book_viewer.js') }}"></script>
     <script>
         lucide.createIcons();
 
@@ -494,7 +573,7 @@
         }).format(currentDate);
 
         try {
-            const savedTargets = localStorage.getItem(hafalanStorageKey);
+            const savedTargets = window.UstadOnlineStorage.getItem(hafalanStorageKey);
             if (savedTargets !== null) {
                 const parsedTargets = JSON.parse(savedTargets);
                 if (!Array.isArray(parsedTargets) || parsedTargets.length !== hafalanInputs.length || !parsedTargets.every((target) => typeof target === 'boolean')) {
@@ -525,7 +604,7 @@
                 updateHafalanProgress();
                 if (!hafalanStorageAvailable) return;
                 try {
-                    localStorage.setItem(hafalanStorageKey, JSON.stringify(completedHafalanTargets));
+                    window.UstadOnlineStorage.setItem(hafalanStorageKey, JSON.stringify(completedHafalanTargets));
                 } catch (error) {
                     hafalanStorageAvailable = false;
                     console.error('Progres target hafalan tidak dapat disimpan:', error);
@@ -701,11 +780,6 @@
         let ambienceType = 'off';
         let ambienceVolume = 0.12;
         let allSurahs = [];
-        let readerRequest;
-        let audioQueue = [];
-        let audioQueueIndex = 0;
-        let currentVerses = [];
-        let currentSurahAudio = {};
         let surahsLoading = false;
         let lastOpenedSurahNumber = 0;
         let recitationIsPlaying = false;
@@ -719,7 +793,7 @@
         let ambienceModulationGain;
 
         try {
-            const preferences = JSON.parse(localStorage.getItem(ambienceStorageKey) || '{}');
+            const preferences = JSON.parse(window.UstadOnlineStorage.getItem(ambienceStorageKey) || '{}');
             if (preferences && Object.prototype.hasOwnProperty.call(ambienceProfiles, preferences.type)) {
                 ambienceType = preferences.type;
             }
@@ -738,7 +812,7 @@
             surahStatus.className = isError ? 'mt-3 text-xs text-rose-700' : 'mt-3 text-xs text-slate-500';
         }
 
-        async function fetchSurahs() {
+        async function fetchSurahs(openInitialSurah) {
             surahsLoading = true;
             surahList.replaceChildren();
             surahCount.textContent = 'Memuat daftar surah...';
@@ -759,12 +833,32 @@
                     revelation: surah.tempatTurun
                 })).sort((first, second) => first.number - second.number);
                 surahsLoading = false;
+                window.QuranBookViewer.setSurahs(allSurahs);
                 renderSurahs();
+                if (openInitialSurah) {
+                    let savedPage = null;
+                    let lastReadPage = 1;
+                    let lastReadNumber = 1;
+                    try {
+                        const storedPage = Number(window.UstadOnlineStorage.getItem('ustadOnline.lastReadPage'));
+                        if (Number.isInteger(storedPage) && storedPage >= 1 && storedPage <= 604) {
+                            savedPage = storedPage;
+                            lastReadPage = storedPage;
+                        }
+                        const savedNumber = Number(window.UstadOnlineStorage.getItem('ustadOnline.lastReadSurah'));
+                        if (Number.isInteger(savedNumber) && savedNumber >= 1 && savedNumber <= 114) lastReadNumber = savedNumber;
+                    } catch (error) {
+                        console.error('Posisi bacaan terakhir tidak dapat dibaca:', error);
+                    }
+                    if (savedPage !== null) window.QuranBookViewer.openPage(lastReadPage);
+                    else openSurah(allSurahs.find((surah) => surah.number === lastReadNumber) || allSurahs[0]);
+                }
             } catch (error) {
                 surahsLoading = false;
                 console.error('Gagal memuat daftar surah dari Equran.id:', error);
                 surahCount.textContent = 'Daftar surah belum tersedia';
                 setSurahStatus('Daftar surah gagal dimuat dari Equran.id. Periksa koneksi internet, lalu coba lagi.', true);
+                if (openInitialSurah) document.getElementById('quran-book-status').textContent = 'Daftar surah gagal dimuat. Periksa koneksi internet, lalu coba lagi.';
                 const retry = document.createElement('button');
                 retry.type = 'button';
                 retry.className = 'mt-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-800 hover:bg-rose-50';
@@ -812,6 +906,7 @@
                 button.append(number, details, arabic);
                 button.addEventListener('click', () => {
                     quranLibraryModal.close();
+                    if (!readerModal.open) readerModal.showModal();
                     openSurah(surah);
                 });
                 surahList.append(button);
@@ -820,9 +915,8 @@
 
         surahSearch.addEventListener('input', renderSurahs);
         if ({{ open_quran_library|default(false)|tojson }}) {
-            quranLibraryModal.showModal();
-            fetchSurahs();
-            window.setTimeout(() => surahSearch.focus({ preventScroll: true }), 100);
+            readerModal.showModal();
+            fetchSurahs(true);
         }
         document.getElementById('close-quran-library').addEventListener('click', () => quranLibraryModal.close());
         quranLibraryModal.addEventListener('click', (event) => {
@@ -850,7 +944,7 @@
 
         function saveAmbienceSettings() {
             try {
-                localStorage.setItem(ambienceStorageKey, JSON.stringify({
+                window.UstadOnlineStorage.setItem(ambienceStorageKey, JSON.stringify({
                     type: ambienceType,
                     volume: ambienceVolume
                 }));
@@ -1041,112 +1135,28 @@
         });
 
         async function openSurah(surah) {
+            if (!surah) return;
             if (window.UstadPageTransition && typeof window.UstadPageTransition.playQuranSurah === 'function') {
                 await window.UstadPageTransition.playQuranSurah(lastOpenedSurahNumber, surah.number);
             }
             lastOpenedSurahNumber = surah.number;
-            if (readerRequest) readerRequest.abort();
-            readerRequest = new AbortController();
             stopAudio();
-            currentVerses = [];
-            currentSurahAudio = {};
-            playFullSurah.disabled = true;
-            ayahList.replaceChildren();
             readerTitle.textContent = `${surah.number}. ${surah.latinName}`;
             readerMeta.textContent = `${surah.ayahCount} ayat${surah.revelation ? ` · ${surah.revelation}` : ''}`;
             setReaderStatus('Memuat teks Arab, terjemahan, dan audio...', false);
-            readerModal.showModal();
-            try {
-                const response = await fetch(`https://equran.id/api/v2/surat/${surah.number}`, { signal: readerRequest.signal });
-                if (!response.ok) throw new Error(`Layanan surah merespons dengan status ${response.status}.`);
-                const payload = await response.json();
-                const surahData = payload.data;
-                if (payload.code !== 200 || !surahData || !Array.isArray(surahData.ayat) || surahData.ayat.length !== surahData.jumlahAyat) {
-                    throw new Error('Data ayat Equran.id tidak lengkap atau formatnya tidak dikenali.');
-                }
-                if (surahData.nomor !== surah.number || !surahData.audioFull || !surahData.ayat.every((ayah) => (
-                    typeof ayah.teksArab === 'string' && ayah.teksArab.length > 0 &&
-                    typeof ayah.teksIndonesia === 'string' && ayah.teksIndonesia.length > 0 &&
-                    ayah.audio && Object.keys(ayah.audio).length > 0
-                ))) {
-                    throw new Error('Data teks, terjemahan, atau audio Equran.id tidak lengkap.');
-                }
-                currentSurahAudio = surahData.audioFull;
-                currentVerses = surahData.ayat.map((ayah) => ({
-                    numberInSurah: ayah.nomorAyat,
-                    arabic: ayah.teksArab,
-                    translation: ayah.teksIndonesia,
-                    audio: ayah.audio
-                }));
-                playFullSurah.disabled = !currentSurahAudio[reciterSelect.value];
-                renderAyahs(currentVerses);
-                setReaderStatus(`${currentVerses.length} ayat siap dibaca dan didengarkan dari Equran.id.`, false);
-            } catch (error) {
-                if (error.name === 'AbortError') return;
-                console.error('Gagal memuat isi surah dari Equran.id:', error);
-                setReaderStatus('Isi surah gagal dimuat dari Equran.id. Periksa koneksi internet lalu coba lagi.', true);
-            }
+            if (!readerModal.open) readerModal.showModal();
+            window.QuranBookViewer.openSurah(surah.number);
         }
-
-        function renderAyahs(verses) {
-            ayahList.replaceChildren();
-            verses.forEach((ayah, index) => {
-                const item = document.createElement('li');
-                item.className = 'rounded-xl border border-slate-200 p-4 sm:p-5';
-                const top = document.createElement('div');
-                top.className = 'mb-4 flex items-center justify-between gap-3';
-                const badge = document.createElement('span');
-                badge.className = 'flex h-8 min-w-8 items-center justify-center rounded-full bg-blue-50 px-2 text-xs font-semibold text-blue-900';
-                badge.textContent = String(ayah.numberInSurah);
-                const audioButton = document.createElement('button');
-                audioButton.type = 'button';
-                audioButton.className = 'inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-emerald-200 px-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100';
-                audioButton.setAttribute('aria-label', `Putar audio ayat ${ayah.numberInSurah}`);
-                audioButton.innerHTML = '<i data-lucide="volume-2" class="h-4 w-4"></i><span>Putar ayat</span>';
-                audioButton.disabled = !ayah.audio[reciterSelect.value];
-                audioButton.addEventListener('click', () => {
-                    const queue = verses.map((verse) => ({
-                        numberInSurah: verse.numberInSurah,
-                        label: `ayat ${verse.numberInSurah}`,
-                        audio: verse.audio[reciterSelect.value]
-                    })).filter((verse) => verse.audio);
-                    const startIndex = queue.findIndex((verse) => verse.numberInSurah === ayah.numberInSurah);
-                    if (startIndex >= 0) playAudioQueue(queue, startIndex);
-                });
-                top.append(badge, audioButton);
-                const arabic = document.createElement('p');
-                arabic.className = 'text-right text-2xl leading-[2.2] text-blue-950 sm:text-3xl';
-                arabic.dir = 'rtl';
-                arabic.lang = 'ar';
-                arabic.dataset.quranContent = 'true';
-                arabic.textContent = ayah.arabic;
-                const translation = document.createElement('p');
-                translation.className = 'mt-3 border-t border-slate-100 pt-3 text-sm leading-7 text-slate-600';
-                translation.dataset.quranContent = 'true';
-                translation.textContent = ayah.translation;
-                item.append(top, arabic, translation);
-                ayahList.append(item);
-            });
-            lucide.createIcons({ attrs: { 'stroke-width': 1.8 } });
-        }
-
-        playFullSurah.addEventListener('click', () => {
-            const audio = currentSurahAudio[reciterSelect.value];
-            if (audio) playAudioQueue([{ label: 'seluruh surah', audio }], 0);
-        });
-        reciterSelect.addEventListener('change', () => {
-            stopAudio();
-            playFullSurah.disabled = !currentSurahAudio[reciterSelect.value];
-            if (currentVerses.length) renderAyahs(currentVerses);
-        });
 
         document.getElementById('close-reader').addEventListener('click', () => readerModal.close());
+        document.getElementById('open-surah-library').addEventListener('click', () => {
+            readerModal.close();
+            quranLibraryModal.showModal();
+            if (!allSurahs.length && !surahsLoading) fetchSurahs();
+            window.setTimeout(() => surahSearch.focus({ preventScroll: true }), 100);
+        });
         readerModal.addEventListener('click', (event) => {
             if (event.target === readerModal) readerModal.close();
-        });
-        readerModal.addEventListener('close', () => {
-            if (readerRequest) readerRequest.abort();
-            stopAudio();
         });
 
     </script>

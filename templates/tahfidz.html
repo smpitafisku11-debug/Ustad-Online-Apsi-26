@@ -86,7 +86,7 @@
             </div>
             <p class="status" id="storage-status" role="status" aria-live="polite"></p>
             <div class="actions">
-                <a class="button button-primary" href="{{ url_for('baca_alquran') }}">Buka Al-Qur'an</a>
+                <a class="button button-primary" href="{{ url_for('baca_alquran') }}" data-no-page-transition>Buka Al-Qur'an</a>
                 <a class="button" href="{{ url_for('komunitas') }}">Diskusi di Komunitas</a>
                 <button class="button" id="reset-targets" type="button">Atur Ulang Target Hari Ini</button>
             </div>
@@ -155,7 +155,7 @@
             }
 
             try {
-                const saved = localStorage.getItem(storageKey);
+                const saved = window.UstadOnlineStorage.getItem(storageKey);
                 if (saved !== null) {
                     const parsed = JSON.parse(saved);
                     if (!Array.isArray(parsed) || parsed.length !== targets.length || !parsed.every((item) => typeof item === 'boolean')) {
@@ -174,7 +174,7 @@
                 updateProgress();
                 if (!storageAvailable) return;
                 try {
-                    localStorage.setItem(storageKey, JSON.stringify(targets.map((target) => target.checked)));
+                    window.UstadOnlineStorage.setItem(storageKey, JSON.stringify(targets.map((target) => target.checked)));
                     status.className = 'status';
                     status.textContent = 'Progres target tersimpan di browser ini.';
                 } catch (error) {
@@ -233,7 +233,7 @@
                     targets.forEach((target, index) => {
                         if (!approvedTargetKeys.has(targetKeys[index])) target.checked = false;
                     });
-                    localStorage.removeItem(storageKey);
+                    window.UstadOnlineStorage.removeItem(storageKey);
                     if (targets.some((target) => target.checked)) {
                         saveTargets();
                     } else {

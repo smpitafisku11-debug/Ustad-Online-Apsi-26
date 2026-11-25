@@ -180,6 +180,50 @@
         body[data-theme="midnight"] .settings-button:hover, body[data-theme="midnight"] .back-link:hover, body[data-theme="midnight"] .button-secondary:hover { border-color: #348e70; background: #142b2b; }
         body[data-theme="midnight"] .reset-settings { color: #c5d2e4; }
         body[data-theme="midnight"] .result-card p, body[data-theme="midnight"] .result-score span { color: #a4b1c5; }
+        body { position: relative; isolation: isolate; background: radial-gradient(ellipse at 86% 4%,rgba(215,235,216,.7),transparent 34rem),radial-gradient(ellipse at 4% 28%,rgba(245,233,197,.48),transparent 30rem),linear-gradient(155deg,#f8faf4,#eff4eb 58%,#fbfaf4); }
+        body::before { position: fixed; z-index: -1; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84' fill='none'%3E%3Cpath d='M42 3 55 16 42 29 29 16 42 3Zm0 26 13 13-13 13-13-13 13-13Zm0 26 13 13-13 13-13-13 13-13ZM3 42l13-13 13 13-13 13L3 42Zm52 0 13-13 13 13-13 13-13-13Z' stroke='%238d9d70' stroke-opacity='.12'/%3E%3Ccircle cx='42' cy='42' r='3' fill='%23c9a95e' fill-opacity='.16'/%3E%3C/svg%3E"); background-size: 84px 84px; content: ""; opacity: .48; pointer-events: none; }
+        .hero { border-color: #cad7b8; background: linear-gradient(118deg,#fffdf7 0%,#f2f5e8 55%,#e9f2e7 100%); }
+        .hero::after { border-color: #d7dcbf; box-shadow: 0 0 0 34px rgba(201,169,94,.08),0 0 0 74px rgba(201,169,94,.05); }
+        .kicker,.eyebrow { color: #52714c; }
+        .panel { border-color: #dfe5d6; box-shadow: 0 12px 30px rgba(27,56,35,.055); }
+        .arena-top { align-items: stretch; }
+        .duel-card { border-color: #dedac4; background: linear-gradient(145deg,#fffdf8,#f5f4e9); box-shadow: inset 0 1px rgba(255,255,255,.9); }
+        .duel-card.opponents { background: linear-gradient(145deg,#eff5e9,#fffdf7); }
+        .duel-card.score-pop { animation: battle-score-pop 420ms ease-out; }
+        .score-track { height: 9px; overflow: hidden; border: 1px solid rgba(115,132,88,.13); border-radius: 99px; margin-top: 12px; background: #e8ecdf; }
+        .score-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#668451,#c3a45a); transition: width 420ms cubic-bezier(.2,.8,.2,1); }
+        .opponents .score-fill { background: linear-gradient(90deg,#a8ae78,#d2b369); }
+        .duel-player + .score-track { margin-top: 12px; }
+        .opponent-list .duel-player { flex-wrap: wrap; }
+        .opponent-list .duel-player .player-meta { min-width: calc(100% - 112px); }
+        .opponent-score-track { width: 100%; height: 6px; overflow: hidden; border-radius: 99px; background: #e8ecdf; }
+        .opponent-score-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#809268,#c9ad67); transition: width 420ms cubic-bezier(.2,.8,.2,1); }
+        .combo-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+        .combo-pill { display: inline-flex; min-height: 28px; align-items: center; gap: 5px; border: 1px solid #e8d6a5; border-radius: 99px; background: #fff8e6; padding: 3px 9px; color: #80642b; font-size: .68rem; font-weight: 800; }
+        .combo-pill.is-hot { border-color: #d8b85e; background: #f9edc9; animation: battle-combo-pop 360ms ease-out; }
+        .combo-best { color: #79816d; font-size: .65rem; }
+        .timer-row { margin-top: 18px; }
+        .timer-track { height: 8px; overflow: hidden; border-radius: 99px; margin-top: 8px; background: #e6eadf; }
+        .timer-fill { width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#879a63,#c4a355); transform-origin: left center; transition: width 700ms linear,background-color 200ms ease; }
+        .timer-fill.low { background: linear-gradient(90deg,#d99b59,#bd6650); }
+        .question-box { border-color: #e5dfcd; background: linear-gradient(145deg,#fffefa,#fff); }
+        .question-arabic { background: #f5f2e7; color: #254533; }
+        .option-button[aria-pressed="true"] { border-color: #82976b; background: #f0f4e9; box-shadow: inset 0 0 0 1px #bdc9a6; }
+        .answer-celebration { display: inline-flex; width: fit-content; min-height: 32px; align-items: center; border: 1px solid #e2d09c; border-radius: 99px; margin-top: 10px; background: #fff8e5; padding: 4px 11px; color: #765d27; font-size: .72rem; font-weight: 800; opacity: 0; transform: translateY(4px) scale(.96); }
+        .answer-celebration.is-visible { animation: battle-celebrate 850ms ease-out both; }
+        @keyframes battle-score-pop { 45% { box-shadow: 0 0 0 4px rgba(192,163,88,.2); transform: translateY(-2px); } }
+        @keyframes battle-combo-pop { 50% { transform: scale(1.07); } }
+        @keyframes battle-celebrate { 12% { opacity: 1; transform: translateY(0) scale(1.04); } 75% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-3px) scale(1); } }
+        body[data-theme="mushaf"] .score-track,body[data-theme="mushaf"] .opponent-score-track,body[data-theme="mushaf"] .timer-track { background: #eee7d6; }
+        body[data-theme="midnight"]::before { opacity: .22; }
+        body[data-theme="midnight"] .score-track,body[data-theme="midnight"] .opponent-score-track,body[data-theme="midnight"] .timer-track { background: #263345; }
+        body[data-theme="midnight"] .combo-pill,body[data-theme="midnight"] .answer-celebration { border-color: #5b5236; background: #302c20; color: #eed58e; }
+        body[data-theme="midnight"] .combo-best { color: #aab79d; }
+        body[data-theme="midnight"] .duel-card { border-color: #2b3b57; background: linear-gradient(145deg,#17253d,#121d30); }
+        body[data-theme="midnight"] .duel-card.opponents { border-color: #245442; background: linear-gradient(145deg,#142c2b,#121e2e); }
+        body[data-theme="midnight"] .question-box { border-color: #29364b; background: linear-gradient(145deg,#142137,#111b2d); }
+        @media (max-width: 560px) { .score-track { height: 8px; } .combo-row { align-items: flex-start; flex-direction: column; } .timer-track { height: 7px; } }
+        @media (prefers-reduced-motion: reduce) { .duel-card.score-pop,.combo-pill.is-hot,.answer-celebration.is-visible { animation: none !important; opacity: 1; transform: none; } .score-fill,.opponent-score-fill,.timer-fill { transition: none; } }
         [data-mode-card]:focus-visible, .format-card:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #10b981; outline-offset: 3px; }
         @media (max-width: 850px) { .lobby-grid { grid-template-columns: 1fr; } .mode-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
         @media (max-width: 560px) { .shell { width: min(100% - 1.2rem, 1120px); } .topbar { height: 61px; } main { padding-top: 19px; } .hero { border-radius: 19px; } .mode-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; } .mode-card { min-height: 75px; padding: 9px; } .mode-card strong { font-size: .7rem; } .mode-card span { font-size: .61rem; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 4px; } .arena-top { grid-template-columns: 1fr; } .options { grid-template-columns: 1fr; } .action-row > button { flex: 1 1 100%; } .join-box { grid-template-columns: 1fr; } .result-scores { gap: 8px; } .result-score { min-width: 0; flex: 1; } .back-link { padding: 0 .65rem; font-size: .72rem; } }
@@ -206,8 +250,8 @@
         <section class="hero" aria-labelledby="page-title">
             <div class="hero-content">
                 <div class="eyebrow">BELAJAR BERSAMA, BERTANDING DENGAN SPORTIF</div>
-                <h1 id="page-title">Quran Battle</h1>
-                <p>Latihan interaktif untuk belajar bersama. Ketepatan dan kualitas bacaan lebih penting daripada kecepatan.</p>
+                <h1 id="page-title">Quran Battle Arena</h1>
+                <p>Ketepatan jawaban adalah yang utama. Jaga konsistensi untuk membangun combo; timer hanya menandai waktu tiap soal. Setoran suara menunggu peninjauan pengajar.</p>
             </div>
         </section>
 
@@ -234,7 +278,7 @@
                             <option value="target-pribadi">Target pribadi</option>
                         </select>
                     </div>
-                    <div class="notice"><strong>Catatan:</strong> waktu lebih longgar untuk latihan dasar; setoran suara mendapat 90 detik. Rekaman tidak dinilai otomatis atau dibagikan ke peserta lain. Materi ayat harus merujuk sumber terverifikasi.</div>
+                    <div class="notice"><strong>Skor adil:</strong> jawaban benar bernilai 100 poin. Setiap 3 jawaban benar beruntun memberi bonus combo +10, hingga +30 per soal. Kecepatan tidak memengaruhi nilai. Setoran suara mendapat 90 detik dan menunggu peninjauan pengajar.</div>
                 </div>
                 <div class="setup-box">
                     <span class="field-label">Pilih mode pertandingan</span>
@@ -292,6 +336,8 @@
                 <article class="duel-card">
                     <span class="duel-label">KAMU</span>
                     <div class="duel-player"><span class="avatar" id="self-avatar">P</span><div class="player-meta"><div class="player-name" id="self-name">Pemain</div><div class="player-status" id="self-team">Skor pertandingan</div></div><span class="player-score" id="self-score">0</span></div>
+                    <div class="score-track" role="progressbar" id="self-score-track" aria-label="Progres skor pemain" aria-valuemin="0" aria-valuemax="390" aria-valuenow="0"><div class="score-fill" id="self-score-fill"></div></div>
+                    <div class="combo-row"><span class="combo-pill" id="combo-pill">✦ Combo 0</span><span class="combo-best" id="combo-best">Rekor streak: 0</span></div>
                 </article>
                 <article class="duel-card opponents">
                     <span class="duel-label" id="opponent-label">LAWAN</span>
@@ -299,7 +345,8 @@
                 </article>
             </div>
             <div class="timer-row"><span class="round-meta" id="round-label">Soal 1/3</span><span class="timer-pill" id="round-timer">30 dtk</span></div>
-            <div class="progress-track" role="progressbar" aria-label="Progres soal pertandingan" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1"><div class="progress-fill" id="round-progress"></div></div>
+            <div class="timer-track" role="progressbar" id="timer-track" aria-label="Sisa waktu soal" aria-valuemin="0" aria-valuemax="30" aria-valuenow="30"><div class="timer-fill" id="timer-fill"></div></div>
+            <div class="progress-track" role="progressbar" id="round-progress-track" aria-label="Progres soal pertandingan" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1"><div class="progress-fill" id="round-progress"></div></div>
             <article class="question-box">
                 <span class="kicker" id="question-kind">TANTANGAN</span>
                 <h3 id="question-text"></h3>
@@ -323,8 +370,9 @@
                     <audio class="audio-preview" id="own-audio" controls hidden></audio>
                 </div>
                 <p class="status-message" id="answer-status" role="status" aria-live="polite"></p>
+                <p class="answer-celebration" id="answer-celebration" aria-hidden="true"></p>
             </article>
-            <p class="arena-note">Poin kuis diberikan berdasarkan ketepatan, bukan kecepatan. Setoran suara menunggu peninjauan dan tidak dinilai otomatis.</p>
+            <p class="arena-note">Ketepatan menjaga poin dan adab belajar. Waktu hanya membatasi durasi soal—bukan penentu nilai.</p>
             <div class="action-row"><button class="button-danger" id="leave-arena" type="button">Keluar dari Pertandingan</button></div>
         </section>
 
@@ -361,6 +409,7 @@
         let qariAudioRequest = null;
         let opponentRosterSignature = '';
         let lastBuzzerEvent = null;
+        let celebrationTimer = null;
 
         const lobby = document.getElementById('lobby');
         const waitingRoom = document.getElementById('waiting-room');
@@ -600,11 +649,15 @@
         }
 
         function renderRoster(room) {
-            const rosterSignature = JSON.stringify(room.players.map((player) => [player.id, player.name, player.score, player.status, player.has_recording]));
+            const rosterSignature = JSON.stringify(room.players.map((player) => [player.id, player.name, player.score, player.streak, player.best_streak, player.status, player.has_recording]));
             if (rosterSignature === opponentRosterSignature) return;
             opponentRosterSignature = rosterSignature;
             const ownPlayer = room.players.find((player) => player.is_you);
             const others = room.players.filter((player) => !player.is_you);
+            const maxScore = Math.max(1, room.total_questions * 100 + Array.from(
+                { length: room.total_questions },
+                (_, index) => Math.min(Math.floor((index + 1) / 3) * 10, 30)
+            ).reduce((total, bonus) => total + bonus, 0));
             const teamScoreboard = document.getElementById('team-scoreboard');
             teamScoreboard.hidden = room.format !== 'team';
             if (!teamScoreboard.hidden) {
@@ -623,7 +676,28 @@
             document.getElementById('self-name').textContent = ownPlayer ? ownPlayer.name : 'Pemain';
             document.getElementById('self-avatar').textContent = ownPlayer ? ownPlayer.name.trim().charAt(0).toUpperCase() : 'P';
             document.getElementById('self-score').textContent = ownPlayer ? String(ownPlayer.score) : '0';
-            document.getElementById('self-team').textContent = 'Skor pertandingan';
+            const ownScore = ownPlayer ? ownPlayer.score : 0;
+            const selfTrack = document.getElementById('self-score-track');
+            selfTrack.setAttribute('aria-valuemax', String(maxScore));
+            selfTrack.setAttribute('aria-valuenow', String(ownScore));
+            document.getElementById('self-score-fill').style.width = `${Math.min(100, (ownScore / maxScore) * 100)}%`;
+            const scoreCard = document.querySelector('.arena-top .duel-card:not(.opponents)');
+            const previousScore = scoreCard.dataset.score;
+            if (previousScore !== undefined && ownScore > Number(previousScore)) {
+                scoreCard.classList.remove('score-pop');
+                void scoreCard.offsetWidth;
+                scoreCard.classList.add('score-pop');
+                window.setTimeout(() => scoreCard.classList.remove('score-pop'), 450);
+            }
+            scoreCard.dataset.score = String(ownScore);
+            const streak = ownPlayer ? ownPlayer.streak : 0;
+            const comboPill = document.getElementById('combo-pill');
+            comboPill.textContent = `✦ Combo ${streak}`;
+            comboPill.classList.toggle('is-hot', streak >= 3);
+            document.getElementById('combo-best').textContent = `Rekor streak: ${ownPlayer ? ownPlayer.best_streak : 0}`;
+            document.getElementById('self-team').textContent = room.mode.key === 'team-battle' && ownPlayer
+                ? `Tim ${ownPlayer.team_id} · Skor pemain`
+                : 'Skor pertandingan';
             document.getElementById('opponent-label').textContent = room.format === 'solo' ? 'LATIHAN SOLO' : (others.length > 1 ? 'LAWAN' : 'LAWAN');
             const opponentList = document.getElementById('opponent-list');
             opponentList.replaceChildren();
@@ -657,8 +731,21 @@
                     'Sudah menjawab': 'Lawan telah menjawab'
                 };
                 const playerStatus = statusLabels[player.status] || player.status;
-                status.textContent = playerStatus;
-                meta.append(name, status);
+                status.textContent = room.mode.key === 'team-battle'
+                    ? `Tim ${player.team_id} · ${playerStatus}`
+                    : playerStatus;
+                const opponentTrack = document.createElement('div');
+                opponentTrack.className = 'opponent-score-track';
+                opponentTrack.setAttribute('role', 'progressbar');
+                opponentTrack.setAttribute('aria-label', `Progres skor ${player.name}`);
+                opponentTrack.setAttribute('aria-valuemin', '0');
+                opponentTrack.setAttribute('aria-valuemax', String(maxScore));
+                opponentTrack.setAttribute('aria-valuenow', String(player.score));
+                const opponentFill = document.createElement('div');
+                opponentFill.className = 'opponent-score-fill';
+                opponentFill.style.width = `${Math.min(100, (player.score / maxScore) * 100)}%`;
+                opponentTrack.append(opponentFill);
+                meta.append(name, status, opponentTrack);
                 const score = document.createElement('span');
                 score.className = 'player-score';
                 score.textContent = String(player.score);
@@ -707,7 +794,16 @@
             document.getElementById('round-timer').classList.toggle('low', room.seconds_remaining <= 8);
             const progress = ((room.question_index + 1) / room.total_questions) * 100;
             document.getElementById('round-progress').style.width = `${progress}%`;
-            document.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(room.question_index + 1));
+            const roundProgress = document.getElementById('round-progress-track');
+            roundProgress.setAttribute('aria-valuemax', String(room.total_questions));
+            roundProgress.setAttribute('aria-valuenow', String(room.question_index + 1));
+            const roundDuration = room.round_duration || 30;
+            const remainingPercent = Math.min(100, (room.seconds_remaining / roundDuration) * 100);
+            const timerTrack = document.getElementById('timer-track');
+            timerTrack.setAttribute('aria-valuemax', String(roundDuration));
+            timerTrack.setAttribute('aria-valuenow', String(room.seconds_remaining));
+            document.getElementById('timer-fill').style.width = `${remainingPercent}%`;
+            document.getElementById('timer-fill').classList.toggle('low', room.seconds_remaining <= 8);
             if (room.question && room.question.id !== shownQuestionId) renderQuestion(room);
             updateInputState(room);
         }
@@ -790,13 +886,34 @@
                     answer
                 });
                 submittedQuestionId = currentRoom.question.id;
-                setStatus(answerStatus, response.correct === null ? `Jawaban terkirim untuk ditinjau · +5 EXP partisipasi.` : (response.correct ? `Tepat! +${response.points} poin · +5 EXP partisipasi.` : 'Belum tepat · +5 EXP partisipasi.'), response.correct === false ? 'error' : 'success');
+                if (response.correct === true) {
+                    const bonus = response.combo_bonus || 0;
+                    const feedback = bonus
+                        ? `Combo ${response.streak}! Bonus +${bonus} poin—tepat dan konsisten.`
+                        : 'Tepat. Pertahankan ketelitian bacaan dan jawaban.';
+                    setStatus(answerStatus, `${feedback} Total +${response.points} poin · +5 EXP partisipasi.`, 'success');
+                    showCelebration(bonus ? `Combo ${response.streak} · +${bonus} bonus` : 'Jawaban tepat · +100 poin');
+                } else if (response.correct === false) {
+                    setStatus(answerStatus, 'Jawaban belum tepat. Streak kembali ke 0; lanjutkan belajar dengan tenang · +5 EXP partisipasi.', 'error');
+                } else {
+                    setStatus(answerStatus, `Jawaban terkirim untuk ditinjau · +${response.points} poin · +5 EXP partisipasi.`, 'success');
+                }
                 currentRoom = response.room;
                 await syncRoom();
             } catch (error) {
                 setStatus(answerStatus, error.message, 'error');
                 await syncRoom();
             }
+        }
+
+        function showCelebration(message) {
+            const celebration = document.getElementById('answer-celebration');
+            window.clearTimeout(celebrationTimer);
+            celebration.textContent = message;
+            celebration.classList.remove('is-visible');
+            void celebration.offsetWidth;
+            celebration.classList.add('is-visible');
+            celebrationTimer = window.setTimeout(() => celebration.classList.remove('is-visible'), 900);
         }
 
         async function pressBuzzer() {

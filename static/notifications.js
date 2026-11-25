@@ -9,7 +9,7 @@
 
     function readJson(key, fallback) {
         try {
-            const value = JSON.parse(localStorage.getItem(key));
+            const value = JSON.parse(window.UstadOnlineStorage.getItem(key));
             return value && typeof value === 'object' ? value : fallback;
         } catch (error) {
             return fallback;
@@ -18,7 +18,7 @@
 
     function saveJson(key, value) {
         try {
-            localStorage.setItem(key, JSON.stringify(value));
+            window.UstadOnlineStorage.setItem(key, JSON.stringify(value));
         } catch (error) {
             console.error('Status notifikasi tidak dapat disimpan:', error);
         }
@@ -176,7 +176,7 @@
     async function pollCommunityMessages() {
         let memberIds = {};
         try {
-            memberIds = JSON.parse(localStorage.getItem('ustadOnline.community.member.v1') || '{}');
+            memberIds = JSON.parse(window.UstadOnlineStorage.getItem('ustadOnline.community.member.v1') || '{}');
         } catch (error) {
             return;
         }
@@ -189,7 +189,7 @@
                 if (!latest) continue;
                 const id = `chat:${latest.id}`;
                 if (readSeen().has(id)) continue;
-                const profileName = (localStorage.getItem('ustadOnline.community.profile.v1') || '').trim();
+                const profileName = (window.UstadOnlineStorage.getItem('ustadOnline.community.profile.v1') || '').trim();
                 if (profileName && latest.sender === profileName) continue;
                 await showNotification(`Pesan baru · ${payload.group?.name || 'Komunitas'}`, `${latest.sender}: ${latest.text}`, id, '/komunitas');
             } catch (error) {

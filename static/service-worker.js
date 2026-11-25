@@ -1,6 +1,8 @@
-const cacheName = 'ustad-online-v12';
+const cacheName = 'ustad-online-v13';
 const appShell = [
     '/',
+    '/connect',
+    '/baca-quran',
     '/static/manifest.json',
     '/static/icon-192.png',
     '/static/icon-512.png',
@@ -10,10 +12,10 @@ const appShell = [
     '/static/profile.js',
     '/static/qibla.css',
     '/static/qibla.js',
+    '/static/quran_book_viewer.css',
+    '/static/quran_book_viewer.js',
     '/static/page_transitions.css',
     '/static/page_transitions.js',
-    '/connect',
-    '/ustad-dashboard',
     '/static/ustad_dashboard.css',
     '/static/ustad_dashboard.js',
     '/static/connect.css',
@@ -26,6 +28,7 @@ const appShell = [
     '/static/dzikir_doa.css',
     '/static/dzikir_doa.js'
 ];
+const offlineCacheName = 'ustad-online-offline-v1';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll(appShell)));
@@ -34,11 +37,13 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((keys) => Promise.all(
-            keys.filter((key) => key !== cacheName).map((key) => caches.delete(key))
-        ))
+        Promise.all([
+            caches.keys().then((keys) => Promise.all(
+                keys.filter((key) => key !== cacheName && key !== offlineCacheName).map((key) => caches.delete(key))
+            )),
+            self.clients.claim()
+        ])
     );
-    self.clients.claim();
 });
 
 self.addEventListener('push', (event) => {
@@ -89,7 +94,18 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+    const requestUrl = new URL(event.request.url);
+    if (requestUrl.origin !== self.location.origin || requestUrl.pathname.startsWith('/api/')) return;
+
     event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || caches.match('/')))
+        fetch(event.request).catch(async () => {
+            const cached = await caches.match(event.request);
+            if (cached) return cached;
+            if (event.request.mode === 'navigate') {
+                const home = await caches.match('/');
+                if (home) return home;
+            }
+            return Response.error();
+        })
     );
 });

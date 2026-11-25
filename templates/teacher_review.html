@@ -26,6 +26,7 @@
         .meta span, .meta a { color: #273c30; overflow-wrap: anywhere; }
         .decision { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
         .reject { border: 1px solid #ead8d5; background: #fff7f6; color: #9d5148; }
+        .switch-account { margin-left: 6px; border: 1px solid #dce8dd; background: #f5f8f2; color: #27694d; }
         .empty { border: 1px dashed #cfd9cc; border-radius: 12px; background: #fafbf8; padding: 22px; text-align: center; }
         .error { color: #a33838; }
         .verification-check { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: #526357; font-size: .75rem; }
@@ -43,8 +44,8 @@
     {% if setup_required %}
         <section class="card">
             <h2>Admin belum dikonfigurasi</h2>
-            <p>Untuk melindungi persetujuan akun, atur kata sandi admin di environment sebelum menjalankan aplikasi.</p>
-            <p class="notice">PowerShell: <code>$env:USTAD_ADMIN_PASSWORD = "kata-sandi-kuat"</code>, lalu jalankan <code>py app.py</code> di terminal yang sama.</p>
+            <p>Untuk membuka mode Admin, atur <code>USTAD_ADMIN_PASSWORD</code> pada environment server. Simpan sebagai environment variable/secret di dashboard hosting, lalu restart atau deploy ulang aplikasi agar konfigurasi terbaca.</p>
+            <p class="notice">Di server, kata sandi admin tidak dibuat otomatis. Aplikasi hanya mengizinkan login setelah nilai <code>USTAD_ADMIN_PASSWORD</code> tersedia saat server mulai.</p>
         </section>
     {% elif not authenticated %}
         <section class="card">
@@ -64,6 +65,7 @@
             <form method="post" action="{{ url_for('auth_api.review_logout') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button class="reject" type="submit">Keluar dari panel</button>
+                <button class="switch-account" type="submit" name="switch_account" value="1">Ganti akun</button>
             </form>
         </div>
 

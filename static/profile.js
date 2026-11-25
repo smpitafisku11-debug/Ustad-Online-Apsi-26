@@ -515,8 +515,6 @@
         document.querySelectorAll('[data-account-role]').forEach((button) => {
             button.setAttribute('aria-selected', String(button.dataset.accountRole === role));
         });
-        const demoSwitch = document.querySelector('.demo-account-switch');
-        if (demoSwitch) demoSwitch.hidden = role === 'admin';
         updateAuthForm();
     }
 
@@ -594,24 +592,6 @@
             setStatus(document.getElementById('login-status'), '', '');
         });
     });
-    document.querySelectorAll('[data-demo-login]').forEach((button) => {
-        button.addEventListener('click', async () => {
-            const role = button.dataset.demoLogin;
-            button.disabled = true;
-            setStatus(document.getElementById('login-status'), 'Menyiapkan akun demonstrasi...', '');
-            try {
-                const result = await postJson('/api/auth/demo-login', { role });
-                user = result.user;
-                pendingPhoto = readPhoto();
-                applyProfile();
-                loginDialog?.close();
-            } catch (error) {
-                setStatus(document.getElementById('login-status'), error.message, 'error');
-            } finally {
-                button.disabled = false;
-            }
-        });
-    });
     document.querySelectorAll('[data-auth-mode]').forEach((button) => {
         button.addEventListener('click', () => {
             setMode(button.dataset.authMode);
@@ -668,6 +648,10 @@
             user = result.user;
             pendingPhoto = readPhoto();
             applyProfile();
+            if (user.role === 'admin') {
+                window.location.assign('/review/teachers');
+                return;
+            }
             loginDialog?.close();
         } catch (error) {
             if (!error.status || error.status >= 500) console.error('Akun tidak dapat diproses:', error);
@@ -729,7 +713,7 @@
         }
     });
 
-    document.getElementById('profile-logout')?.addEventListener('click', async () => {
+    async function endSession(openLogin) {
         try {
             const result = await postJson('/api/auth/logout', {});
             csrfToken = result.csrf_token || '';
@@ -742,12 +726,15 @@
             setRole('student');
             setMode('login');
             setStatus(document.getElementById('login-status'), '', '');
-            if (loginDialog) loginDialog.showModal();
+            if (openLogin && loginDialog) loginDialog.showModal();
         } catch (error) {
-            console.error('Logout gagal:', error);
-            setStatus(document.getElementById('profile-status'), `Tidak dapat keluar: ${error.message}`, 'error');
+            console.error('Sesi akun tidak dapat diakhiri:', error);
+            setStatus(document.getElementById('profile-status'), `Tidak dapat mengakhiri sesi: ${error.message}`, 'error');
         }
-    });
+    }
+
+    document.getElementById('profile-logout')?.addEventListener('click', () => endSession(false));
+    document.getElementById('profile-switch-account')?.addEventListener('click', () => endSession(true));
 
     document.getElementById('profile-install-button')?.addEventListener('click', async () => {
         if (!deferredInstallPrompt) return;

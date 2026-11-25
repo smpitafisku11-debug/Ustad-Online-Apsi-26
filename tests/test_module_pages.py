@@ -13,10 +13,8 @@ class ModulePageTests(unittest.TestCase):
         app.testing = True
         self.original_database = app.config["AUTH_DATABASE"]
         self.original_admin_password = app.config.get("USTAD_ADMIN_PASSWORD")
-        self.original_demo_mode = app.config.get("USTAD_DEMO_MODE")
         self.temp_directory = tempfile.TemporaryDirectory()
         app.config["AUTH_DATABASE"] = os.path.join(self.temp_directory.name, "test_users.sqlite3")
-        app.config["USTAD_DEMO_MODE"] = True
         init_auth_db(app.config["AUTH_DATABASE"])
         init_connect_db(app.config["AUTH_DATABASE"])
         self.addCleanup(self.temp_directory.cleanup)
@@ -26,7 +24,6 @@ class ModulePageTests(unittest.TestCase):
     def _restore_auth_config(self):
         app.config["AUTH_DATABASE"] = self.original_database
         app.config["USTAD_ADMIN_PASSWORD"] = self.original_admin_password
-        app.config["USTAD_DEMO_MODE"] = self.original_demo_mode
 
     def test_ai_tahsin_and_community_routes_render(self):
         for path, title in (
@@ -56,6 +53,9 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b'data-account-role="student"', response.data)
         self.assertIn(b'data-account-role="teacher"', response.data)
         self.assertIn(b'data-account-role="admin"', response.data)
+        self.assertIn(b'id="profile-switch-account"', response.data)
+        self.assertNotIn(b"Masuk Demo Siswa", response.data)
+        self.assertNotIn(b"Masuk Demo Ustad", response.data)
         self.assertIn(b'id="ui-language-select"', response.data)
         for language in (
             b'value="id" lang="id">Bahasa Indonesia',
@@ -111,6 +111,8 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b'id="qibla-button"', response.data)
         self.assertIn(b'id="qibla-dialog"', response.data)
         self.assertIn(b'aria-label="Kompas arah kiblat"', response.data)
+        self.assertIn(b"Saat kompas dibuka, lokasi dan sensor arah akan dimulai otomatis", response.data)
+        self.assertIn(b"Perbarui lokasi", response.data)
         for path in ("/static/qibla.css", "/static/qibla.js"):
             asset = self.client.get(path)
             self.assertEqual(asset.status_code, 200)
@@ -118,6 +120,8 @@ class ModulePageTests(unittest.TestCase):
         script = self.client.get("/static/qibla.js")
         self.assertIn(b"getQiblaBearing", script.data)
         self.assertIn(b"getCurrentPosition", script.data)
+        normalized_script = script.data.replace(b"\r\n", b"\n")
+        self.assertIn(b"dialog.showModal();\n            findQibla();", normalized_script)
         script.close()
 
     def test_quran_reader_has_mellow_background_choices_and_volume_settings(self):
@@ -628,7 +632,7 @@ class ModulePageTests(unittest.TestCase):
             with patch.dict(os.environ, {"USTAD_ADMIN_PASSWORD": "environment-password"}):
                 self.assertEqual(_load_admin_password(directory), "environment-password")
 
-    def test_demo_admin_password_can_open_admin_session(self):
+    def test_admin_login_opens_admin_review_panel(self):
         app.config["USTAD_ADMIN_PASSWORD"] = "UstadAdmin123!"
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         response = self.client.post(
@@ -639,27 +643,98 @@ class ModulePageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["user"]["role"], "admin")
         self.assertEqual(self.client.get("/api/auth/session").json["user"]["role"], "admin")
+        self.assertEqual(self.client.get("/review/teachers").status_code, 200)
 
-    def test_demo_accounts_can_switch_between_student_and_teacher_modes(self):
-        student_token = self.client.get("/api/auth/session").json["csrf_token"]
-        student = self.client.post(
+    def test_demo_accounts_are_removed_and_logout_allows_account_switching(self):
+        first_token = self.client.get("/api/auth/session").json["csrf_token"]
+        first = self.client.post(
+            "/api/auth/register",
+            json={
+                "role": "student",
+                "name": "Siswa Pertama",
+                "email": "first-student@example.test",
+                "password": "rahasia-123",
+            },
+            headers={"X-CSRF-Token": first_token},
+        )
+        self.assertEqual(first.status_code, 201)
+
+        other_client = app.test_client()
+        other_token = other_client.get("/api/auth/session").json["csrf_token"]
+        second = other_client.post(
+            "/api/auth/register",
+            json={
+                "role": "student",
+                "name": "Siswa Kedua",
+                "email": "second-student@example.test",
+                "password": "rahasia-456",
+            },
+            headers={"X-CSRF-Token": other_token},
+        )
+        self.assertEqual(second.status_code, 201)
+
+        logout_token = self.client.get("/api/auth/session").json["csrf_token"]
+        logout = self.client.post(
+            "/api/auth/logout",
+            json={},
+            headers={"X-CSRF-Token": logout_token},
+        )
+        self.assertEqual(logout.status_code, 200)
+        self.assertIsNone(self.client.get("/api/auth/session").json["user"])
+
+        switch_token = self.client.get("/api/auth/session").json["csrf_token"]
+        switched = self.client.post(
+            "/api/auth/login",
+            json={
+                "role": "student",
+                "email": "second-student@example.test",
+                "password": "rahasia-456",
+            },
+            headers={"X-CSRF-Token": switch_token},
+        )
+        self.assertEqual(switched.status_code, 200)
+        self.assertEqual(switched.json["user"]["email"], "second-student@example.test")
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        removed_demo_route = self.client.post(
             "/api/auth/demo-login",
             json={"role": "student"},
-            headers={"X-CSRF-Token": student_token},
+            headers={"X-CSRF-Token": csrf_token},
         )
-        self.assertEqual(student.status_code, 200)
-        self.assertEqual(student.json["user"]["role"], "student")
-        self.assertEqual(self.client.get("/ustad-dashboard").status_code, 403)
+        self.assertEqual(removed_demo_route.status_code, 404)
 
-        teacher_token = self.client.get("/api/auth/session").json["csrf_token"]
-        teacher = self.client.post(
-            "/api/auth/demo-login",
-            json={"role": "teacher"},
-            headers={"X-CSRF-Token": teacher_token},
+    def test_admin_login_reports_missing_server_configuration(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = None
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        response = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "password": "irrelevant"},
+            headers={"X-CSRF-Token": csrf_token},
         )
-        self.assertEqual(teacher.status_code, 200)
-        self.assertEqual(teacher.json["user"]["role"], "teacher")
-        self.assertEqual(self.client.get("/ustad-dashboard").status_code, 200)
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("USTAD_ADMIN_PASSWORD", response.json["error"])
+        setup_page = self.client.get("/review/teachers")
+        self.assertEqual(setup_page.status_code, 503)
+        self.assertIn(b"restart atau deploy ulang", setup_page.data)
+
+    def test_admin_can_switch_accounts_from_review_panel(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = "test-admin-password"
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        login = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "password": "test-admin-password"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(login.status_code, 200)
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        switched = self.client.post(
+            "/review/logout",
+            data={"switch_account": "1", "csrf_token": csrf_token},
+        )
+        self.assertEqual(switched.status_code, 302)
+        self.assertEqual(switched.headers["Location"], "/")
+        self.assertIsNone(self.client.get("/api/auth/session").json["user"])
 
     def test_student_cannot_log_in_as_ustad_or_change_role(self):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]

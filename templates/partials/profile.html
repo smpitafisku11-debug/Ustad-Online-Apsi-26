@@ -35,10 +35,6 @@
                 <button type="button" data-auth-mode="login" aria-pressed="true">Masuk</button>
                 <button type="button" data-auth-mode="register" aria-pressed="false">Daftar</button>
             </div>
-            <div class="demo-account-switch" role="group" aria-label="Masuk cepat untuk pengujian">
-                <button type="button" data-demo-login="student">Masuk Demo Siswa</button>
-                <button type="button" data-demo-login="teacher">Masuk Demo Ustad</button>
-            </div>
             <p class="auth-review-note" id="auth-review-note" hidden>Pengajuan ustad akan ditinjau admin melalui email dan WhatsApp. Akun belum bisa digunakan sebagai ustad sebelum disetujui.</p>
             <form id="account-auth-form" class="auth-fields" novalidate>
                 <div data-register-only>
@@ -265,7 +261,10 @@
         <textarea id="profile-bio" name="bio" maxlength="160" rows="3" placeholder="Ceritakan tujuan belajarmu..."></textarea>
         <p class="profile-status" id="profile-status" role="status" aria-live="polite"></p>
         <div class="profile-dialog-actions">
-            <button class="profile-danger-button" id="profile-logout" type="button">Keluar</button>
+            <div class="profile-account-actions">
+                <button class="profile-danger-button" id="profile-logout" type="button">Keluar</button>
+                <button class="profile-switch-button" id="profile-switch-account" type="button">Ganti akun</button>
+            </div>
             <button class="profile-primary-button" type="submit">Simpan profil</button>
         </div>
     </form>

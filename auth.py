@@ -194,80 +194,6 @@ def register():
     return jsonify(user=_user_dict(row), csrf_token=token), 201
 
 
-@auth_api.post("/api/auth/demo-login")
-def demo_login():
-    if not _valid_csrf():
-        return _csrf_error()
-    if not current_app.config.get("USTAD_DEMO_MODE"):
-        return jsonify(error="Akun demonstrasi tidak aktif di server ini."), 403
-
-    data = request.get_json(silent=True) or {}
-    role = data.get("role")
-    if role not in ("student", "teacher"):
-        return jsonify(error="Pilih mode demonstrasi Siswa atau Ustad."), 400
-
-    email = "siswa.demo@ustadonline.local" if role == "student" else "guru.demo@ustadonline.local"
-    connection = _database()
-    try:
-        row = connection.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,),
-        ).fetchone()
-        if not row:
-            name = "Siswa Demo" if role == "student" else "Ustad Demo"
-            cursor = connection.execute(
-                """
-                INSERT INTO users
-                (name, email, password_hash, role, status, phone, experience, username)
-                VALUES (?, ?, ?, ?, 'approved', ?, ?, ?)
-                """,
-                (
-                    name,
-                    email,
-                    generate_password_hash("UstadDemo123!"),
-                    role,
-                    "080000000000" if role == "teacher" else "",
-                    "Akun demonstrasi untuk pengujian mode Ustad." if role == "teacher" else "",
-                    "demo-siswa" if role == "student" else "demo-ustad",
-                ),
-            )
-            connection.commit()
-            row = connection.execute(
-                "SELECT * FROM users WHERE id = ?",
-                (cursor.lastrowid,),
-            ).fetchone()
-        if row and role == "teacher":
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS connect_teacher_verifications (
-                    teacher_id INTEGER PRIMARY KEY,
-                    identity_checked INTEGER NOT NULL CHECK (identity_checked = 1),
-                    competence_checked INTEGER NOT NULL CHECK (competence_checked = 1),
-                    verified_by TEXT NOT NULL,
-                    verified_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )
-                """,
-            )
-            connection.execute(
-                """
-                INSERT OR REPLACE INTO connect_teacher_verifications
-                (teacher_id, identity_checked, competence_checked, verified_by)
-                VALUES (?, 1, 1, 'demo')
-                """,
-                (row["id"],),
-            )
-            connection.commit()
-    finally:
-        connection.close()
-    if not row:
-        return jsonify(error="Akun demonstrasi belum tersedia. Muat ulang aplikasi."), 503
-
-    session.clear()
-    session["user_id"] = row["id"]
-    token = _csrf_token()
-    return jsonify(user=_user_dict(row), csrf_token=token), 200
-
-
 @auth_api.post("/api/auth/login")
 def login():
     if not _valid_csrf():
@@ -277,7 +203,9 @@ def login():
     if role == "admin":
         configured_password = current_app.config.get("USTAD_ADMIN_PASSWORD")
         if not configured_password:
-            return jsonify(error="Login admin belum dikonfigurasi."), 503
+            return jsonify(
+                error="Login admin belum dikonfigurasi di server. Atur USTAD_ADMIN_PASSWORD pada environment server lalu mulai ulang aplikasi."
+            ), 503
         password = data.get("password", "")
         if not isinstance(password, str) or not hmac.compare_digest(password, configured_password):
             return jsonify(error="Kata sandi admin tidak cocok."), 401
@@ -423,8 +351,10 @@ def review_login():
 def review_logout():
     if not _valid_csrf():
         return _csrf_error()
-    session.pop("admin_authenticated", None)
-    session.pop("csrf_token", None)
+    switch_account = request.form.get("switch_account") == "1"
+    session.clear()
+    if switch_account:
+        return redirect(url_for("home"))
     return redirect(url_for("auth_api.review_teachers"))
 
 

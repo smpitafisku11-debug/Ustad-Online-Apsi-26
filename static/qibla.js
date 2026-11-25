@@ -142,7 +142,10 @@
     }
 
     button.addEventListener('click', () => {
-        if (!dialog.open) dialog.showModal();
+        if (!dialog.open) {
+            dialog.showModal();
+            findQibla();
+        }
     });
     locateButton.addEventListener('click', findQibla);
     document.querySelectorAll('[data-close-qibla]').forEach((closeButton) => {

@@ -33,7 +33,6 @@ app.config['AUTH_DATABASE'] = os.environ.get(
     'AUTH_DATABASE',
     os.path.join(app.instance_path, 'ustad_online.sqlite3'),
 )
-app.config['USTAD_DEMO_MODE'] = os.environ.get('USTAD_DEMO_MODE', '1') == '1'
 app.config['USTAD_ADMIN_PASSWORD'] = _load_admin_password(app.instance_path)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'

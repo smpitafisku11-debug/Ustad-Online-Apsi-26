@@ -1,8 +1,9 @@
 import unittest
 import os
 import tempfile
+from unittest.mock import patch
 
-from app import app
+from app import app, _load_admin_password
 from auth import init_auth_db
 from connect import init_connect_db
 
@@ -615,6 +616,17 @@ class ModulePageTests(unittest.TestCase):
             b"battle_result",
         ):
             self.assertIn(expected, response.data)
+
+    def test_admin_password_reads_private_instance_file_and_prefers_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            password_path = os.path.join(directory, "admin_password")
+            with open(password_path, "w", encoding="utf-8") as password_file:
+                password_file.write("private-password\n")
+            with patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("USTAD_ADMIN_PASSWORD", None)
+                self.assertEqual(_load_admin_password(directory), "private-password")
+            with patch.dict(os.environ, {"USTAD_ADMIN_PASSWORD": "environment-password"}):
+                self.assertEqual(_load_admin_password(directory), "environment-password")
 
     def test_demo_admin_password_can_open_admin_session(self):
         app.config["USTAD_ADMIN_PASSWORD"] = "UstadAdmin123!"

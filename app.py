@@ -14,6 +14,18 @@ from quran_battle import quran_battle_api
 from community import community_api, init_community_db
 from connect import connect_api, init_connect_db
 
+
+def _load_admin_password(instance_path):
+    password = os.environ.get('USTAD_ADMIN_PASSWORD')
+    if password:
+        return password
+    try:
+        with open(os.path.join(instance_path, 'admin_password'), encoding='utf-8') as password_file:
+            return password_file.read().strip() or None
+    except FileNotFoundError:
+        return None
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(32)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024 + 64 * 1024
@@ -22,7 +34,7 @@ app.config['AUTH_DATABASE'] = os.environ.get(
     os.path.join(app.instance_path, 'ustad_online.sqlite3'),
 )
 app.config['USTAD_DEMO_MODE'] = os.environ.get('USTAD_DEMO_MODE', '1') == '1'
-app.config['USTAD_ADMIN_PASSWORD'] = os.environ.get('USTAD_ADMIN_PASSWORD')
+app.config['USTAD_ADMIN_PASSWORD'] = _load_admin_password(app.instance_path)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE') == '1'

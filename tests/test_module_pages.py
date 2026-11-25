@@ -12,8 +12,10 @@ class ModulePageTests(unittest.TestCase):
         app.testing = True
         self.original_database = app.config["AUTH_DATABASE"]
         self.original_admin_password = app.config.get("USTAD_ADMIN_PASSWORD")
+        self.original_demo_mode = app.config.get("USTAD_DEMO_MODE")
         self.temp_directory = tempfile.TemporaryDirectory()
         app.config["AUTH_DATABASE"] = os.path.join(self.temp_directory.name, "test_users.sqlite3")
+        app.config["USTAD_DEMO_MODE"] = True
         init_auth_db(app.config["AUTH_DATABASE"])
         init_connect_db(app.config["AUTH_DATABASE"])
         self.addCleanup(self.temp_directory.cleanup)
@@ -23,6 +25,7 @@ class ModulePageTests(unittest.TestCase):
     def _restore_auth_config(self):
         app.config["AUTH_DATABASE"] = self.original_database
         app.config["USTAD_ADMIN_PASSWORD"] = self.original_admin_password
+        app.config["USTAD_DEMO_MODE"] = self.original_demo_mode
 
     def test_ai_tahsin_and_community_routes_render(self):
         for path, title in (
@@ -612,6 +615,39 @@ class ModulePageTests(unittest.TestCase):
             b"battle_result",
         ):
             self.assertIn(expected, response.data)
+
+    def test_demo_admin_password_can_open_admin_session(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = "UstadAdmin123!"
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        response = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "password": "UstadAdmin123!"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["user"]["role"], "admin")
+        self.assertEqual(self.client.get("/api/auth/session").json["user"]["role"], "admin")
+
+    def test_demo_accounts_can_switch_between_student_and_teacher_modes(self):
+        student_token = self.client.get("/api/auth/session").json["csrf_token"]
+        student = self.client.post(
+            "/api/auth/demo-login",
+            json={"role": "student"},
+            headers={"X-CSRF-Token": student_token},
+        )
+        self.assertEqual(student.status_code, 200)
+        self.assertEqual(student.json["user"]["role"], "student")
+        self.assertEqual(self.client.get("/ustad-dashboard").status_code, 403)
+
+        teacher_token = self.client.get("/api/auth/session").json["csrf_token"]
+        teacher = self.client.post(
+            "/api/auth/demo-login",
+            json={"role": "teacher"},
+            headers={"X-CSRF-Token": teacher_token},
+        )
+        self.assertEqual(teacher.status_code, 200)
+        self.assertEqual(teacher.json["user"]["role"], "teacher")
+        self.assertEqual(self.client.get("/ustad-dashboard").status_code, 200)
 
     def test_student_cannot_log_in_as_ustad_or_change_role(self):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]

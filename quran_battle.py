@@ -235,7 +235,8 @@ MODES = {
     },
 }
 
-_format_sizes = {"solo": 1, "duel": 2, "team": 4}
+_format_sizes = {"solo": 1, "duel": 2, "trio": 3}
+_custom_format_limits = (2, 8)
 _difficulty_round_seconds = {"pemula": 45, "menengah": 35, "mahir": 30}
 _hafalan_categories = {
     "juz-amma": "Juz Amma",
@@ -294,6 +295,27 @@ def _validate_name(value):
     return name if 2 <= len(name) <= 24 else None
 
 
+def _format_capacity(game_format, data):
+    if isinstance(game_format, str):
+        normalized = game_format.strip().lower()
+        aliases = {
+            "1vs1": "duel",
+            "1v1": "duel",
+            "1vs1vs1": "trio",
+            "1v1v1": "trio",
+        }
+        normalized = aliases.get(normalized, normalized)
+        if normalized in _format_sizes:
+            return normalized, _format_sizes[normalized]
+        if normalized == "custom":
+            capacity = data.get("sides", data.get("capacity"))
+            if isinstance(capacity, int) and not isinstance(capacity, bool):
+                minimum, maximum = _custom_format_limits
+                if minimum <= capacity <= maximum:
+                    return "custom", capacity
+    return None, None
+
+
 def _new_room(name, player_id, mode_key, game_format, capacity, difficulty, category):
     code = secrets.token_hex(3).upper()
     while code in _rooms:
@@ -317,7 +339,7 @@ def _new_room(name, player_id, mode_key, game_format, capacity, difficulty, cate
             player_id: {
                 "id": player_id,
                 "name": name,
-                "team_id": "A" if game_format == "team" else None,
+                "team_id": None,
                 "score": 0,
                 "exp": 0,
                 "status": "Bersiap",
@@ -337,17 +359,10 @@ def _new_player_id():
 
 def _join_room(room, name):
     player_id = _new_player_id()
-    team_id = None
-    if room["format"] == "team":
-        team_counts = {
-            team: sum(player.get("team_id") == team for player in room["players"].values())
-            for team in ("A", "B")
-        }
-        team_id = "A" if team_counts["A"] <= team_counts["B"] else "B"
     player = {
         "id": player_id,
         "name": name,
-        "team_id": team_id,
+        "team_id": None,
         "score": 0,
         "exp": 0,
         "status": "Bersiap",
@@ -430,13 +445,7 @@ def _room_response(room, player_id):
         "status": room["status"],
         "player_id": player_id,
         "players": players,
-        "teams": [
-            {
-                "id": team,
-                "score": sum(player["score"] for player in room["players"].values() if player.get("team_id") == team),
-            }
-            for team in ("A", "B")
-        ] if room["format"] == "team" else [],
+        "teams": [],
         "question": public_question,
         "question_index": question_index,
         "total_questions": len(mode["questions"]),
@@ -529,7 +538,7 @@ def _score_submission(code, data):
 def matchmaking():
     data = _json_body()
     name = _validate_name(data.get("name"))
-    game_format = data.get("format")
+    requested_format = data.get("format")
     mode_key = data.get("mode")
     if not name:
         return _error("Nama harus berisi 2–24 karakter.", 400)
@@ -537,11 +546,9 @@ def matchmaking():
         return _error("Mode permainan tidak dikenali.", 400)
     if mode_key not in AVAILABLE_MODE_KEYS:
         return _error("Mode permainan belum tersedia.", 400)
-    capacity = _format_sizes.get(game_format) if isinstance(game_format, str) else None
-    if capacity is None:
+    game_format, capacity = _format_capacity(requested_format, data)
+    if not game_format:
         return _error("Format pertandingan tidak valid.", 400)
-    if (game_format == "team") != (mode_key == "team-battle"):
-        return _error("Team Battle hanya tersedia dalam format tim.", 400)
     difficulty = data.get("difficulty", "menengah")
     if not isinstance(difficulty, str) or difficulty not in _difficulty_round_seconds:
         return _error("Tingkat kesulitan tidak valid.", 400)
@@ -565,18 +572,16 @@ def create_room():
     data = _json_body()
     name = _validate_name(data.get("name"))
     mode_key = data.get("mode")
-    game_format = data.get("format", "solo")
+    requested_format = data.get("format", "solo")
     if not name:
         return _error("Nama harus berisi 2–24 karakter.", 400)
     if not isinstance(mode_key, str) or mode_key not in MODES:
         return _error("Mode permainan tidak dikenali.", 400)
     if mode_key not in AVAILABLE_MODE_KEYS:
         return _error("Mode permainan belum tersedia.", 400)
-    capacity = _format_sizes.get(game_format) if isinstance(game_format, str) else None
-    if capacity is None:
+    game_format, capacity = _format_capacity(requested_format, data)
+    if not game_format:
         return _error("Format pertandingan tidak valid.", 400)
-    if (game_format == "team") != (mode_key == "team-battle"):
-        return _error("Team Battle hanya tersedia dalam format tim.", 400)
     difficulty = data.get("difficulty", "menengah")
     if not isinstance(difficulty, str) or difficulty not in _difficulty_round_seconds:
         return _error("Tingkat kesulitan tidak valid.", 400)

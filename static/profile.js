@@ -515,6 +515,8 @@
         document.querySelectorAll('[data-account-role]').forEach((button) => {
             button.setAttribute('aria-selected', String(button.dataset.accountRole === role));
         });
+        const demoSwitch = document.querySelector('.demo-account-switch');
+        if (demoSwitch) demoSwitch.hidden = role === 'admin';
         updateAuthForm();
     }
 
@@ -590,6 +592,24 @@
             if (button.dataset.accountRole === 'admin') setMode('login');
             setRole(button.dataset.accountRole);
             setStatus(document.getElementById('login-status'), '', '');
+        });
+    });
+    document.querySelectorAll('[data-demo-login]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const role = button.dataset.demoLogin;
+            button.disabled = true;
+            setStatus(document.getElementById('login-status'), 'Menyiapkan akun demonstrasi...', '');
+            try {
+                const result = await postJson('/api/auth/demo-login', { role });
+                user = result.user;
+                pendingPhoto = readPhoto();
+                applyProfile();
+                loginDialog?.close();
+            } catch (error) {
+                setStatus(document.getElementById('login-status'), error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
         });
     });
     document.querySelectorAll('[data-auth-mode]').forEach((button) => {

@@ -69,7 +69,7 @@ class QuranBattleTests(unittest.TestCase):
             "/api/battle/matchmaking",
             json={"name": "Aminah", "format": "duel", "mode": "team-battle"},
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 201)
 
     def test_modes_api_lists_the_six_requested_modes(self):
         response = self.client.get("/api/battle/modes")
@@ -99,19 +99,36 @@ class QuranBattleTests(unittest.TestCase):
     def test_team_room_assigns_balanced_teams_and_exposes_team_scores(self):
         created = self.client.post(
             "/api/battle/rooms",
-            json={"name": "Aminah", "format": "team", "mode": "team-battle"},
+            json={"name": "Aminah", "format": "trio", "mode": "team-battle"},
         )
         self.assertEqual(created.status_code, 201)
         room = created.get_json()
-        for name in ("Fatimah", "Aisyah", "Maryam"):
+        for name in ("Fatimah", "Aisyah"):
             joined = self.client.post(
                 f"/api/battle/rooms/{room['code']}/join",
                 json={"name": name},
             )
             self.assertEqual(joined.status_code, 200)
         self.assertEqual(joined.get_json()["status"], "playing")
-        self.assertEqual([player["team_id"] for player in joined.get_json()["players"]], ["A", "B", "A", "B"])
-        self.assertEqual(len(joined.get_json()["teams"]), 2)
+        self.assertEqual([player["team_id"] for player in joined.get_json()["players"]], [None, None, None])
+        self.assertEqual(joined.get_json()["capacity"], 3)
+        self.assertEqual(len(joined.get_json()["teams"]), 0)
+
+    def test_team_format_is_rejected_but_custom_side_count_is_supported(self):
+        team = self.client.post(
+            "/api/battle/rooms",
+            json={"name": "Aminah", "format": "team", "mode": "tajwid-battle"},
+        )
+        self.assertEqual(team.status_code, 400)
+
+        custom = self.client.post(
+            "/api/battle/rooms",
+            json={"name": "Aminah", "format": "custom", "sides": 5, "mode": "tajwid-battle"},
+        )
+        self.assertEqual(custom.status_code, 201)
+        room = custom.get_json()
+        self.assertEqual(room["format"], "custom")
+        self.assertEqual(room["capacity"], 5)
 
     def test_voice_recording_is_unscored_and_not_playable_by_other_players(self):
         created = self.client.post(

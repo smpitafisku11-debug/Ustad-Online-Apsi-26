@@ -253,7 +253,20 @@
                 <div class="format-list" role="group" aria-label="Format pertandingan">
                     <button class="format-card" data-format-card="solo" type="button" aria-pressed="false"><strong>Solo</strong><span>Latihan mandiri</span></button>
                     <button class="format-card selected" data-format-card="duel" type="button" aria-pressed="true"><strong>Duel</strong><span>1 lawan 1</span></button>
-                    <button class="format-card" data-format-card="team" type="button" aria-pressed="false"><strong>Tim</strong><span>4 pemain · 2 tim</span></button>
+                    <button class="format-card" data-format-card="trio" type="button" aria-pressed="false"><strong>Triple</strong><span>1 lawan 1 lawan 1</span></button>
+                    <button class="format-card" data-format-card="custom" type="button" aria-pressed="false"><strong>Lebih Banyak Pihak</strong><span>1 pemain di setiap pihak</span></button>
+                </div>
+                <div class="custom-capacity" id="custom-capacity-field" hidden>
+                    <label class="field-label" for="custom-capacity">Jumlah pihak</label>
+                    <select class="select-input" id="custom-capacity">
+                        <option value="2">2 pihak · 1 lawan 1</option>
+                        <option value="3" selected>3 pihak · 1 lawan 1 lawan 1</option>
+                        <option value="4">4 pihak</option>
+                        <option value="5">5 pihak</option>
+                        <option value="6">6 pihak</option>
+                        <option value="7">7 pihak</option>
+                        <option value="8">8 pihak</option>
+                    </select>
                 </div>
             </div>
             <div class="action-row">
@@ -432,11 +445,6 @@
         document.querySelectorAll('[data-mode-card]').forEach((button) => {
             button.addEventListener('click', () => {
                 selectedMode = button.dataset.modeCard;
-                if (selectedMode === 'team-battle') {
-                    selectedFormat = 'team';
-                } else if (selectedFormat === 'team') {
-                    selectedFormat = 'duel';
-                }
                 document.querySelectorAll('[data-mode-card]').forEach((card) => {
                     const active = card === button;
                     card.classList.toggle('selected', active);
@@ -456,14 +464,13 @@
                 const active = card.dataset.formatCard === selectedFormat;
                 card.classList.toggle('selected', active);
                 card.setAttribute('aria-pressed', String(active));
-                card.disabled = (card.dataset.formatCard === 'team') !== (selectedMode === 'team-battle');
             });
+            document.getElementById('custom-capacity-field').hidden = selectedFormat !== 'custom';
         }
 
         document.querySelectorAll('[data-format-card]').forEach((button) => {
             button.addEventListener('click', () => {
                 selectedFormat = button.dataset.formatCard;
-                selectedMode = selectedFormat === 'team' ? 'team-battle' : (selectedMode === 'team-battle' ? 'tajwid-battle' : selectedMode);
                 document.querySelectorAll('[data-mode-card]').forEach((card) => {
                     const active = card.dataset.modeCard === selectedMode;
                     card.classList.toggle('selected', active);
@@ -482,6 +489,7 @@
                 const room = await api('/matchmaking', jsonOptions({
                     name: selectedName(),
                     format: selectedFormat,
+                    sides: selectedFormat === 'custom' ? Number(document.getElementById('custom-capacity').value) : undefined,
                     mode: selectedMode,
                     difficulty: document.getElementById('difficulty').value,
                     category: document.getElementById('hafalan-category').value
@@ -615,9 +623,7 @@
             document.getElementById('self-name').textContent = ownPlayer ? ownPlayer.name : 'Pemain';
             document.getElementById('self-avatar').textContent = ownPlayer ? ownPlayer.name.trim().charAt(0).toUpperCase() : 'P';
             document.getElementById('self-score').textContent = ownPlayer ? String(ownPlayer.score) : '0';
-            document.getElementById('self-team').textContent = room.format === 'team' && ownPlayer
-                ? `Tim ${ownPlayer.team_id} · Skor pemain`
-                : 'Skor pertandingan';
+            document.getElementById('self-team').textContent = 'Skor pertandingan';
             document.getElementById('opponent-label').textContent = room.format === 'solo' ? 'LATIHAN SOLO' : (others.length > 1 ? 'LAWAN' : 'LAWAN');
             const opponentList = document.getElementById('opponent-list');
             opponentList.replaceChildren();
@@ -651,9 +657,7 @@
                     'Sudah menjawab': 'Lawan telah menjawab'
                 };
                 const playerStatus = statusLabels[player.status] || player.status;
-                status.textContent = room.format === 'team'
-                    ? `Tim ${player.team_id} · ${playerStatus}`
-                    : playerStatus;
+                status.textContent = playerStatus;
                 meta.append(name, status);
                 const score = document.createElement('span');
                 score.className = 'player-score';
@@ -912,33 +916,6 @@
             const own = room.players.find((player) => player.is_you);
             const others = room.players.filter((player) => !player.is_you && player.status !== 'Keluar');
             const activePlayers = room.players.filter((player) => player.status !== 'Keluar');
-            if (room.format === 'team') {
-                const teams = room.teams;
-                const highTeamScore = Math.max(0, ...teams.map((team) => team.score));
-                const winningTeams = teams.filter((team) => team.score === highTeamScore);
-                const ownTeam = teams.find((team) => own && team.id === own.team_id);
-                const teamTie = winningTeams.length > 1;
-                const teamWon = ownTeam && ownTeam.score === highTeamScore;
-                document.getElementById('result-icon').textContent = teamTie ? '🤝' : (teamWon ? '🏆' : '⚔️');
-                document.getElementById('result-title').textContent = teamTie ? 'Hasil Imbang' : (teamWon ? 'Tim Kamu Menang!' : 'Tim Lawan Menang');
-                document.getElementById('result-message').textContent = teamTie
-                    ? 'Skor kedua tim sama. Pertandingan berlangsung seimbang.'
-                    : (teamWon ? `Selamat, Tim ${ownTeam.id} meraih skor tertinggi!` : 'Terus berlatih dan coba tantangan berikutnya.');
-                const teamResults = document.getElementById('result-scores');
-                teamResults.replaceChildren();
-                teams.forEach((team) => {
-                    const card = document.createElement('div');
-                    card.className = 'result-score';
-                    const name = document.createElement('span');
-                    name.textContent = `Tim ${team.id}${ownTeam && team.id === ownTeam.id ? ' (Kamu)' : ''}`;
-                    const score = document.createElement('strong');
-                    score.textContent = String(team.score);
-                    card.append(name, score);
-                    teamResults.append(card);
-                });
-                document.getElementById('result-exp').textContent = `Poin individu: ${own ? own.score : 0} · EXP partisipasi: +${own ? own.exp : 0}`;
-                return;
-            }
             const highest = Math.max(0, ...activePlayers.map((player) => player.score));
             const winners = activePlayers.filter((player) => player.score === highest);
             const isWinner = own && own.score === highest;

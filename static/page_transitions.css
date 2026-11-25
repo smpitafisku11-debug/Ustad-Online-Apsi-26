@@ -5,20 +5,46 @@
     display: grid;
     overflow: hidden;
     place-items: center;
+    background: transparent;
+    color: #f3ead0;
+    opacity: 1;
+    pointer-events: none;
+    perspective: 1800px;
+    perspective-origin: center;
+}
+
+.page-transition-door {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 50%;
+    overflow: hidden;
     background:
         radial-gradient(ellipse at 50% 45%, rgba(114, 151, 110, .2), transparent 28rem),
         linear-gradient(145deg, #102e2a, #174536 62%, #1c503b);
-    color: #f3ead0;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(102%);
-    transform-origin: center bottom;
-    will-change: transform, opacity;
+    backface-visibility: hidden;
+    box-shadow: inset 0 0 42px rgba(4, 20, 15, .16);
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.page-transition-door-left {
+    left: 0;
+    transform: rotateY(-92deg);
+    transform-origin: left center;
+}
+
+.page-transition-door-right {
+    right: 0;
+    transform: rotateY(92deg);
+    transform-origin: right center;
 }
 
 .page-transition-overlay::before,
 .page-transition-overlay::after {
     position: absolute;
+    z-index: 2;
     width: min(56vw, 430px);
     aspect-ratio: 1;
     border: 1px solid rgba(233, 215, 169, .2);
@@ -37,7 +63,7 @@
 
 .page-transition-emblem {
     position: relative;
-    z-index: 1;
+    z-index: 3;
     display: grid;
     width: 76px;
     height: 76px;
@@ -52,6 +78,7 @@
 
 .page-transition-label {
     position: absolute;
+    z-index: 3;
     top: calc(50% + 63px);
     color: rgba(241, 231, 205, .84);
     font: 700 .61rem/1.5 'DM Sans', sans-serif;
@@ -71,14 +98,13 @@
 }
 
 @keyframes page-enter {
-    from { opacity: 0; transform: translate3d(0, 9px, 0); }
+    from { opacity: 0; transform: translate3d(9px, 0, 0); }
     to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
-@keyframes page-cover {
-    0% { opacity: 0; transform: translateY(102%); }
-    12% { opacity: 1; }
-    100% { opacity: 1; transform: translateY(0); }
+@keyframes page-door-close {
+    0% { transform: rotateY(var(--door-open-angle)); }
+    100% { transform: rotateY(0); }
 }
 
 @keyframes page-transition-rule {
@@ -91,7 +117,11 @@ body.page-transition-ready {
 }
 
 body.page-transition-ready .page-transition-overlay {
-    animation: page-cover .4s cubic-bezier(.75, 0, .2, 1) reverse forwards;
+    animation: none;
+}
+
+body.page-transition-ready .page-transition-door {
+    animation: page-door-close .4s cubic-bezier(.2, .75, .25, 1) reverse both;
 }
 
 body.page-transition-ready.page-transition-leaving {
@@ -99,35 +129,39 @@ body.page-transition-ready.page-transition-leaving {
 }
 
 body.page-transition-ready.page-transition-leaving .page-transition-overlay {
-    animation: page-cover .32s cubic-bezier(.2, .75, .25, 1) forwards;
+    animation: none;
 }
 
-body[data-transition-direction="home"] .page-transition-overlay {
+body.page-transition-ready.page-transition-leaving .page-transition-door {
+    animation: page-door-close .32s cubic-bezier(.2, .75, .25, 1) forwards;
+}
+
+body[data-transition-direction="home"] .page-transition-door {
     background:
         radial-gradient(ellipse at 18% 65%, rgba(211, 196, 139, .18), transparent 24rem),
         linear-gradient(145deg, #102e2a, #174536 62%, #1c503b);
 }
 
-body[data-transition-direction="feature"] .page-transition-overlay {
+body[data-transition-direction="feature"] .page-transition-door {
     background:
         radial-gradient(ellipse at 82% 35%, rgba(174, 204, 173, .22), transparent 24rem),
         linear-gradient(145deg, #17385a, #14544a 62%, #1b6251);
 }
 
-body[data-transition-direction="quran"] .page-transition-overlay {
+body[data-transition-direction="quran"] .page-transition-door {
     background:
         radial-gradient(ellipse at 50% 42%, rgba(226, 200, 137, .18), transparent 20rem),
         linear-gradient(145deg, #17352f, #1d4b3e 58%, #7a6538);
 }
 
-body[data-transition-direction="academy"] .page-transition-overlay { background: linear-gradient(145deg,#102f4f,#1b4f68 62%,#1b6a58); }
-body[data-transition-direction="tahsin"] .page-transition-overlay { background: linear-gradient(145deg,#173a67,#315c91 58%,#1e6b61); }
-body[data-transition-direction="connect"] .page-transition-overlay { background: linear-gradient(145deg,#26354d,#3f5f78 58%,#1e715d); }
-body[data-transition-direction="tahfidz"] .page-transition-overlay { background: linear-gradient(145deg,#17372d,#35644a 58%,#7d7048); }
-body[data-transition-direction="prayer"] .page-transition-overlay { background: linear-gradient(145deg,#143b32,#36705b 58%,#b49a5e); }
-body[data-transition-direction="battle"] .page-transition-overlay { background: linear-gradient(145deg,#3c2437,#6b3e55 58%,#173d52); }
-body[data-transition-direction="community"] .page-transition-overlay { background: linear-gradient(145deg,#183d5a,#3f6680 58%,#2f765f); }
-body[data-transition-direction="feature"] .page-transition-overlay { background: linear-gradient(145deg,#27384b,#55687a 58%,#317d68); }
+body[data-transition-direction="academy"] .page-transition-door { background: linear-gradient(145deg,#102f4f,#1b4f68 62%,#1b6a58); }
+body[data-transition-direction="tahsin"] .page-transition-door { background: linear-gradient(145deg,#173a67,#315c91 58%,#1e6b61); }
+body[data-transition-direction="connect"] .page-transition-door { background: linear-gradient(145deg,#26354d,#3f5f78 58%,#1e715d); }
+body[data-transition-direction="tahfidz"] .page-transition-door { background: linear-gradient(145deg,#17372d,#35644a 58%,#7d7048); }
+body[data-transition-direction="prayer"] .page-transition-door { background: linear-gradient(145deg,#143b32,#36705b 58%,#b49a5e); }
+body[data-transition-direction="battle"] .page-transition-door { background: linear-gradient(145deg,#3c2437,#6b3e55 58%,#173d52); }
+body[data-transition-direction="community"] .page-transition-door { background: linear-gradient(145deg,#183d5a,#3f6680 58%,#2f765f); }
+body[data-transition-direction="feature"] .page-transition-door { background: linear-gradient(145deg,#27384b,#55687a 58%,#317d68); }
 
 body[data-transition-direction="academy"] .page-transition-overlay::before {
     border-radius: 12px;
@@ -174,6 +208,9 @@ body[data-transition-direction="feature"] .page-transition-overlay::before {
     border-style: dashed;
 }
 
+.page-transition-door-left { --door-open-angle: -92deg; }
+.page-transition-door-right { --door-open-angle: 92deg; }
+
 @keyframes tahsin-orbit {
     to { transform: rotate(360deg); }
 }
@@ -192,8 +229,8 @@ body.page-transition-ready.page-transition-leaving .page-transition-label {
 }
 
 @keyframes transition-label-in {
-    from { opacity: 0; transform: translateY(8px); letter-spacing: .32em; }
-    to { opacity: 1; transform: translateY(0); letter-spacing: .22em; }
+    from { opacity: 0; transform: translateX(8px); letter-spacing: .32em; }
+    to { opacity: 1; transform: translateX(0); letter-spacing: .22em; }
 }
 
 .quran-page-flip {
@@ -292,7 +329,7 @@ body.page-transition-ready.page-transition-leaving .page-transition-label {
     display: none;
 }
 
-.page-transition-overlay.is-quran-flipping {
+.page-transition-overlay.is-quran-flipping .page-transition-door {
     background:
         radial-gradient(ellipse at 50% 45%, rgba(226,200,137,.2), transparent 24rem),
         linear-gradient(145deg,#17352f,#1d4b3e 58%,#7a6538);
@@ -393,6 +430,12 @@ body.page-transition-reduced .page-transition-overlay {
     transition: none !important;
 }
 
+body[data-page-motion="off"] .page-transition-door,
+body[data-effects="off"] .page-transition-door,
+body.page-transition-reduced .page-transition-door {
+    animation: none !important;
+}
+
 body {
     isolation: isolate;
 }
@@ -442,6 +485,7 @@ body[data-effects="off"]::before {
 @media (prefers-reduced-motion: reduce) {
     body,
     body .page-transition-overlay,
+    body .page-transition-door,
     body::before {
         animation: none !important;
         transition: none !important;

@@ -144,6 +144,14 @@ class ModulePageTests(unittest.TestCase):
         self.assertIn(b"<title>Baca Al-Qur&#39;an | Ustad Online</title>", response.data)
         self.assertIn(b"quranLibraryModal.showModal();", response.data)
 
+    def test_shared_stylesheets_load_once_on_home_reader_and_feature_pages(self):
+        for path in ("/", "/baca-quran", "/fitur-tambahan", "/akademi"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data.count(b"/static/ui_customization.css"), 1)
+                self.assertEqual(response.data.count(b"/static/page_transitions.css"), 1)
+
     def test_ustad_connect_route_renders_guidance_page(self):
         response = self.client.get("/ustad-connect")
         self.assertEqual(response.status_code, 200)

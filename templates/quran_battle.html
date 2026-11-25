@@ -186,7 +186,6 @@
         @media (max-width: 560px) { .settings-button { width: 41px; padding: 0; } .settings-button span { display: none; } .settings-header, .settings-content { padding-right: 15px; padding-left: 15px; } .theme-option { padding: 8px 6px; font-size: .64rem; } .setting-actions { align-items: flex-start; flex-direction: column; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
     {% include "partials/page_transitions.html" %}
 </head>
 <body>
@@ -352,6 +351,7 @@
         let selectedMode = 'tajwid-battle';
         let currentRoom = null;
         let pollTimer = null;
+        let roundTimer = null;
         let shownQuestionId = null;
         let submittedQuestionId = null;
         let mediaRecorder = null;
@@ -376,6 +376,7 @@
         const qariAudioPlayer = document.getElementById('qari-audio');
         const qariAudioButton = document.getElementById('play-qari-audio');
         const qariAudioStatus = document.getElementById('qari-audio-status');
+        const timerElement = document.getElementById('round-timer');
 
         async function api(path, options) {
             const response = await fetch(`${apiBase}${path}`, options || {});
@@ -431,7 +432,34 @@
 
         function clearPolling() {
             window.clearInterval(pollTimer);
+            window.clearInterval(roundTimer);
             pollTimer = null;
+            roundTimer = null;
+        }
+
+        function startRoundCountdown(secondsRemaining) {
+            window.clearInterval(roundTimer);
+            let remaining = Number.isInteger(secondsRemaining) ? Math.max(0, secondsRemaining) : 30;
+            const updateTimer = () => {
+                timerElement.textContent = `${remaining} dtk`;
+                timerElement.classList.toggle('low', remaining <= 8);
+            };
+            const submitQuiz = () => {
+                window.clearInterval(roundTimer);
+                roundTimer = null;
+                syncRoom();
+            };
+
+            updateTimer();
+            if (remaining === 0) {
+                submitQuiz();
+                return;
+            }
+            roundTimer = window.setInterval(() => {
+                remaining = Math.max(0, remaining - 1);
+                updateTimer();
+                if (remaining === 0) submitQuiz();
+            }, 1000);
         }
 
         function setLobbyControlsDisabled(disabled) {
@@ -703,8 +731,6 @@
             document.getElementById('arena-mode').textContent = `${room.mode.name}${room.category ? ` · ${room.category}` : ''} · ${room.format.toUpperCase()} · ${room.difficulty.toUpperCase()} · Room ${room.code}`;
             renderRoster(room);
             document.getElementById('round-label').textContent = `Soal ${room.question_index + 1}/${room.total_questions}`;
-            document.getElementById('round-timer').textContent = `${room.seconds_remaining} dtk`;
-            document.getElementById('round-timer').classList.toggle('low', room.seconds_remaining <= 8);
             const progress = ((room.question_index + 1) / room.total_questions) * 100;
             document.getElementById('round-progress').style.width = `${progress}%`;
             document.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(room.question_index + 1));
@@ -724,6 +750,7 @@
             qariAudioStatus.textContent = 'Audio dimuat saat diminta.';
             shownQuestionId = room.question.id;
             submittedQuestionId = null;
+            startRoundCountdown(room.seconds_remaining);
             answerStatus.textContent = '';
             const question = room.question;
             const typeLabels = { voice: 'SETORAN LISAN', essay: 'JAWABAN ESAI', buzzer: 'CEPAT TEPAT', choice: 'PILIHAN JAWABAN' };

@@ -44,7 +44,7 @@
     const overlay = document.createElement('div');
     overlay.className = 'page-transition-overlay';
     overlay.setAttribute('aria-hidden', 'true');
-    overlay.innerHTML = '<span class="page-transition-emblem">ت</span><span class="page-transition-label">ILMU · ADAB · AMAL</span>';
+    overlay.innerHTML = '<span class="page-transition-door page-transition-door-left"></span><span class="page-transition-door page-transition-door-right"></span><span class="page-transition-emblem">ت</span><span class="page-transition-label">ILMU · ADAB · AMAL</span>';
     document.body.appendChild(overlay);
     document.body.classList.add('page-transition-ready');
 

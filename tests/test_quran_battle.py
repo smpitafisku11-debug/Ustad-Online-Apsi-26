@@ -79,6 +79,13 @@ class QuranBattleTests(unittest.TestCase):
             "makharij-battle", "team-battle",
         })
 
+    def test_battle_page_wires_round_countdown_to_server_timer(self):
+        response = self.client.get("/quran-battle")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'id="round-timer"', response.data)
+        self.assertIn(b'function startRoundCountdown(secondsRemaining)', response.data)
+        self.assertIn(b'startRoundCountdown(room.seconds_remaining)', response.data)
+
     def test_duel_room_starts_when_two_players_join(self):
         created = self.client.post(
             "/api/battle/rooms",

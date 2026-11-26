@@ -17,7 +17,7 @@
         <div class="shell topbar-inner">
             <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true"><img src="{{ url_for('static', filename='brand-logo.svg') }}" alt=""></span> Ustad Online <span class="brand-separator">/</span> Panel Ustad</a>
             <div class="topbar-actions">
-                {% if admin_preview %}<a class="quiet-link" href="{{ url_for('auth_api.review_teachers') }}">Panel Admin</a>{% endif %}
+                {% if admin_preview %}<a class="quiet-link" href="{{ url_for('auth_api.admin_dashboard') }}">Panel Admin</a>{% endif %}
                 <a class="quiet-link" href="{{ url_for('connect') }}">Ustad Connect</a>
                 <a class="button button-small" href="{{ url_for('home') }}">Beranda</a>
             </div>
@@ -44,7 +44,7 @@
             </div>
         </section>
 
-        <section class="dashboard-stats" aria-label="Ringkasan pengajaran">
+        <section class="dashboard-stats" aria-label="Ringkasan pengajaran" data-language-aria="teacher.statsAria">
             <article><span>Permintaan baru</span><strong data-stat-requested>0</strong><small>Menunggu konfirmasi</small></article>
             <article><span>Sesi mendatang</span><strong data-stat-upcoming>0</strong><small>Sudah dikonfirmasi</small></article>
             <article><span>Sesi selesai</span><strong data-stat-completed>0</strong><small>Evaluasi telah diberikan</small></article>
@@ -52,7 +52,7 @@
         </section>
 
         <div class="dashboard-grid">
-            <aside class="dashboard-nav" aria-label="Menu panel Ustad">
+            <aside class="dashboard-nav" aria-label="Menu panel Ustad" data-language-aria="teacher.navAria">
                 <button type="button" class="is-active" data-dashboard-tab="requests">Permintaan siswa <span data-nav-requested>0</span></button>
                 <button type="button" data-dashboard-tab="tahfidz">Setoran hafalan</button>
                 <button type="button" data-dashboard-tab="schedule">Jadwal mengajar</button>

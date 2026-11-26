@@ -484,7 +484,6 @@ body::before {
     background-size: 140% 140%, 130% 130%, 145% 145%, 22px 22px;
     content: "";
     pointer-events: none;
-    animation: ambient-background-drift 42s ease-in-out infinite alternate;
 }
 
 body[data-theme="mushaf"]::before {
@@ -503,26 +502,20 @@ body[data-theme="midnight"]::before {
         radial-gradient(rgba(194, 214, 235, .07) .65px, transparent .85px);
 }
 
-@keyframes ambient-background-drift {
-    from { background-position: 0% 0%, 100% 0%, 100% 100%, 0 0; }
-    to { background-position: 8% 5%, 94% 7%, 92% 93%, 0 0; }
-}
-
 body[data-page-motion="off"]::before,
 body[data-effects="off"]::before {
     animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    body,
-    body .page-transition-overlay,
-    body::before {
-        visibility: hidden !important;
-        animation: none !important;
-    }
-
+    html:focus-within { scroll-behavior: auto !important; }
+    body::before { animation: none !important; }
+    body .page-transition-overlay { visibility: hidden !important; animation: none !important; }
     body .page-transition-door {
         animation: none !important;
         will-change: auto;
     }
+    *,
+    *::before,
+    *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

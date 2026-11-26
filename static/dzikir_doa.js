@@ -149,9 +149,9 @@
     ];
 
     const categoryLabels = {
-        'pagi-petang': 'Pagi & petang · pilihan Al-Ma’tsurat',
-        'setelah-salat': 'Dzikir setelah salat',
-        harian: 'Doa sehari-hari'
+        'pagi-petang': ['prayer.categoryMorning', 'Pagi & petang · pilihan Al-Ma’tsurat'],
+        'setelah-salat': ['prayer.categoryAfterPrayer', 'Dzikir setelah salat'],
+        harian: ['prayer.categoryDaily', 'Doa sehari-hari']
     };
     const date = new Date();
     const dateKey = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
@@ -162,6 +162,20 @@
     const search = document.getElementById('prayer-search');
     let activeCategory = 'all';
     let progress = {};
+
+    function translate(key, fallback) {
+        return window.UstadOnlineI18n
+            ? window.UstadOnlineI18n.translateKey(key) || fallback
+            : fallback;
+    }
+
+    function formatCount(key, fallback, values) {
+        let text = translate(key, fallback);
+        Object.keys(values).forEach((name) => {
+            text = text.replace(`{${name}}`, new Intl.NumberFormat(document.documentElement.lang || 'id').format(values[name]));
+        });
+        return text;
+    }
 
     function loadProgress() {
         try {
@@ -196,10 +210,11 @@
     }
 
     function render() {
-        const query = search.value.trim().toLocaleLowerCase('id-ID');
+        const locale = document.documentElement.lang || 'id';
+        const query = search.value.trim().toLocaleLowerCase(locale);
         const filtered = prayers.filter((prayer) => {
             const matchesCategory = activeCategory === 'all' || prayer.category === activeCategory;
-            const searchable = `${prayer.title} ${prayer.arabic} ${prayer.transliteration} ${prayer.meaning} ${prayer.reference}`.toLocaleLowerCase('id-ID');
+            const searchable = `${prayer.title} ${prayer.arabic} ${prayer.transliteration} ${prayer.meaning} ${prayer.reference}`.toLocaleLowerCase(locale);
             return matchesCategory && searchable.includes(query);
         });
         list.replaceChildren();
@@ -214,9 +229,10 @@
             const top = document.createElement('div');
             top.className = 'prayer-card-top';
             const titleGroup = document.createElement('div');
+            const translatedTitle = translate(`prayer.title.${prayer.id}`, prayer.title);
             titleGroup.append(
-                createText('h3', '', prayer.title),
-                createText('span', 'prayer-category', categoryLabels[prayer.category])
+                createText('h3', '', translatedTitle),
+                createText('span', 'prayer-category', translate(categoryLabels[prayer.category][0], categoryLabels[prayer.category][1]))
             );
             top.append(titleGroup, createText('span', 'prayer-repeat', `${prayer.repeat}×`));
 
@@ -235,8 +251,12 @@
             const actions = document.createElement('div');
             actions.className = 'prayer-card-actions';
             const counter = createText('span', 'prayer-counter', `${count}/${prayer.repeat}`);
-            counter.setAttribute('aria-label', `${count} dari ${prayer.repeat} bacaan`);
-            const increment = createText('button', '', '+1 bacaan');
+            counter.setAttribute('aria-label', formatCount(
+                'prayer.counterAriaTemplate',
+                '{count} dari {total} bacaan',
+                { count, total: prayer.repeat }
+            ));
+            const increment = createText('button', '', translate('prayer.increment', '+1 bacaan'));
             increment.type = 'button';
             increment.dataset.action = 'increment';
             increment.disabled = complete;
@@ -245,7 +265,9 @@
                 saveProgress();
                 render();
             });
-            const markComplete = createText('button', '', complete ? 'Selesai ✓' : 'Tandai selesai');
+            const markComplete = createText('button', '', complete
+                ? `${translate('prayer.completed', 'Selesai')} ✓`
+                : translate('prayer.markComplete', 'Tandai selesai'));
             markComplete.type = 'button';
             markComplete.dataset.action = 'complete';
             markComplete.disabled = complete;
@@ -259,7 +281,11 @@
             list.append(card);
         });
 
-        progressLabel.textContent = `${completedCount()} dari ${prayers.length} dzikir/doa selesai`;
+        progressLabel.textContent = formatCount(
+            'prayer.progressCountTemplate',
+            '{completed} dari {total} dzikir/doa selesai',
+            { completed: completedCount(), total: prayers.length }
+        );
     }
 
     document.querySelectorAll('[data-prayer-filter]').forEach((button) => {
@@ -275,6 +301,7 @@
     });
 
     search.addEventListener('input', render);
+    window.addEventListener('ustadonline:languagechange', render);
     document.getElementById('reset-progress').addEventListener('click', () => {
         progress = {};
         saveProgress();

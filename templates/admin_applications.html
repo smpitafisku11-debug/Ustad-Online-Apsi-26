@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pengajuan Ustad | Ustad Online</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='i18n.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <script src="{{ url_for('static', filename='i18n.js') }}" defer></script>
+    <script defer>
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+            if (form.matches('[data-confirm-decision]') && !window.confirm(form.dataset.confirmDecision)) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+    {% set active_page = 'applications' %}
+    {% include "partials/admin_nav.html" %}
+    <main class="admin-content">
+        <header class="admin-topline">
+            <div><p class="admin-eyebrow">TINJAUAN PENGAJAR</p><h1>Pengajuan Ustad</h1><p class="admin-intro">Periksa profil dan alasan pemohon sebelum mengambil keputusan.</p></div>
+            <div class="admin-user-mark"><span>F</span> FAMDI Admin</div>
+        </header>
+        <section class="admin-panel">
+            <h2>Seluruh pengajuan</h2>
+            <p>Keputusan berlaku pada akun pemohon; penolakan mengembalikan role akun menjadi siswa.</p>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>Pemohon</th><th>Profil &amp; kontak</th><th>Alasan dan dokumen</th><th>Diajukan</th><th>Status</th><th>Tindakan</th></tr></thead>
+                    <tbody>
+                    {% for application in applications %}
+                        <tr>
+                            <td class="admin-person"><strong>{{ application.name }}</strong><span>#{{ application.user_id }}</span></td>
+                            <td class="admin-person"><a href="mailto:{{ application.email }}">{{ application.email }}</a><span>{{ application.phone or 'Nomor telepon tidak tersedia' }}</span><span>{{ application.username or 'Belum ada username profil' }}</span><span>{{ application.bio or 'Belum ada bio profil' }}</span></td>
+                            <td><div class="admin-reason">{{ application.reason or 'Alasan belum diisi.' }}</div><small>{{ application.document_name or 'Tidak ada dokumen pendukung' }}</small></td>
+                            <td>{{ application.submitted_at }}</td>
+                            <td><span class="admin-badge {{ application.status }}">{{ application.status }}</span>{% if application.rejection_note %}<p>{{ application.rejection_note }}</p>{% endif %}</td>
+                            <td>
+                                {% if application.status == 'pending' %}
+                                <div class="admin-actions">
+                                    <form method="post" action="{{ url_for('auth_api.admin_decide_application', application_id=application.id) }}" data-confirm-decision="Terima pengajuan {{ application.name }}? Akun ini akan mendapatkan role Ustad.">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <input type="hidden" name="decision" value="approved">
+                                        <label class="admin-check"><input type="checkbox" name="identity_verified" value="1" required> Identitas sudah diperiksa</label>
+                                        <label class="admin-check"><input type="checkbox" name="competence_verified" value="1" required> Kompetensi sudah diperiksa</label>
+                                        <button class="admin-button" type="submit">Terima pengajuan</button>
+                                    </form>
+                                    <form method="post" action="{{ url_for('auth_api.admin_decide_application', application_id=application.id) }}" data-confirm-decision="Tolak pengajuan {{ application.name }}? Pemohon akan tetap menjadi siswa.">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <input type="hidden" name="decision" value="rejected">
+                                        <textarea name="rejection_note" minlength="3" maxlength="1000" placeholder="Catatan alasan penolakan (3–1000 karakter)" required></textarea>
+                                        <button class="admin-button reject" type="submit">Tolak pengajuan</button>
+                                    </form>
+                                </div>
+                                {% else %}<span>Sudah diproses</span>{% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td class="admin-empty" colspan="6">Belum ada pengajuan ustad/ustadzah.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -41,6 +41,60 @@ def init_auth_db(path):
             )
             """
         )
+        connection.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS admin_credentials (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                username TEXT NOT NULL,
+                password_hash TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS teacher_applications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+                reason TEXT NOT NULL DEFAULT '',
+                document_name TEXT NOT NULL DEFAULT '',
+                document_url TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
+                rejection_note TEXT NOT NULL DEFAULT '',
+                submitted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                reviewed_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS teacher_applications_status
+                ON teacher_applications(status, submitted_at);
+            INSERT OR IGNORE INTO teacher_applications
+                (user_id, reason, status, submitted_at)
+            SELECT id, experience, status, created_at
+            FROM users WHERE role = 'teacher';
+            UPDATE users SET role = 'student', status = 'approved'
+            WHERE role = 'teacher' AND status = 'rejected';
+            """
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def init_admin_account(path, username, password):
+    if not isinstance(username, str) or not username.strip() or not isinstance(password, str) or not password:
+        return
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    connection = sqlite3.connect(path, timeout=10)
+    try:
+        row = connection.execute(
+            "SELECT username, password_hash FROM admin_credentials WHERE id = 1"
+        ).fetchone()
+        if row and row[0] == username and check_password_hash(row[1], password):
+            return
+        connection.execute(
+            """
+            INSERT INTO admin_credentials (id, username, password_hash)
+            VALUES (1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                username = excluded.username,
+                password_hash = excluded.password_hash
+            """,
+            (username, generate_password_hash(password)),
+        )
         connection.commit()
     finally:
         connection.close()
@@ -74,12 +128,12 @@ def _user_dict(row):
 def _admin_user():
     return {
         "id": None,
-        "name": "Admin",
+        "name": "FAMDI Admin",
         "email": "",
         "role": "admin",
         "status": "approved",
         "phone": "",
-        "username": "",
+        "username": session.get("admin_username", current_app.config.get("USTAD_ADMIN_USERNAME", "FAMDI_Admin")),
         "bio": "",
     }
 
@@ -110,8 +164,12 @@ def _admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if not current_app.config.get("USTAD_ADMIN_PASSWORD"):
+            if request.path.startswith("/admin"):
+                return render_template("admin_login.html", setup_required=True), 503
             return render_template("teacher_review.html", setup_required=True), 503
         if not session.get("admin_authenticated"):
+            if request.path.startswith("/admin"):
+                return redirect(url_for("auth_api.review_login"))
             return render_template(
                 "teacher_review.html",
                 setup_required=False,
@@ -125,8 +183,40 @@ def _admin_required(view):
 
 @auth_api.get("/api/auth/session")
 def auth_session():
+    if session.get("admin_authenticated") and session.get("admin_preview_mode") in ("student", "teacher"):
+        preview_role = session["admin_preview_mode"]
+        user = {
+            "id": None,
+            "name": "Admin FAMDI (Pratinjau)",
+            "email": "",
+            "role": preview_role,
+            "status": "approved",
+            "phone": "",
+            "username": "",
+            "bio": "",
+            "admin_preview": True,
+        }
+        return jsonify(user=user, csrf_token=_csrf_token(), application_notification=None)
     user = _admin_user() if session.get("admin_authenticated") else _current_user()
-    return jsonify(user=user, csrf_token=_csrf_token())
+    notification = None
+    if user and user["role"] != "admin":
+        connection = _database()
+        try:
+            application = connection.execute(
+                """
+                SELECT status, rejection_note FROM teacher_applications
+                WHERE user_id = ? ORDER BY id DESC LIMIT 1
+                """,
+                (user["id"],),
+            ).fetchone()
+            if application and application["status"] == "rejected":
+                notification = {
+                    "status": "rejected",
+                    "message": application["rejection_note"],
+                }
+        finally:
+            connection.close()
+    return jsonify(user=user, csrf_token=_csrf_token(), application_notification=notification)
 
 
 @auth_api.post("/api/auth/register")
@@ -174,6 +264,14 @@ def register():
             ),
         )
         user_id = cursor.lastrowid
+        if role == "teacher":
+            connection.execute(
+                """
+                INSERT INTO teacher_applications (user_id, reason, status)
+                VALUES (?, ?, 'pending')
+                """,
+                (user_id, experience),
+            )
         connection.commit()
         row = connection.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     except sqlite3.IntegrityError:
@@ -201,16 +299,33 @@ def login():
     data = request.get_json(silent=True) or {}
     role = data.get("role")
     if role == "admin":
+        configured_username = current_app.config.get("USTAD_ADMIN_USERNAME", "FAMDI_Admin")
         configured_password = current_app.config.get("USTAD_ADMIN_PASSWORD")
         if not configured_password:
             return jsonify(
                 error="Login admin belum dikonfigurasi di server. Atur USTAD_ADMIN_PASSWORD pada environment server lalu mulai ulang aplikasi."
             ), 503
+        init_admin_account(current_app.config["AUTH_DATABASE"], configured_username, configured_password)
+        username = data.get("username", "")
         password = data.get("password", "")
-        if not isinstance(password, str) or not hmac.compare_digest(password, configured_password):
+        connection = _database()
+        try:
+            admin = connection.execute(
+                "SELECT username, password_hash FROM admin_credentials WHERE id = 1"
+            ).fetchone()
+        finally:
+            connection.close()
+        if (
+            not isinstance(username, str)
+            or not isinstance(password, str)
+            or not admin
+            or not hmac.compare_digest(username, admin["username"])
+            or not check_password_hash(admin["password_hash"], password)
+        ):
             return jsonify(error="Kata sandi admin tidak cocok."), 401
         session.clear()
         session["admin_authenticated"] = True
+        session["admin_username"] = admin["username"]
         return jsonify(user=_admin_user(), csrf_token=_csrf_token())
 
     email = data.get("email", "").strip().lower() if isinstance(data.get("email"), str) else ""
@@ -291,9 +406,11 @@ def review_teachers():
     try:
         pending = connection.execute(
             """
-            SELECT id, name, email, phone, experience, created_at
-            FROM users WHERE role = 'teacher' AND status = 'pending'
-            ORDER BY created_at ASC
+            SELECT u.id, u.name, u.email, u.phone, a.reason AS experience,
+                   a.submitted_at AS created_at, a.document_name, a.document_url
+            FROM teacher_applications a JOIN users u ON u.id = a.user_id
+            WHERE a.status = 'pending'
+            ORDER BY a.submitted_at ASC
             """
         ).fetchall()
         unverified = connection.execute(
@@ -325,26 +442,149 @@ def review_teachers():
     )
 
 
+@auth_api.route("/admin/login", methods=["GET", "POST"])
 @auth_api.post("/review/login")
 def review_login():
+    configured_username = current_app.config.get("USTAD_ADMIN_USERNAME", "FAMDI_Admin")
     configured_password = current_app.config.get("USTAD_ADMIN_PASSWORD")
     if not configured_password:
-        return render_template("teacher_review.html", setup_required=True), 503
+        template = "admin_login.html" if request.path == url_for("auth_api.review_login") else "teacher_review.html"
+        return render_template(template, setup_required=True), 503
+    if request.method == "GET":
+        if session.get("admin_authenticated"):
+            return redirect(url_for("auth_api.admin_dashboard"))
+        return render_template("admin_login.html", csrf_token=_csrf_token())
     if not _valid_csrf():
         return _csrf_error()
+    init_admin_account(current_app.config["AUTH_DATABASE"], configured_username, configured_password)
+    username = request.form.get("username", "")
     password = request.form.get("password", "")
-    if not hmac.compare_digest(password, configured_password):
+    connection = _database()
+    try:
+        admin = connection.execute(
+            "SELECT username, password_hash FROM admin_credentials WHERE id = 1"
+        ).fetchone()
+    finally:
+        connection.close()
+    if (
+        not admin
+        or not hmac.compare_digest(username, admin["username"])
+        or not check_password_hash(admin["password_hash"], password)
+    ):
+        if request.path == url_for("auth_api.review_login"):
+            return render_template(
+                "admin_login.html",
+                setup_required=False,
+                csrf_token=_csrf_token(),
+                login_error="Username atau kata sandi admin tidak cocok.",
+            ), 401
         return render_template(
             "teacher_review.html",
             setup_required=False,
             authenticated=False,
             csrf_token=_csrf_token(),
-            login_error="Kata sandi admin tidak cocok.",
+            login_error="Username atau kata sandi admin tidak cocok.",
         ), 401
     session.clear()
     session["admin_authenticated"] = True
+    session["admin_username"] = admin["username"]
     _csrf_token()
-    return redirect(url_for("auth_api.review_teachers"))
+    return redirect(url_for("auth_api.admin_dashboard"))
+
+
+@auth_api.get("/admin")
+@_admin_required
+def admin_dashboard():
+    connection = _database()
+    try:
+        counts = connection.execute(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM users WHERE role = 'student' AND status = 'approved') AS students,
+                (SELECT COUNT(*) FROM users WHERE role = 'teacher' AND status = 'approved') AS teachers,
+                (SELECT COUNT(*) FROM teacher_applications WHERE status = 'pending') AS pending,
+                (SELECT COUNT(*) FROM teacher_applications WHERE status = 'approved') AS accepted,
+                (SELECT COUNT(*) FROM teacher_applications WHERE status = 'rejected') AS rejected
+            """
+        ).fetchone()
+    finally:
+        connection.close()
+    return render_template("admin_dashboard.html", counts=dict(counts), csrf_token=_csrf_token())
+
+
+@auth_api.get("/admin/applications")
+@_admin_required
+def admin_applications():
+    connection = _database()
+    try:
+        applications = connection.execute(
+            """
+            SELECT a.id, a.user_id, a.reason, a.document_name, a.document_url,
+                   a.status, a.rejection_note, a.submitted_at, a.reviewed_at,
+                   u.name, u.email, u.phone, u.username, u.bio
+            FROM teacher_applications a JOIN users u ON u.id = a.user_id
+            ORDER BY CASE a.status WHEN 'pending' THEN 0 ELSE 1 END, a.submitted_at DESC
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+    return render_template(
+        "admin_applications.html",
+        applications=[dict(row) for row in applications],
+        csrf_token=_csrf_token(),
+    )
+
+
+@auth_api.get("/admin/users")
+@_admin_required
+def admin_users():
+    connection = _database()
+    try:
+        users = connection.execute(
+            """
+            SELECT id, name, email, role, status, phone, username, created_at
+            FROM users ORDER BY created_at DESC LIMIT 500
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+    return render_template("admin_users.html", users=[dict(row) for row in users], csrf_token=_csrf_token())
+
+
+@auth_api.get("/admin/preview/<mode>")
+@_admin_required
+def admin_preview(mode):
+    if mode not in ("student", "teacher"):
+        return jsonify(error="Mode pratinjau tidak valid."), 404
+    session["admin_preview_mode"] = mode
+    if mode == "teacher":
+        return redirect(url_for("connect_api.ustad_dashboard"))
+    return redirect(url_for("home"))
+
+
+@auth_api.post("/admin/applications/<int:application_id>")
+@_admin_required
+def admin_decide_application(application_id):
+    connection = _database()
+    try:
+        application = connection.execute(
+            "SELECT user_id FROM teacher_applications WHERE id = ?",
+            (application_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+    if not application:
+        return jsonify(error="Pengajuan tidak ditemukan."), 404
+    return decide_teacher(application["user_id"])
+
+
+@auth_api.post("/admin/logout")
+@_admin_required
+def admin_logout():
+    if not _valid_csrf():
+        return _csrf_error()
+    session.clear()
+    return redirect(url_for("home"))
 
 
 @auth_api.post("/review/logout")
@@ -355,7 +595,7 @@ def review_logout():
     session.clear()
     if switch_account:
         return redirect(url_for("home"))
-    return redirect(url_for("auth_api.review_teachers"))
+    return redirect(url_for("auth_api.admin_dashboard"))
 
 
 @auth_api.post("/review/teachers/<int:user_id>")
@@ -371,6 +611,9 @@ def decide_teacher(user_id):
         or request.form.get("competence_verified") != "1"
     ):
         return jsonify(error="Verifikasi identitas dan kompetensi wajib dilakukan sebelum persetujuan."), 400
+    rejection_note = request.form.get("rejection_note", "").strip()
+    if decision == "rejected" and not 3 <= len(rejection_note) <= 1000:
+        return jsonify(error="Catatan penolakan harus berisi 3 sampai 1000 karakter."), 400
     connection = _database()
     try:
         if decision == "reverify":
@@ -388,14 +631,29 @@ def decide_teacher(user_id):
                 (user_id,),
             )
         else:
-            cursor = connection.execute(
-                """
-                UPDATE users SET status = ?
-                WHERE id = ? AND role = 'teacher' AND status = 'pending'
-                """,
-                (decision, user_id),
-            )
-        if cursor.rowcount == 1 and decision == "approved":
+            application = connection.execute(
+                "SELECT id FROM teacher_applications WHERE user_id = ? AND status = 'pending'",
+                (user_id,),
+            ).fetchone()
+            if not application:
+                cursor = None
+            else:
+                connection.execute(
+                    """
+                    UPDATE teacher_applications
+                    SET status = ?, rejection_note = ?, reviewed_at = CURRENT_TIMESTAMP
+                    WHERE id = ? AND status = 'pending'
+                    """,
+                    (decision, rejection_note if decision == "rejected" else "", application["id"]),
+                )
+                cursor = connection.execute(
+                    """
+                    UPDATE users SET role = ?, status = 'approved'
+                    WHERE id = ? AND role = 'teacher' AND status = 'pending'
+                    """,
+                    ("teacher" if decision == "approved" else "student", user_id),
+                )
+        if cursor and cursor.rowcount == 1 and decision == "approved":
             connection.execute(
                 """
                 INSERT INTO connect_teacher_verifications (
@@ -404,9 +662,12 @@ def decide_teacher(user_id):
                 """,
                 (user_id,),
             )
-        connection.commit()
+        if cursor and cursor.rowcount == 1:
+            connection.commit()
+        else:
+            connection.rollback()
     finally:
         connection.close()
-    if cursor.rowcount != 1:
+    if not cursor or cursor.rowcount != 1:
         return jsonify(error="Pengajuan tidak ditemukan atau sudah diproses."), 404
-    return redirect(url_for("auth_api.review_teachers"))
+    return redirect(url_for("auth_api.admin_applications"))

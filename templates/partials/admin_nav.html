@@ -1,0 +1,24 @@
+<aside class="admin-sidebar">
+    <a class="admin-brand" href="{{ url_for('auth_api.admin_dashboard') }}">
+        <span class="admin-brand-mark">✦</span>
+        <span>USTAD ONLINE<small>FAMDI · ADMIN</small></span>
+    </a>
+    <p class="admin-nav-label">Workspace</p>
+    <nav class="admin-nav" aria-label="Navigasi admin" data-language-aria="admin.navigation">
+        <a href="{{ url_for('auth_api.admin_dashboard') }}" {% if active_page == 'dashboard' %}aria-current="page"{% endif %}>⌂ <span>Dashboard</span></a>
+        <a href="{{ url_for('auth_api.admin_applications') }}" {% if active_page == 'applications' %}aria-current="page"{% endif %}>◎ <span>Pengajuan Ustad</span></a>
+        <a href="{{ url_for('auth_api.admin_users') }}" {% if active_page == 'users' %}aria-current="page"{% endif %}>◷ <span>Manajemen pengguna</span></a>
+    </nav>
+    <p class="admin-nav-label">Pratinjau mode</p>
+    <nav class="admin-nav" aria-label="Pratinjau mode" data-language-aria="admin.previewMode">
+        <a href="{{ url_for('auth_api.admin_preview', mode='student') }}">◉ <span>Mode Siswa</span></a>
+        <a href="{{ url_for('auth_api.admin_preview', mode='teacher') }}">✦ <span>Mode Ustad</span></a>
+    </nav>
+    <div class="admin-sidebar-bottom">
+        <a href="{{ url_for('home') }}">← Beranda Ustad Online</a>
+        <form method="post" action="{{ url_for('auth_api.admin_logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit">Keluar dari akun admin</button>
+        </form>
+    </div>
+</aside>

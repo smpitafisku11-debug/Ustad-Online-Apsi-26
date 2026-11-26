@@ -12,6 +12,7 @@
     const phoneInput = document.getElementById('login-phone');
     const experienceInput = document.getElementById('login-experience');
     const emailFields = document.querySelector('[data-account-email]');
+    const usernameFields = document.querySelector('[data-account-username]');
     const authModeSwitch = document.querySelector('.auth-mode-switch');
     const passwordLabel = document.getElementById('login-password-label');
     let user = null;
@@ -498,9 +499,7 @@
         document.querySelectorAll('[data-admin-feature]').forEach((element) => {
             element.hidden = !isAdmin;
         });
-        document.querySelectorAll('[data-feature-count]').forEach((element) => {
-            element.textContent = `${isAdmin ? 10 : isTeacher ? 9 : 8} fitur tersedia`;
-        });
+        updateFeatureCount();
         document.querySelectorAll('[data-profile-name]').forEach((element) => {
             element.textContent = name;
         });
@@ -509,6 +508,23 @@
         const button = document.getElementById('profile-button');
         if (button) button.setAttribute('aria-label', user ? `Profil ${name}, ${roleLabel(user.role)}` : 'Login atau profil pengguna');
     }
+
+    function updateFeatureCount() {
+        const isTeacher = Boolean(user && ['teacher', 'admin'].includes(user.role));
+        const isAdmin = Boolean(user && user.role === 'admin');
+        const count = isAdmin ? 10 : isTeacher ? 9 : 8;
+        const language = document.documentElement.lang || 'id';
+        const formattedCount = new Intl.NumberFormat(language).format(count);
+        const label = window.UstadOnlineI18n
+            ? window.UstadOnlineI18n.translateKey('app.featuresAvailable')
+            : 'fitur tersedia';
+        document.querySelectorAll('[data-feature-count]').forEach((element) => {
+            element.textContent = `${formattedCount} ${label}`;
+        });
+    }
+
+    window.addEventListener('ustadonline:languagechange', updateFeatureCount);
+    document.addEventListener('DOMContentLoaded', updateFeatureCount, { once: true });
 
     function setRole(role) {
         authRole = role;
@@ -537,8 +553,11 @@
             group.hidden = !teacherRegistration;
         });
         if (emailFields) emailFields.hidden = isAdminLogin;
+        if (usernameFields) usernameFields.hidden = !isAdminLogin;
         const emailInput = document.getElementById('login-email');
         if (emailInput) emailInput.required = !isAdminLogin;
+        const usernameInput = document.getElementById('login-username');
+        if (usernameInput) usernameInput.required = isAdminLogin;
         if (authModeSwitch) authModeSwitch.hidden = isAdminLogin;
         if (nameInput) nameInput.required = registering;
         if (phoneInput) phoneInput.required = teacherRegistration;
@@ -567,7 +586,7 @@
 
     function openProfile() {
         if (user && user.role === 'admin') {
-            window.location.assign('/review/teachers');
+            window.location.assign('/admin');
             return;
         }
         if (!user) {
@@ -623,6 +642,7 @@
             password: String(formData.get('password') || '')
         };
         if (authRole !== 'admin') data.email = String(formData.get('email') || '').trim();
+        else data.username = String(formData.get('username') || '').trim();
         if (authMode === 'register') {
             data.name = String(formData.get('name') || '').trim();
             if (authRole === 'teacher') {
@@ -650,7 +670,7 @@
             pendingPhoto = readPhoto();
             applyProfile();
             if (user.role === 'admin') {
-                window.location.assign('/review/teachers');
+                window.location.assign('/admin');
                 return;
             }
             loginDialog?.close();
@@ -777,6 +797,15 @@
             window.UstadOnlineStorage.setAccount(user ? user.id : null);
             pendingPhoto = readPhoto();
             applyProfile();
+            if (user && user.admin_preview) {
+                document.getElementById('admin-preview-mode')?.removeAttribute('hidden');
+            }
+            const notification = document.getElementById('application-notification');
+            if (notification && result.application_notification) {
+                const note = result.application_notification.message || 'Silakan hubungi admin untuk informasi lebih lanjut.';
+                notification.textContent = `Pengajuan Ustad ditolak. Catatan admin: ${note}`;
+                notification.hidden = false;
+            }
             gamificationStorageAvailable = true;
             gamification = readGamification();
             document.querySelectorAll('[data-hafalan-task]').forEach((input) => {

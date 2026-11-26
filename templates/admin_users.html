@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manajemen Pengguna | Ustad Online</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='i18n.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <script src="{{ url_for('static', filename='i18n.js') }}" defer></script>
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+    {% set active_page = 'users' %}
+    {% include "partials/admin_nav.html" %}
+    <main class="admin-content">
+        <header class="admin-topline">
+            <div><p class="admin-eyebrow">AKUN TERDAFTAR</p><h1>Manajemen pengguna</h1><p class="admin-intro">Tinjau identitas dan status akun. Role hanya berubah melalui persetujuan pengajuan.</p></div>
+            <div class="admin-user-mark"><span>F</span> FAMDI Admin</div>
+        </header>
+        <section class="admin-panel">
+            <h2>{{ users|length }} <span>akun terbaru</span></h2>
+            <p>Data dibatasi hingga 500 akun terakhir. Kata sandi dan data autentikasi tidak ditampilkan.</p>
+            <div class="admin-table-wrap">
+                <table class="admin-table admin-user-table">
+                    <thead><tr><th>Pengguna</th><th>Email</th><th>Role</th><th>Status</th><th>WhatsApp</th><th>Terdaftar</th></tr></thead>
+                    <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td class="admin-person"><strong>{{ user.name }}</strong><span>{{ user.username or 'Tanpa username profil' }}</span></td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ 'Ustad' if user.role == 'teacher' else 'Siswa' }}</td>
+                            <td><span class="admin-badge {{ user.status }}">{{ user.status }}</span></td>
+                            <td>{{ user.phone or '—' }}</td>
+                            <td>{{ user.created_at }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td class="admin-empty" colspan="6">Belum ada pengguna terdaftar.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

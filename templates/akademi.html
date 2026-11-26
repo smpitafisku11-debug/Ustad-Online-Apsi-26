@@ -75,7 +75,7 @@
 <body class="academy-view">
     <header class="academy-topbar">
         <div class="academy-topbar-inner">
-            <a class="academy-brand" href="{{ url_for('home') }}" aria-label="Kembali ke Ustad Online">
+            <a class="academy-brand" href="{{ url_for('home') }}" aria-label="Kembali ke Ustad Online" data-language-aria="academy.backHome">
                 <img class="academy-brand-mark" src="{{ url_for('static', filename='brand-logo.svg') }}" alt="">
                 <span>USTAD <b>ONLINE</b></span>
             </a>
@@ -104,7 +104,7 @@
             </div>
         </section>
 
-        <section class="academy-progress-card progress-section" aria-label="Progres belajar">
+        <section class="academy-progress-card progress-section" aria-label="Progres belajar" data-language-aria="academy.progressLabel">
             <div class="academy-progress-heading">
                 <div>
                     <p class="academy-eyebrow">PERJALANANMU</p>
@@ -112,7 +112,7 @@
                 </div>
                 <div class="academy-progress-count"><strong data-progress-percent>0%</strong><span data-progress-count>0 dari 7 bagian</span></div>
             </div>
-            <div class="academy-progress-track progress-bar-bg" role="progressbar" aria-label="Progres Akademi Tilawah" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="academy-progress-track progress-bar-bg" role="progressbar" aria-label="Progres Akademi Tilawah" data-language-aria="academy.progressBarAria" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <span class="academy-progress-fill progress-bar-fill" data-progress-fill></span>
             </div>
             <p class="academy-progress-note" data-progress-note>Mulai dari materi yang paling dasar. Progres tersimpan di perangkat ini.</p>
@@ -126,7 +126,7 @@
                     <p>Pilih tingkat yang paling nyaman. Kamu tetap bisa membuka semua materi.</p>
                 </div>
             </div>
-            <div class="academy-level-picker" role="group" aria-label="Pilih tingkat belajar">
+            <div class="academy-level-picker" role="group" aria-label="Pilih tingkat belajar" data-language-aria="academy.chooseLevel">
                 <button class="academy-level-option" type="button" data-learning-level="pemula" aria-pressed="true">
                     <span class="level-number">01</span><span class="level-copy"><strong>Pemula</strong><small>Mulai dari huruf dan bunyi</small></span><span class="level-check" aria-hidden="true">✓</span>
                 </button>

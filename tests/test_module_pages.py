@@ -1,11 +1,13 @@
 import unittest
 import os
+import sqlite3
 import tempfile
 from unittest.mock import patch
 
 from app import app, _load_admin_password
 from auth import init_auth_db
 from connect import init_connect_db
+from werkzeug.security import check_password_hash
 
 
 class ModulePageTests(unittest.TestCase):
@@ -13,6 +15,10 @@ class ModulePageTests(unittest.TestCase):
         app.testing = True
         self.original_database = app.config["AUTH_DATABASE"]
         self.original_admin_password = app.config.get("USTAD_ADMIN_PASSWORD")
+        self.original_admin_username = app.config.get("USTAD_ADMIN_USERNAME")
+        self.original_session_cookie_secure = app.config.get("SESSION_COOKIE_SECURE")
+        app.config["SESSION_COOKIE_SECURE"] = False
+        app.config["USTAD_ADMIN_USERNAME"] = "FAMDI_Admin"
         self.temp_directory = tempfile.TemporaryDirectory()
         app.config["AUTH_DATABASE"] = os.path.join(self.temp_directory.name, "test_users.sqlite3")
         init_auth_db(app.config["AUTH_DATABASE"])
@@ -24,6 +30,8 @@ class ModulePageTests(unittest.TestCase):
     def _restore_auth_config(self):
         app.config["AUTH_DATABASE"] = self.original_database
         app.config["USTAD_ADMIN_PASSWORD"] = self.original_admin_password
+        app.config["USTAD_ADMIN_USERNAME"] = self.original_admin_username
+        app.config["SESSION_COOKIE_SECURE"] = self.original_session_cookie_secure
 
     def test_ai_tahsin_and_community_routes_render(self):
         for path, title in (
@@ -314,7 +322,7 @@ class ModulePageTests(unittest.TestCase):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         invalid = self.client.post(
             "/api/auth/login",
-            json={"role": "admin", "password": "wrong-password"},
+            json={"role": "admin", "username": "FAMDI_Admin", "password": "wrong-password"},
             headers={"X-CSRF-Token": csrf_token},
         )
         self.assertEqual(invalid.status_code, 401)
@@ -322,7 +330,7 @@ class ModulePageTests(unittest.TestCase):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         login = self.client.post(
             "/api/auth/login",
-            json={"role": "admin", "password": "test-admin-password"},
+            json={"role": "admin", "username": "FAMDI_Admin", "password": "test-admin-password"},
             headers={"X-CSRF-Token": csrf_token},
         )
         self.assertEqual(login.status_code, 200)
@@ -677,7 +685,7 @@ class ModulePageTests(unittest.TestCase):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         response = self.client.post(
             "/api/auth/login",
-            json={"role": "admin", "password": "UstadAdmin123!"},
+            json={"role": "admin", "username": "FAMDI_Admin", "password": "UstadAdmin123!"},
             headers={"X-CSRF-Token": csrf_token},
         )
         self.assertEqual(response.status_code, 200)
@@ -762,7 +770,7 @@ class ModulePageTests(unittest.TestCase):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         login = self.client.post(
             "/api/auth/login",
-            json={"role": "admin", "password": "test-admin-password"},
+            json={"role": "admin", "username": "FAMDI_Admin", "password": "test-admin-password"},
             headers={"X-CSRF-Token": csrf_token},
         )
         self.assertEqual(login.status_code, 200)
@@ -775,6 +783,148 @@ class ModulePageTests(unittest.TestCase):
         self.assertEqual(switched.status_code, 302)
         self.assertEqual(switched.headers["Location"], "/")
         self.assertIsNone(self.client.get("/api/auth/session").json["user"])
+
+    def test_admin_dashboard_hashes_password_and_previews_without_user_identity(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = "dashboard-test-password"
+        protected = self.client.get("/admin")
+        self.assertEqual(protected.status_code, 302)
+        self.assertIn("/admin/login", protected.headers["Location"])
+        login_page = self.client.get("/admin/login")
+        self.assertEqual(login_page.status_code, 200)
+        self.assertIn(b"Masuk sebagai Admin", login_page.data)
+        self.assertEqual(self.client.get("/admin/applications").status_code, 302)
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        wrong_username = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "username": "someone-else", "password": "dashboard-test-password"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(wrong_username.status_code, 401)
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        login = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "username": "FAMDI_Admin", "password": "dashboard-test-password"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(login.status_code, 200)
+        connection = sqlite3.connect(app.config["AUTH_DATABASE"])
+        try:
+            password_hash = connection.execute(
+                "SELECT password_hash FROM admin_credentials WHERE id = 1"
+            ).fetchone()[0]
+        finally:
+            connection.close()
+        self.assertNotEqual(password_hash, "dashboard-test-password")
+        self.assertTrue(check_password_hash(password_hash, "dashboard-test-password"))
+        for path in ("/admin", "/admin/applications", "/admin/users"):
+            self.assertEqual(self.client.get(path).status_code, 200)
+
+        preview = self.client.get("/admin/preview/student")
+        self.assertEqual(preview.status_code, 302)
+        preview_user = self.client.get("/api/auth/session").json["user"]
+        self.assertEqual(preview_user["role"], "student")
+        self.assertTrue(preview_user["admin_preview"])
+        self.assertEqual(self.client.get("/api/connect/me").status_code, 401)
+        teacher_preview = self.client.get("/admin/preview/teacher")
+        self.assertEqual(teacher_preview.status_code, 302)
+        self.assertIn(b"PRATINJAU MODE USTAD", self.client.get("/ustad-dashboard").data)
+        self.assertEqual(self.client.get("/api/connect/me").status_code, 401)
+
+    def test_admin_login_page_creates_and_authenticates_bootstrapped_account(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = "direct-login-password"
+        login_page = self.client.get("/admin/login")
+        self.assertEqual(login_page.status_code, 200)
+        connection = sqlite3.connect(app.config["AUTH_DATABASE"])
+        try:
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM admin_credentials").fetchone()[0],
+                0,
+            )
+        finally:
+            connection.close()
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        response = self.client.post(
+            "/admin/login",
+            data={
+                "username": "FAMDI_Admin",
+                "password": "direct-login-password",
+                "csrf_token": csrf_token,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin", response.headers["Location"])
+        self.assertEqual(self.client.get("/admin").status_code, 200)
+        connection = sqlite3.connect(app.config["AUTH_DATABASE"])
+        try:
+            row = connection.execute(
+                "SELECT username, password_hash FROM admin_credentials WHERE id = 1"
+            ).fetchone()
+        finally:
+            connection.close()
+        self.assertEqual(row[0], "FAMDI_Admin")
+        self.assertTrue(check_password_hash(row[1], "direct-login-password"))
+
+    def test_rejected_teacher_application_keeps_student_role_and_exposes_notice(self):
+        app.config["USTAD_ADMIN_PASSWORD"] = "dashboard-test-password"
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        application = self.client.post(
+            "/api/auth/register",
+            json={
+                "role": "teacher",
+                "name": "Calon Ustad",
+                "email": "calon-ustad@example.test",
+                "password": "rahasia-123",
+                "phone": "081234567890",
+                "experience": "Saya telah mengajar tahsin selama tiga tahun.",
+            },
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(application.status_code, 202)
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        admin_login = self.client.post(
+            "/api/auth/login",
+            json={"role": "admin", "username": "FAMDI_Admin", "password": "dashboard-test-password"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(admin_login.status_code, 200)
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        rejected = self.client.post(
+            "/review/teachers/1",
+            data={
+                "decision": "rejected",
+                "rejection_note": "Mohon lengkapi bukti pengalaman mengajar.",
+                "csrf_token": csrf_token,
+            },
+        )
+        self.assertEqual(rejected.status_code, 302)
+
+        connection = sqlite3.connect(app.config["AUTH_DATABASE"])
+        try:
+            row = connection.execute(
+                "SELECT role, status FROM users WHERE email = ?",
+                ("calon-ustad@example.test",),
+            ).fetchone()
+        finally:
+            connection.close()
+        self.assertEqual(row, ("student", "approved"))
+
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        student_login = self.client.post(
+            "/api/auth/login",
+            json={
+                "role": "student",
+                "email": "calon-ustad@example.test",
+                "password": "rahasia-123",
+            },
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(student_login.status_code, 200)
+        session_response = self.client.get("/api/auth/session")
+        self.assertEqual(session_response.json["application_notification"]["status"], "rejected")
+        self.assertIn("lengkapi bukti", session_response.json["application_notification"]["message"])
 
     def test_student_cannot_log_in_as_ustad_or_change_role(self):
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
@@ -837,17 +987,20 @@ class ModulePageTests(unittest.TestCase):
 
         self.assertEqual(self.client.get("/review/teachers").status_code, 200)
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
-        self.client.post("/review/login", data={"password": "test-admin-password", "csrf_token": csrf_token})
+        self.client.post(
+            "/review/login",
+            data={"username": "FAMDI_Admin", "password": "test-admin-password", "csrf_token": csrf_token},
+        )
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         missing_verification = self.client.post(
-            "/review/teachers/1",
+            "/admin/applications/1",
             data={"decision": "approved", "csrf_token": csrf_token},
             follow_redirects=True,
         )
         self.assertEqual(missing_verification.status_code, 400)
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         self.client.post(
-            "/review/teachers/1",
+            "/admin/applications/1",
             data={
                 "decision": "approved",
                 "identity_verified": "1",

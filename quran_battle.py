@@ -98,6 +98,12 @@ MODES = {
             {"prompt": "Apa hukum nun sukun atau tanwin bertemu huruf ba?", "options": ["Ikhfa", "Iqlab", "Idgham"], "answer": 1},
             {"prompt": "Huruf qalqalah terkumpul dalam lafaz...", "options": ["قطب جد", "يرملون", "خص ضغط قظ"], "answer": 0},
             {"prompt": "Apa hukum mim sukun bertemu mim?", "options": ["Idgham mimi", "Izhar syafawi", "Ikhfa haqiqi"], "answer": 0},
+            {"prompt": "Nun sukun bertemu huruf lam dibaca dengan hukum...", "options": ["Izhar halqi", "Idgham bilaghunnah", "Ikhfa haqiqi"], "answer": 1},
+            {"prompt": "Nun sukun bertemu huruf ya dibaca dengan hukum...", "options": ["Idgham bighunnah", "Iqlab", "Izhar syafawi"], "answer": 0},
+            {"prompt": "Nun sukun bertemu huruf hamzah dibaca dengan hukum...", "options": ["Ikhfa haqiqi", "Idgham mimi", "Izhar halqi"], "answer": 2},
+            {"prompt": "Mim sukun bertemu huruf ba dibaca dengan hukum...", "options": ["Ikhfa syafawi", "Idgham bilaghunnah", "Izhar halqi"], "answer": 0},
+            {"prompt": "Tanwin bertemu huruf ra dibaca dengan hukum...", "options": ["Iqlab", "Idgham bilaghunnah", "Ikhfa syafawi"], "answer": 1},
+            {"prompt": "Mad thabi'i umumnya dibaca sepanjang...", "options": ["Dua harakat", "Empat harakat", "Enam harakat"], "answer": 0},
         ],
     },
     "makharij-battle": {
@@ -239,7 +245,7 @@ MODES = {
 
 _format_sizes = {"solo": 1, "duel": 2, "trio": 3}
 _custom_format_limits = (2, 8)
-_difficulty_round_seconds = {"pemula": 45, "menengah": 35, "mahir": 30}
+_difficulty_round_seconds = {"pemula": 30, "menengah": 30, "mahir": 30}
 _hafalan_categories = {
     "juz-amma": "Juz Amma",
     "surah-pendek": "Surah pendek",
@@ -330,7 +336,7 @@ def _new_room(name, player_id, mode_key, game_format, capacity, difficulty, cate
         "mode_key": mode_key,
         "difficulty": difficulty,
         "category": category,
-        "round_seconds": 90 if MODES[mode_key]["kind"] == "voice" else _difficulty_round_seconds[difficulty],
+        "round_seconds": _difficulty_round_seconds[difficulty],
         "status": "playing" if capacity == 1 else "waiting",
         "host_id": player_id,
         "created_at": now,

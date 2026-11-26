@@ -195,13 +195,11 @@
             savePreferences();
         });
     }
-    window.addEventListener('storage', (event) => {
-        if (event.key !== window.UstadOnlineStorage.key(storageKey)) return;
-        preferences = loadPreferences();
-        applyPreferences();
-    });
-
     window.UstadOnlineUI = {
+        reloadPreferences() {
+            preferences = loadPreferences();
+            applyPreferences();
+        },
         getPreference(name) {
             return preferences[name];
         },
@@ -245,4 +243,12 @@
             }
         }
     };
+
+    if (!window.ustadUiStorageSyncBound) {
+        window.ustadUiStorageSyncBound = true;
+        window.addEventListener('storage', (event) => {
+            if (event.key !== window.UstadOnlineStorage.key(storageKey)) return;
+            if (window.UstadOnlineUI) window.UstadOnlineUI.reloadPreferences();
+        });
+    }
 }());

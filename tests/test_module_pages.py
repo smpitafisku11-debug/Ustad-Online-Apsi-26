@@ -1,10 +1,11 @@
 import unittest
 import os
 import tempfile
+import sqlite3
 from unittest.mock import patch
 
 from app import app, _load_admin_password
-from auth import init_auth_db
+from auth import ensure_admin_account, init_auth_db
 from connect import init_connect_db
 
 
@@ -16,6 +17,8 @@ class ModulePageTests(unittest.TestCase):
         self.temp_directory = tempfile.TemporaryDirectory()
         app.config["AUTH_DATABASE"] = os.path.join(self.temp_directory.name, "test_users.sqlite3")
         init_auth_db(app.config["AUTH_DATABASE"])
+        app.config["USTAD_ADMIN_PASSWORD"] = "TestAdminPassword!123"
+        ensure_admin_account(app.config["AUTH_DATABASE"], app.config["USTAD_ADMIN_PASSWORD"])
         init_connect_db(app.config["AUTH_DATABASE"])
         self.addCleanup(self.temp_directory.cleanup)
         self.addCleanup(self._restore_auth_config)
@@ -123,6 +126,32 @@ class ModulePageTests(unittest.TestCase):
         normalized_script = script.data.replace(b"\r\n", b"\n")
         self.assertIn(b"dialog.showModal();\n            findQibla();", normalized_script)
         script.close()
+
+    def test_home_includes_spa_navigation_and_local_prayer_reminder(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        for expected in (
+            b'id="prayer-reminder"',
+            b'id="enable-prayer-reminder"',
+            b'id="prayer-times-list"',
+            b'id="prayer-reminder-alert"',
+            b"Alarm hanya aktif saat aplikasi terbuka",
+            b"prayer_times.js",
+            b"page_transitions.js",
+        ):
+            self.assertIn(expected, response.data)
+        router = self.client.get("/static/page_transitions.js")
+        self.assertEqual(router.status_code, 200)
+        self.assertIn(b"fetch(destination.href", router.data)
+        self.assertIn(b"document.body.replaceChildren", router.data)
+        self.assertIn(b"document.addEventListener('submit'", router.data)
+        self.assertIn(b"new FormData(form)", router.data)
+        self.assertNotIn(b"window.location.assign(destination.href)", router.data)
+        router.close()
+        prayer_script = self.client.get("/static/prayer_times.js")
+        self.assertEqual(prayer_script.status_code, 200)
+        self.assertIn(b"api.aladhan.com/v1/timings", prayer_script.data)
+        prayer_script.close()
 
     def test_quran_reader_has_mellow_background_choices_and_volume_settings(self):
         response = self.client.get("/")
@@ -807,6 +836,51 @@ class ModulePageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["user"]["role"], "student")
 
+    def test_forgot_password_generates_token_and_reset_updates_hash(self):
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        registered = self.client.post(
+            "/api/auth/register",
+            json={
+                "role": "student",
+                "name": "Siswa Reset",
+                "email": "reset@example.test",
+                "password": "password-lama-123",
+            },
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(registered.status_code, 201)
+        csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        sent = {}
+
+        def capture_email(email, reset_url):
+            sent["url"] = reset_url
+            return True
+
+        with patch("auth._send_password_reset_email", side_effect=capture_email):
+            forgot = self.client.post(
+                "/api/auth/forgot-password",
+                json={"email": "reset@example.test"},
+                headers={"X-CSRF-Token": csrf_token},
+            )
+        self.assertEqual(forgot.status_code, 200)
+        token = sent["url"].rsplit("/", 1)[-1]
+        reset = self.client.post(
+            "/api/auth/reset-password",
+            json={"token": token, "password": "password-baru-123"},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(reset.status_code, 200)
+        login = self.client.post(
+            "/api/auth/login",
+            json={
+                "role": "student",
+                "email": "reset@example.test",
+                    "password": "password-baru-123",
+            },
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        self.assertEqual(login.status_code, 200)
+
     def test_teacher_application_requires_admin_approval(self):
         app.config["USTAD_ADMIN_PASSWORD"] = "test-admin-password"
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
@@ -837,17 +911,24 @@ class ModulePageTests(unittest.TestCase):
 
         self.assertEqual(self.client.get("/review/teachers").status_code, 200)
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
+        connection = sqlite3.connect(app.config["AUTH_DATABASE"])
+        try:
+            teacher_id = connection.execute(
+                "SELECT id FROM users WHERE email = 'ustad@example.test'"
+            ).fetchone()[0]
+        finally:
+            connection.close()
         self.client.post("/review/login", data={"password": "test-admin-password", "csrf_token": csrf_token})
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         missing_verification = self.client.post(
-            "/review/teachers/1",
+            f"/review/teachers/{teacher_id}",
             data={"decision": "approved", "csrf_token": csrf_token},
             follow_redirects=True,
         )
         self.assertEqual(missing_verification.status_code, 400)
         csrf_token = self.client.get("/api/auth/session").json["csrf_token"]
         self.client.post(
-            "/review/teachers/1",
+            f"/review/teachers/{teacher_id}",
             data={
                 "decision": "approved",
                 "identity_verified": "1",

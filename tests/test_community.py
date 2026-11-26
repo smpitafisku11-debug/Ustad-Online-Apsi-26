@@ -26,6 +26,12 @@ class CommunityGroupTests(unittest.TestCase):
         self.assertIn(b"join_community", response.data)
         self.assertIn(b"community_message", response.data)
         self.assertIn(b"Kode undangan", response.data)
+        self.assertEqual(
+            response.data.count(b"getElementById('join-form').addEventListener('submit'"),
+            1,
+        )
+        self.assertIn(b"isSubmittingGroup", response.data)
+        self.assertIn(b"createButton.disabled = true", response.data)
 
     def test_create_join_send_and_keep_groups_private(self):
         created = self.client.post(

@@ -154,7 +154,7 @@
     dialog.addEventListener('click', (event) => {
         if (event.target === dialog) dialog.close();
     });
-    dialog.addEventListener('close', () => {
+    function stopOrientation() {
         if (orientationListening) {
             window.removeEventListener('deviceorientation', handleOrientation);
             window.removeEventListener('deviceorientationabsolute', handleOrientation);
@@ -163,5 +163,8 @@
         window.clearTimeout(sensorTimeout);
         deviceHeading = null;
         updateCompass();
-    });
+    }
+
+    dialog.addEventListener('close', stopOrientation);
+    window.addEventListener('pagehide', stopOrientation, { once: true });
 }());

@@ -1,14 +1,16 @@
 import hmac
 import io
 import os
+import shutil
 import sqlite3
+import datetime
 
 import eventlet
 
 eventlet.monkey_patch()
 
 from flask import Flask, jsonify, redirect, render_template, request, send_file, session, url_for
-from auth import auth_api, init_auth_db
+from auth import auth_api, ensure_admin_account, init_auth_db
 from extensions import socketio
 from quran_battle import quran_battle_api
 from community import community_api, init_community_db
@@ -42,7 +44,15 @@ app.register_blueprint(auth_api)
 app.register_blueprint(quran_battle_api)
 app.register_blueprint(community_api)
 app.register_blueprint(connect_api)
+if os.path.isfile(app.config['AUTH_DATABASE']):
+    backup_dir = os.path.join(os.path.dirname(app.config['AUTH_DATABASE']), 'backups')
+    os.makedirs(backup_dir, exist_ok=True)
+    backup_name = datetime.datetime.now().strftime('ustad_online-%Y%m%d-%H%M%S.sqlite3')
+    backup_path = os.path.join(backup_dir, backup_name)
+    if not os.path.exists(backup_path):
+        shutil.copy2(app.config['AUTH_DATABASE'], backup_path)
 init_auth_db(app.config['AUTH_DATABASE'])
+ensure_admin_account(app.config['AUTH_DATABASE'], app.config['USTAD_ADMIN_PASSWORD'])
 init_connect_db(app.config['AUTH_DATABASE'])
 init_community_db(app.config['AUTH_DATABASE'])
 

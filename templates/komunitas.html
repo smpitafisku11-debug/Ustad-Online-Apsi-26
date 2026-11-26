@@ -177,10 +177,17 @@
             const profileName = document.getElementById('profile-name');
             const createModal = document.getElementById('create-modal');
             const joinModal = document.getElementById('join-modal');
+            const createForm = document.getElementById('create-form');
+            const createButton = createForm.querySelector('button[type="submit"]');
             const renderedMessageIds = new Set();
+            const pendingMessages = new Map();
             const messageLimit = 100;
             let groups = [];
             let activeGroup = null;
+            let openingGroupId = null;
+            let groupOpenSequence = 0;
+            let isSubmittingGroup = false;
+            let pageActive = true;
             let memberIds = {};
             let searchTimer = null;
 
@@ -323,12 +330,16 @@
             }
 
             async function openGroup(groupId) {
+                const sequence = ++groupOpenSequence;
+                openingGroupId = groupId;
                 try {
                     let memberId = memberIds[groupId];
                     if (!memberId) {
                         throw new Error('Anda belum bergabung. Gunakan kode undangan untuk masuk.');
                     }
                     const payload = await api(`/groups/${encodeURIComponent(groupId)}/messages`, memberOptions(memberId));
+                    if (!pageActive || sequence !== groupOpenSequence) return;
+                    openingGroupId = null;
                     if (activeGroup && activeGroup.id !== groupId && communitySocket) {
                         communitySocket.emit('leave_community', {group_id:activeGroup.id});
                     }
@@ -341,9 +352,13 @@
                     messageInput.disabled = false;
                     sendButton.disabled = false;
                     renderMessages(payload);
+                    (pendingMessages.get(groupId) || []).forEach(appendMessage);
+                    pendingMessages.delete(groupId);
                     renderGroups();
                     if (communitySocket) communitySocket.emit('join_community', {group_id:groupId, member_id:memberId});
                 } catch (error) {
+                    if (sequence === groupOpenSequence) openingGroupId = null;
+                    if (!pageActive || sequence !== groupOpenSequence) return;
                     alert(error.message);
                 }
             }
@@ -381,13 +396,6 @@
             });
             document.getElementById('close-create').addEventListener('click', () => { createModal.hidden = true; });
             createModal.addEventListener('click', (event) => { if (event.target === createModal) createModal.hidden = true; });
-            document.getElementById('open-join').addEventListener('click', () => {
-                joinModal.hidden = false;
-                document.getElementById('join-code').focus();
-            });
-            document.getElementById('close-join').addEventListener('click', () => { joinModal.hidden = true; });
-            joinModal.addEventListener('click', (event) => { if (event.target === joinModal) joinModal.hidden = true; });
-
             document.getElementById('join-form').addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const status = document.getElementById('join-status');
@@ -412,32 +420,12 @@
                 }
             });
 
-            document.getElementById('join-form').addEventListener('submit', async (event) => {
+            createForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                const status = document.getElementById('join-status');
-                status.className = 'status';
-                status.textContent = '';
-                try {
-                    const name = saveProfile();
-                    if (!name) return;
-                    const joined = await api('/join', jsonOptions({
-                        code:document.getElementById('join-code').value,
-                        name
-                    }));
-                    memberIds[joined.group.id] = joined.member_id;
-                    window.UstadOnlineStorage.setItem(memberKey, JSON.stringify(memberIds));
-                    joinModal.hidden = true;
-                    document.getElementById('join-form').reset();
-                    await loadGroups('');
-                    await openGroup(joined.group.id);
-                } catch (error) {
-                    status.className = 'status error';
-                    status.textContent = error.message;
-                }
-            });
-
-            document.getElementById('create-form').addEventListener('submit', async (event) => {
-                event.preventDefault();
+                if (isSubmittingGroup) return;
+                isSubmittingGroup = true;
+                createButton.disabled = true;
+                createButton.textContent = 'Membuat grup...';
                 const status = document.getElementById('create-status');
                 status.className = 'status';
                 status.textContent = '';
@@ -458,6 +446,10 @@
                 } catch (error) {
                     status.className = 'status error';
                     status.textContent = error.message;
+                } finally {
+                    isSubmittingGroup = false;
+                    createButton.disabled = false;
+                    createButton.textContent = 'Buat Grup';
                 }
             });
 
@@ -492,7 +484,13 @@
                     }
                 });
                 communitySocket.on('community_message', (event) => {
-                    if (!activeGroup || !event || event.group_id !== activeGroup.id) return;
+                    if (!event || !event.group_id || !event.message) return;
+                    if (openingGroupId === event.group_id) {
+                        const queued = pendingMessages.get(event.group_id) || [];
+                        if (!queued.some((message) => message.id === event.message.id)) queued.push(event.message);
+                        pendingMessages.set(event.group_id, queued);
+                    }
+                    if (!activeGroup || event.group_id !== activeGroup.id) return;
                     appendMessage(event.message);
                     updateGroupPreview(activeGroup.id, event.message);
                     if (window.UstadNotifications && event.message.sender !== profileName.value.trim()) {
@@ -507,6 +505,14 @@
             }
 
             loadGroups('');
+            window.addEventListener('pagehide', () => {
+                pageActive = false;
+                window.clearTimeout(searchTimer);
+                if (activeGroup && communitySocket) {
+                    communitySocket.emit('leave_community', {group_id:activeGroup.id});
+                }
+                if (communitySocket) communitySocket.disconnect();
+            }, { once: true });
         })();
     </script>
 </body>

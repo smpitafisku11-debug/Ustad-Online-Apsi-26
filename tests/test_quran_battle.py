@@ -43,7 +43,7 @@ class QuranBattleTests(unittest.TestCase):
         with _rooms_lock:
             _rooms[room["code"]]["round_started_at"] -= 10
         answers = []
-        for question_index, question in enumerate(MODES["tajwid-battle"]["questions"]):
+        for question_index, question in enumerate(MODES["tajwid-battle"]["questions"][:3]):
             response = self.client.post(
                 f"/api/battle/rooms/{room['code']}/answer",
                 json={
@@ -147,6 +147,27 @@ class QuranBattleTests(unittest.TestCase):
             "tajwid-battle", "sambung-ayat", "hafalan-battle", "nama-surat",
             "makharij-battle", "team-battle",
         })
+
+    def test_tajwid_question_bank_and_round_timer_are_expanded_and_synchronized(self):
+        questions = MODES["tajwid-battle"]["questions"]
+        self.assertEqual(len(questions), 9)
+        for question in questions:
+            self.assertGreaterEqual(question["answer"], 0)
+            self.assertLess(question["answer"], len(question["options"]))
+
+        for difficulty in ("pemula", "menengah", "mahir"):
+            for mode in ("tajwid-battle", "makharij-battle"):
+                response = self.client.post(
+                    "/api/battle/matchmaking",
+                    json={
+                        "name": "Aminah",
+                        "format": "solo",
+                        "mode": mode,
+                        "difficulty": difficulty,
+                    },
+                )
+                self.assertEqual(response.status_code, 201, response.get_json())
+                self.assertEqual(response.get_json()["round_duration"], 30)
 
     def test_duel_room_starts_when_two_players_join(self):
         created = self.client.post(

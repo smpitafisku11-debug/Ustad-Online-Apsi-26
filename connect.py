@@ -10,7 +10,7 @@ connect_api = Blueprint("connect_api", __name__)
 
 @connect_api.get("/ustad-dashboard")
 def ustad_dashboard():
-    if session.get("admin_authenticated"):
+    if session.get("admin_authenticated") and session.get("admin_review_mode", "teacher") in ("teacher", "admin"):
         return render_template(
             "ustad_dashboard.html",
             teacher_verified=False,
@@ -119,6 +119,15 @@ def _json_body():
 
 
 def _current_user(connection):
+    if session.get("admin_authenticated"):
+        virtual_role = session.get("admin_review_mode")
+        if virtual_role in ("teacher", "student"):
+            return {
+                "id": -1,
+                "name": "Admin FAMDI",
+                "role": virtual_role,
+                "status": "approved",
+            }
     user_id = session.get("user_id")
     if not user_id:
         return None

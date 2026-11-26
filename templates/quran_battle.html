@@ -266,8 +266,8 @@
                     <input class="text-input" id="player-name" maxlength="24" value="Pemain Ustad" autocomplete="nickname">
                     <label class="field-label" for="difficulty" style="margin-top:14px">Tingkat kemampuan · waktu untuk kuis</label>
                     <select class="select-input" id="difficulty">
-                        <option value="pemula">Pemula · 45 detik per soal</option>
-                        <option value="menengah" selected>Berkembang · 35 detik per soal</option>
+                        <option value="pemula">Pemula · 30 detik per soal</option>
+                        <option value="menengah" selected>Berkembang · 30 detik per soal</option>
                         <option value="mahir">Mahir · 30 detik per soal</option>
                     </select>
                     <div id="hafalan-category-field" hidden>
@@ -278,7 +278,7 @@
                             <option value="target-pribadi">Target pribadi</option>
                         </select>
                     </div>
-                    <div class="notice"><strong>Skor adil:</strong> jawaban benar bernilai 100 poin. Setiap 3 jawaban benar beruntun memberi bonus combo +10, hingga +30 per soal. Kecepatan tidak memengaruhi nilai. Setoran suara mendapat 90 detik dan menunggu peninjauan pengajar.</div>
+                    <div class="notice"><strong>Skor adil:</strong> jawaban benar bernilai 100 poin. Setiap 3 jawaban benar beruntun memberi bonus combo +10, hingga +30 per soal. Kecepatan tidak memengaruhi nilai. Setiap soal memiliki timer 30 detik; setoran suara menunggu peninjauan pengajar.</div>
                 </div>
                 <div class="setup-box">
                     <span class="field-label">Pilih mode pertandingan</span>
@@ -386,6 +386,7 @@
     </main>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
+        (() => {
         const apiBase = '/api/battle';
         const battleSocket = typeof window.io === 'function' ? window.io() : null;
         const modeNames = {
@@ -400,8 +401,10 @@
         let selectedMode = 'tajwid-battle';
         let currentRoom = null;
         let pollTimer = null;
+        let syncInFlight = false;
         let shownQuestionId = null;
         let submittedQuestionId = null;
+        let answerSubmittingQuestionId = null;
         let mediaRecorder = null;
         let recordingChunks = [];
         let recordingBlob = null;
@@ -410,6 +413,7 @@
         let opponentRosterSignature = '';
         let lastBuzzerEvent = null;
         let celebrationTimer = null;
+        let pageActive = true;
 
         const lobby = document.getElementById('lobby');
         const waitingRoom = document.getElementById('waiting-room');
@@ -565,6 +569,15 @@
         }
 
         async function enterRoom(room) {
+            if (!pageActive) {
+                fetch(`${apiBase}/rooms/${encodeURIComponent(room.code)}/leave`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player_id: room.player_id })
+                }).catch((error) => console.error('Room battle tidak dapat ditinggalkan:', error));
+                return;
+            }
             clearPolling();
             currentRoom = room;
             if (battleSocket && battleSocket.connected) {
@@ -572,6 +585,7 @@
             }
             shownQuestionId = null;
             submittedQuestionId = null;
+            answerSubmittingQuestionId = null;
             opponentRosterSignature = '';
             lastBuzzerEvent = null;
             lobbyStatus.textContent = '';
@@ -613,9 +627,12 @@
         }
 
         async function syncRoom() {
-            if (!currentRoom) return;
+            if (!pageActive || !currentRoom || syncInFlight) return;
+            syncInFlight = true;
+            const roomCode = currentRoom.code;
             try {
                 const room = await api(`/rooms/${encodeURIComponent(currentRoom.code)}?player_id=${encodeURIComponent(currentRoom.player_id)}`);
+                if (!pageActive || !currentRoom || currentRoom.code !== roomCode) return;
                 if (room.status === 'finished') {
                     currentRoom = room;
                     clearPolling();
@@ -642,9 +659,12 @@
                 arena.hidden = false;
                 updateArena(room);
             } catch (error) {
+                if (!pageActive) return;
                 setStatus(lobbyStatus, error.message, 'error');
                 setStatus(answerStatus, error.message, 'error');
                 clearPolling();
+            } finally {
+                syncInFlight = false;
             }
         }
 
@@ -858,7 +878,9 @@
         function updateInputState(room) {
             const currentQuestionId = room.question ? room.question.id : null;
             const ownPlayer = room.players.find((player) => player.is_you);
-            const alreadySent = submittedQuestionId === currentQuestionId || (ownPlayer && ownPlayer.status !== 'Bersiap' && ownPlayer.status !== 'Merebut buzzer');
+            const alreadySent = submittedQuestionId === currentQuestionId ||
+                answerSubmittingQuestionId === currentQuestionId ||
+                (ownPlayer && ownPlayer.status !== 'Bersiap' && ownPlayer.status !== 'Merebut buzzer');
             document.querySelectorAll('.option-button').forEach((button) => {
                 button.disabled = Boolean(alreadySent) || (room.mode.kind === 'buzzer' && room.buzzer_player_id !== room.player_id);
             });
@@ -878,14 +900,19 @@
 
         async function sendAnswer(answer) {
             if (!currentRoom || !currentRoom.question) return;
+            const questionId = currentRoom.question.id;
+            if (submittedQuestionId === questionId || answerSubmittingQuestionId === questionId) return;
+            answerSubmittingQuestionId = questionId;
+            updateInputState(currentRoom);
             try {
                 const response = await submitScore({
                     code: currentRoom.code,
                     player_id: currentRoom.player_id,
-                    question_id: currentRoom.question.id,
+                    question_id: questionId,
                     answer
                 });
-                submittedQuestionId = currentRoom.question.id;
+                if (!pageActive) return;
+                submittedQuestionId = questionId;
                 if (response.correct === true) {
                     const bonus = response.combo_bonus || 0;
                     const feedback = bonus
@@ -901,8 +928,16 @@
                 currentRoom = response.room;
                 await syncRoom();
             } catch (error) {
+                if (!pageActive) return;
                 setStatus(answerStatus, error.message, 'error');
                 await syncRoom();
+            } finally {
+                if (pageActive && answerSubmittingQuestionId === questionId) {
+                    answerSubmittingQuestionId = null;
+                    if (currentRoom && currentRoom.question && currentRoom.question.id === questionId) {
+                        updateInputState(currentRoom);
+                    }
+                }
             }
         }
 
@@ -920,10 +955,12 @@
             if (!currentRoom) return;
             try {
                 const room = await api(`/rooms/${encodeURIComponent(currentRoom.code)}/buzzer`, jsonOptions({ player_id: currentRoom.player_id }));
+                if (!pageActive) return;
                 currentRoom = room;
                 answerStatus.textContent = 'Buzzer berhasil direbut! Pilih jawaban.';
                 updateArena(room);
             } catch (error) {
+                if (!pageActive) return;
                 setStatus(answerStatus, error.message, 'error');
                 await syncRoom();
             }
@@ -990,11 +1027,13 @@
             formData.append('recording', recordingBlob, 'setoran.webm');
             try {
                 const response = await api(`/rooms/${encodeURIComponent(currentRoom.code)}/recording`, { method: 'POST', body: formData });
+                if (!pageActive) return;
                 submittedQuestionId = currentRoom.question.id;
                 setStatus(answerStatus, 'Setoran terkirim · +5 EXP partisipasi. Kualitas bacaan tidak dinilai otomatis dan dapat ditinjau pengajar.', 'success');
                 currentRoom = response.room;
                 await syncRoom();
             } catch (error) {
+                if (!pageActive) return;
                 setStatus(answerStatus, error.message, 'error');
             }
         }
@@ -1006,6 +1045,7 @@
             qariAudioStatus.textContent = 'Memuat sampel murottal...';
             try {
                 const response = await fetch('https://equran.id/api/v2/surat/1', { signal: qariAudioRequest.signal });
+                if (!pageActive) return;
                 if (!response.ok) throw new Error(`Layanan audio merespons dengan status ${response.status}.`);
                 const payload = await response.json();
                 const audioUrl = payload && payload.code === 200 && payload.data && payload.data.audioFull
@@ -1017,7 +1057,7 @@
                 await qariAudioPlayer.play();
                 qariAudioStatus.textContent = 'Memutar sampel murottal Misyari Rasyid Al-Afasi.';
             } catch (error) {
-                if (error.name === 'AbortError') return;
+                if (error.name === 'AbortError' || !pageActive) return;
                 console.error('Sampel murottal tidak dapat dimuat:', error);
                 qariAudioStatus.textContent = 'Audio gagal dimuat. Periksa koneksi lalu coba kembali.';
                 qariAudioButton.disabled = false;
@@ -1100,6 +1140,34 @@
                 setStatus(lobbyStatus, 'Kode tidak dapat disalin. Silakan salin secara manual.', 'error');
             }
         });
+
+        window.addEventListener('pagehide', () => {
+            pageActive = false;
+            clearPolling();
+            window.clearTimeout(celebrationTimer);
+            if (currentRoom) {
+                const room = currentRoom;
+                if (battleSocket && battleSocket.connected) {
+                    battleSocket.emit('leave_battle_room', {
+                        code: room.code,
+                        player_id: room.player_id
+                    });
+                }
+                fetch(`${apiBase}/rooms/${encodeURIComponent(room.code)}/leave`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player_id: room.player_id })
+                }).catch((error) => console.error('Room battle tidak dapat ditinggalkan:', error));
+                currentRoom = null;
+            }
+            if (battleSocket) battleSocket.disconnect();
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (qariAudioRequest) qariAudioRequest.abort();
+            qariAudioPlayer.pause();
+            if (ownAudioUrl) URL.revokeObjectURL(ownAudioUrl);
+        }, { once: true });
+        })();
     </script>
 </body>
 </html>

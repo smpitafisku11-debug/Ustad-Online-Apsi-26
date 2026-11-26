@@ -51,6 +51,12 @@
                         <input id="login-email" name="email" type="email" maxlength="120" autocomplete="email" placeholder="nama@email.com" required>
                     </div>
                 </div>
+                <div data-account-username hidden>
+                    <label for="login-username">Username Admin</label>
+                    <div class="profile-input-wrap">
+                        <input id="login-username" name="username" type="text" maxlength="30" autocomplete="username" value="FAMDI_Admin">
+                    </div>
+                </div>
                 <div data-register-only data-teacher-only>
                     <label for="login-phone">Nomor WhatsApp aktif</label>
                     <div class="profile-input-wrap">
@@ -69,6 +75,7 @@
                 </div>
                 <p class="profile-status" id="login-status" role="status" aria-live="polite"></p>
                 <button class="profile-primary-button" id="auth-submit" type="submit">Masuk sebagai Siswa <span aria-hidden="true">↗</span></button>
+                <button type="button" id="forgot-password-button" class="profile-local-note" style="border:0;background:transparent;margin-top:10px;cursor:pointer">Lupa kata sandi?</button>
             </form>
             <p class="profile-local-note"><span aria-hidden="true">⌑</span> Siswa langsung aktif. Akun ustad perlu verifikasi admin.</p>
             <button class="profile-install-button" id="profile-install-button" type="button" hidden>Pasang aplikasi Ustad Online</button>

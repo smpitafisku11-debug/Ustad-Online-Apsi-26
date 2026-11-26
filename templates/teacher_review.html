@@ -45,7 +45,7 @@
         <section class="card">
             <h2>Admin belum dikonfigurasi</h2>
             <p>Untuk membuka mode Admin, atur <code>USTAD_ADMIN_PASSWORD</code> pada environment server. Simpan sebagai environment variable/secret di dashboard hosting, lalu restart atau deploy ulang aplikasi agar konfigurasi terbaca.</p>
-            <p class="notice">Di server, kata sandi admin tidak dibuat otomatis. Aplikasi hanya mengizinkan login setelah nilai <code>USTAD_ADMIN_PASSWORD</code> tersedia saat server mulai.</p>
+            <p class="notice">Akun <code>FAMDI_Admin</code> dibuat secara otomatis saat nilai <code>USTAD_ADMIN_PASSWORD</code> tersedia. Kata sandi disimpan sebagai hash dan tidak ditulis di source code.</p>
         </section>
     {% elif not authenticated %}
         <section class="card">
@@ -62,12 +62,61 @@
     {% else %}
         <div class="topbar">
             <p>Hubungi pengajar melalui kontak terdaftar, periksa identitas serta bukti kompetensi/pengalaman sebelum menyetujui.</p>
-            <form method="post" action="{{ url_for('auth_api.review_logout') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button class="reject" type="submit">Keluar dari panel</button>
-                <button class="switch-account" type="submit" name="switch_account" value="1">Ganti akun</button>
-            </form>
+            <div>
+                <form method="post" action="{{ url_for('auth_api.set_admin_review_mode', mode='student') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="switch-account" type="submit">Mode Siswa</button>
+                </form>
+                <form method="post" action="{{ url_for('auth_api.set_admin_review_mode', mode='teacher') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="switch-account" type="submit">Mode Ustad</button>
+                </form>
+                <form method="post" action="{{ url_for('auth_api.review_logout') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="reject" type="submit">Keluar dari panel</button>
+                    <button class="switch-account" type="submit" name="switch_account" value="1">Ganti akun</button>
+                </form>
+            </div>
         </div>
+
+        <section class="card">
+            <h2>Statistik website</h2>
+            <div class="meta">
+                <div><strong>Siswa</strong><span>{{ stats.students }}</span></div>
+                <div><strong>Ustad terdaftar</strong><span>{{ stats.approved_teachers }}</span></div>
+                <div><strong>Pengajuan menunggu</strong><span>{{ stats.pending_teachers }}</span></div>
+                <div><strong>Pengguna Ustad</strong><span>{{ stats.teachers }}</span></div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Kelola pengguna</h2>
+            {% if users %}
+                {% for account in users %}
+                <article class="application">
+                    <h2>{{ account.name }}</h2>
+                    <div class="meta">
+                        <div><strong>Email</strong><span>{{ account.email }}</span></div>
+                        <div><strong>Role</strong><span>{{ account.role }}</span></div>
+                        <div><strong>Status</strong><span>{{ account.status }}</span></div>
+                    </div>
+                    <form method="post" action="{{ url_for('auth_api.manage_user', user_id=account.id) }}" class="decision">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        {% if account.status != 'approved' %}
+                        <button type="submit" name="action" value="approve">Aktifkan</button>
+                        {% endif %}
+                        {% if account.status == 'approved' %}
+                        <button class="reject" type="submit" name="action" value="disable">Nonaktifkan</button>
+                        {% else %}
+                        <button class="reject" type="submit" name="action" value="reject">Tolak</button>
+                        {% endif %}
+                    </form>
+                </article>
+                {% endfor %}
+            {% else %}
+                <div class="empty">Belum ada pengguna terdaftar.</div>
+            {% endif %}
+        </section>
 
         {% if pending %}
             {% for application in pending %}

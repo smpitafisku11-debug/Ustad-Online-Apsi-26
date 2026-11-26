@@ -19,9 +19,18 @@
     let authRole = 'student';
     let authMode = 'login';
     let pendingPhoto = '';
-    let deferredInstallPrompt = null;
+    const installState = window.UstadInstallState || { prompt: null };
+    window.UstadInstallState = installState;
     let gamificationStorageAvailable = true;
     let gamification = emptyGamification();
+
+    function navigateAfterSessionChange(path) {
+        if (window.UstadSpa) {
+            window.UstadSpa.navigate(new URL(path, window.location.href));
+        } else {
+            window.location.assign(path);
+        }
+    }
 
     function emptyGamification() {
         return {
@@ -530,6 +539,8 @@
         const isAdminLogin = authRole === 'admin';
         const registering = authMode === 'register' && !isAdminLogin;
         const teacherRegistration = registering && authRole === 'teacher';
+        const usernameFields = document.querySelector('[data-account-username]');
+        if (usernameFields) usernameFields.hidden = !isAdminLogin;
         document.querySelectorAll('[data-register-only]').forEach((group) => {
             group.hidden = !registering;
         });
@@ -539,6 +550,8 @@
         if (emailFields) emailFields.hidden = isAdminLogin;
         const emailInput = document.getElementById('login-email');
         if (emailInput) emailInput.required = !isAdminLogin;
+        const usernameInput = document.getElementById('login-username');
+        if (usernameInput) usernameInput.required = isAdminLogin;
         if (authModeSwitch) authModeSwitch.hidden = isAdminLogin;
         if (nameInput) nameInput.required = registering;
         if (phoneInput) phoneInput.required = teacherRegistration;
@@ -567,7 +580,7 @@
 
     function openProfile() {
         if (user && user.role === 'admin') {
-            window.location.assign('/review/teachers');
+            navigateAfterSessionChange('/review/teachers');
             return;
         }
         if (!user) {
@@ -622,6 +635,7 @@
             role: authRole,
             password: String(formData.get('password') || '')
         };
+        if (authRole === 'admin') data.username = String(formData.get('username') || 'FAMDI_Admin').trim();
         if (authRole !== 'admin') data.email = String(formData.get('email') || '').trim();
         if (authMode === 'register') {
             data.name = String(formData.get('name') || '').trim();
@@ -650,16 +664,27 @@
             pendingPhoto = readPhoto();
             applyProfile();
             if (user.role === 'admin') {
-                window.location.assign('/review/teachers');
+                navigateAfterSessionChange('/review/teachers');
                 return;
             }
             loginDialog?.close();
-            window.location.reload();
+            navigateAfterSessionChange('/');
         } catch (error) {
             if (!error.status || error.status >= 500) console.error('Akun tidak dapat diproses:', error);
             setStatus(document.getElementById('login-status'), error.message, 'error');
         } finally {
             submit.disabled = false;
+        }
+    });
+
+    document.getElementById('forgot-password-button')?.addEventListener('click', async () => {
+        const email = window.prompt('Masukkan email akun siswa atau ustad untuk reset kata sandi:');
+        if (!email) return;
+        try {
+            const result = await postJson('/api/auth/forgot-password', { email: email.trim() });
+            setStatus(document.getElementById('login-status'), result.message, 'success');
+        } catch (error) {
+            setStatus(document.getElementById('login-status'), error.message, 'error');
         }
     });
 
@@ -730,7 +755,7 @@
             setMode('login');
             setStatus(document.getElementById('login-status'), '', '');
             if (openLogin && loginDialog) loginDialog.showModal();
-            window.location.reload();
+            navigateAfterSessionChange('/');
         } catch (error) {
             console.error('Sesi akun tidak dapat diakhiri:', error);
             setStatus(document.getElementById('profile-status'), `Tidak dapat mengakhiri sesi: ${error.message}`, 'error');
@@ -741,25 +766,32 @@
     document.getElementById('profile-switch-account')?.addEventListener('click', () => endSession(true));
 
     document.getElementById('profile-install-button')?.addEventListener('click', async () => {
-        if (!deferredInstallPrompt) return;
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
+        if (!installState.prompt) return;
+        installState.prompt.prompt();
+        await installState.prompt.userChoice;
+        installState.prompt = null;
         document.getElementById('profile-install-button').hidden = true;
     });
-    window.addEventListener('beforeinstallprompt', (event) => {
-        event.preventDefault();
-        deferredInstallPrompt = event;
-        const installButton = document.getElementById('profile-install-button');
-        if (installButton) installButton.hidden = false;
-    });
+    const installButton = document.getElementById('profile-install-button');
+    if (installButton) installButton.hidden = !installState.prompt;
 
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+    if (!window.ustadProfileGlobalHandlersBound) {
+        window.ustadProfileGlobalHandlersBound = true;
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            installState.prompt = event;
+            const button = document.getElementById('profile-install-button');
+            if (button) button.hidden = false;
+        });
+        const registerServiceWorker = () => {
             navigator.serviceWorker.register('/static/service-worker.js').catch((error) => {
                 console.error('Service worker tidak dapat dipasang:', error);
             });
-        });
+        };
+        if ('serviceWorker' in navigator) {
+            if (document.readyState === 'complete') registerServiceWorker();
+            else window.addEventListener('load', registerServiceWorker, { once: true });
+        }
     }
 
     document.querySelectorAll('[data-hafalan-task]').forEach((input) => {

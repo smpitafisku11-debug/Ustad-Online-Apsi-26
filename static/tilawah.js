@@ -622,8 +622,27 @@
 
     function speak(text) {
         const status = document.getElementById('audio-status');
-        status.textContent = `Contoh tertulis: ${text}. Gunakan pemutar Mushaf terverifikasi untuk mendengar bacaan qari kredibel.`;
-        status.className = 'lesson-audio-status';
+        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') {
+            status.textContent = 'Suara pelafalan tidak didukung browser ini. Gunakan pemutar Mushaf terverifikasi.';
+            status.className = 'lesson-audio-status error';
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ar-SA';
+        const arabicVoice = window.speechSynthesis.getVoices()
+            .find((voice) => voice.lang.toLowerCase().startsWith('ar'));
+        if (arabicVoice) utterance.voice = arabicVoice;
+        utterance.onstart = () => {
+            status.textContent = 'Memutar pelafalan sintetis bahasa Arab. Untuk contoh qari, gunakan audio Mushaf terverifikasi.';
+            status.className = 'lesson-audio-status';
+        };
+        utterance.onerror = (event) => {
+            if (event.error === 'canceled' || event.error === 'interrupted') return;
+            status.textContent = 'Pelafalan tidak dapat diputar. Coba pemutar Mushaf terverifikasi.';
+            status.className = 'lesson-audio-status error';
+        };
+        window.speechSynthesis.speak(utterance);
     }
 
     async function playVerifiedExample() {
@@ -708,9 +727,11 @@
             document.getElementById('pilih-materi').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     });
-    window.addEventListener('beforeunload', () => {
+    window.addEventListener('pagehide', () => {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    });
+        const player = document.getElementById('verified-audio-player');
+        if (player) player.pause();
+    }, { once: true });
 
     selectLevel(state.level);
     updateProgress();

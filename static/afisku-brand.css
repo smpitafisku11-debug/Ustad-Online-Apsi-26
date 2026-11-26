@@ -1,0 +1,142 @@
+:root {
+  --afisku-blue: #153d63;
+  --afisku-blue-2: #0b65a8;
+  --afisku-blue-3: #dceaf7;
+  --afisku-yellow: #f3c623;
+  --afisku-yellow-2: #fff4bd;
+  --afisku-ink: #17253a;
+  --afisku-muted: #66758a;
+  --afisku-line: #dbe4ef;
+  --afisku-paper: #ffffff;
+  --afisku-bg: #f4f7fb;
+}
+
+body {
+  background-color: var(--afisku-bg);
+}
+
+.topbar,
+header.sticky {
+  border-color: var(--afisku-line) !important;
+  background: rgba(255, 255, 255, .96) !important;
+}
+
+.brand,
+.brand-name,
+.hero h1,
+.dashboard-welcome h1,
+.panel-heading h2,
+.section-heading h2 {
+  color: var(--afisku-blue) !important;
+}
+
+.button-primary,
+.button-primary:hover,
+.button-primary:focus-visible,
+.mushaf-control,
+.qibla-locate,
+.settings-button {
+  border-color: var(--afisku-blue) !important;
+  background: var(--afisku-blue) !important;
+  color: #fff !important;
+}
+
+.button,
+.text-button,
+.report-button {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.button:not(.button-primary):hover,
+.text-button:hover,
+.report-button:hover {
+  border-color: #9ebdd5;
+  background: #eff6fc;
+  color: var(--afisku-blue);
+}
+
+.dashboard-nav button.is-active,
+.menu-card:hover,
+.glass {
+  border-color: #b9cfe2 !important;
+}
+
+.dashboard-nav button.is-active {
+  background: var(--afisku-blue-3) !important;
+  color: var(--afisku-blue) !important;
+}
+
+.dashboard-nav button span {
+  background: var(--afisku-yellow) !important;
+  color: var(--afisku-blue) !important;
+}
+
+.eyebrow,
+.field-tag,
+.status-pill,
+.verified-badge {
+  color: var(--afisku-blue) !important;
+  background: var(--afisku-blue-3) !important;
+}
+
+.status-requested,
+.status-pending {
+  background: var(--afisku-yellow-2) !important;
+  color: #705b00 !important;
+}
+
+.status-approved,
+.status-completed,
+.status-confirmed,
+.verified-badge {
+  background: #e7f1fb !important;
+  color: var(--afisku-blue) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--afisku-blue-2) !important;
+  box-shadow: 0 0 0 3px rgba(21,61,99,.12) !important;
+}
+
+.hero,
+.dashboard-welcome,
+.teacher-dashboard-page,
+.connect-dialog,
+.dialog,
+.glass,
+.stat-card,
+.menu-card,
+.dashboard-panel,
+.dashboard-request,
+.schedule-card,
+.evaluation-card,
+.teacher-card,
+.booking-card {
+  border-color: var(--afisku-line) !important;
+}
+
+.hero,
+.dashboard-welcome {
+  background: linear-gradient(118deg, #fff 0%, #edf5fc 65%, #fff8cf 100%) !important;
+}
+
+.dashboard-stats article strong,
+.hero-note strong,
+.teacher-price strong {
+  color: var(--afisku-blue) !important;
+}
+
+.connect-toast {
+  border-color: #bed0e2;
+  color: var(--afisku-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

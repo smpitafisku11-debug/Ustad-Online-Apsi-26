@@ -49,12 +49,22 @@
             <article><span>Sesi mendatang</span><strong data-stat-upcoming>0</strong><small>Sudah dikonfirmasi</small></article>
             <article><span>Sesi selesai</span><strong data-stat-completed>0</strong><small>Evaluasi telah diberikan</small></article>
             <article><span>Jadwal tersedia</span><strong data-stat-slots>0</strong><small>Dapat dipilih siswa</small></article>
+            <article><span>Total murid</span><strong data-famdi-students>0</strong><small>Murid dalam bimbingan</small></article>
+            <article><span>Tugas menunggu</span><strong data-famdi-assignment-review>0</strong><small>Harus dinilai</small></article>
+            <article><span>Setoran baru</span><strong data-famdi-submissions>0</strong><small>Menunggu pemeriksaan</small></article>
+            <article><span>Kehadiran hari ini</span><strong data-famdi-attendance>0</strong><small>Data tercatat</small></article>
         </section>
 
         <div class="dashboard-grid">
             <aside class="dashboard-nav" aria-label="Menu panel Ustad">
                 <button type="button" class="is-active" data-dashboard-tab="requests">Permintaan siswa <span data-nav-requested>0</span></button>
                 <button type="button" data-dashboard-tab="tahfidz">Setoran hafalan</button>
+                <button type="button" data-dashboard-tab="students">Murid bimbingan</button>
+                <button type="button" data-dashboard-tab="attendance">Kehadiran</button>
+                <button type="button" data-dashboard-tab="assignments">Tugas digital</button>
+                <button type="button" data-dashboard-tab="classes">Kelas & jadwal</button>
+                <button type="button" data-dashboard-tab="reports">Laporan FAMDI</button>
+                <button type="button" data-dashboard-tab="communication">Komunikasi</button>
                 <button type="button" data-dashboard-tab="schedule">Jadwal mengajar</button>
                 <button type="button" data-dashboard-tab="profile">Profil pengajar</button>
                 <button type="button" data-dashboard-tab="evaluations">Evaluasi selesai</button>
@@ -69,6 +79,73 @@
                 <section class="dashboard-panel" data-dashboard-panel="tahfidz" aria-labelledby="tahfidz-title">
                     <div class="panel-heading"><div><span class="eyebrow">VALIDASI TARGET SISWA</span><h2 id="tahfidz-title">Setoran hafalan</h2></div></div>
                     <div class="request-list" data-tahfidz-review-list><div class="dashboard-empty">{% if admin_preview %}Data setoran hanya tersedia untuk akun Ustad terkait.{% else %}Memuat setoran hafalan…{% endif %}</div></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="students" aria-labelledby="students-title">
+                    <div class="panel-heading"><div><span class="eyebrow">PEMBINAAN DIGITAL</span><h2 id="students-title">Murid bimbingan</h2></div></div>
+                    <div class="famdi-filter"><input type="search" data-student-search placeholder="Cari nama atau email murid"><select data-student-status><option value="">Semua status</option><option value="active">Aktif</option><option value="inactive">Tidak aktif</option></select></div>
+                    <div class="request-list" data-student-list><div class="dashboard-empty">Memuat daftar murid…</div></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="attendance" aria-labelledby="attendance-title">
+                    <div class="panel-heading"><div><span class="eyebrow">REKAP KEHADIRAN</span><h2 id="attendance-title">Absensi murid</h2></div></div>
+                    <form class="famdi-inline-form" data-attendance-form>
+                        <label>Murid<select name="student_id" data-attendance-student required><option value="">Pilih murid</option></select></label>
+                        <label>Tanggal<input name="attendance_date" type="date" required></label>
+                        <label>Status<select name="status"><option value="present">Hadir</option><option value="permit">Izin</option><option value="sick">Sakit</option><option value="absent">Tidak hadir</option></select></label>
+                        <label>Catatan<input name="note" maxlength="500"></label>
+                        <button class="button button-primary" type="submit">Simpan kehadiran</button>
+                    </form>
+                    <div class="request-list" data-attendance-list></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="assignments" aria-labelledby="assignments-title">
+                    <div class="panel-heading"><div><span class="eyebrow">TUGAS PEMBELAJARAN</span><h2 id="assignments-title">Tugas digital</h2></div></div>
+                    <form class="famdi-inline-form" data-assignment-form>
+                        <label>Judul tugas<input name="title" minlength="3" maxlength="180" required></label>
+                        <label>Batas waktu<input name="due_at" type="datetime-local"></label>
+                        <label>Materi<textarea name="material" maxlength="2000"></textarea></label>
+                        <label>Target hafalan<textarea name="target" maxlength="500"></textarea></label>
+                        <button class="button button-primary" type="submit">Buat & kirim tugas</button>
+                    </form>
+                    <div class="request-list" data-assignment-list></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="classes" aria-labelledby="classes-title">
+                    <div class="panel-heading"><div><span class="eyebrow">MANajemen KELAS</span><h2 id="classes-title">Kelas & pengumuman</h2></div></div>
+                    <form class="famdi-inline-form" data-class-form>
+                        <label>Nama kelas<input name="name" minlength="3" maxlength="120" required></label>
+                        <label>Jadwal<input name="schedule" maxlength="300"></label>
+                        <label>Materi<textarea name="material" maxlength="2000"></textarea></label>
+                        <label>Pengumuman<textarea name="announcement" maxlength="2000"></textarea></label>
+                        <button class="button button-primary" type="submit">Buat kelas</button>
+                    </form>
+                    <div class="request-list" data-class-list></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="reports" aria-labelledby="reports-title">
+                    <div class="panel-heading"><div><span class="eyebrow">PELaporan OTOMATIS</span><h2 id="reports-title">Laporan perkembangan FAMDI</h2></div></div>
+                    <form class="famdi-inline-form" data-report-form>
+                        <label>Murid<select name="student_id" data-report-student required><option value="">Pilih murid</option></select></label>
+                        <label>Jenis laporan<select name="report_type"><option value="daily">Harian</option><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option><option value="individual">Individual</option></select></label>
+                        <div class="famdi-report-period" hidden><label>Dari<input name="period_start" type="date"></label><label>Sampai<input name="period_end" type="date"></label></div>
+                        <label>Kelebihan<textarea name="strengths" maxlength="1000"></textarea></label>
+                        <label>Kekurangan<textarea name="weaknesses" maxlength="1000"></textarea></label>
+                        <label>Rekomendasi<textarea name="recommendation" maxlength="1000"></textarea></label>
+                        <label>Catatan ustad<textarea name="note" maxlength="1000"></textarea></label>
+                        <button class="button button-primary" type="submit">Buat laporan dari data nyata</button>
+                    </form>
+                    <div class="request-list" data-report-list></div>
+                </section>
+
+                <section class="dashboard-panel" data-dashboard-panel="communication" aria-labelledby="communication-title">
+                    <div class="panel-heading"><div><span class="eyebrow">PESAN & pengumuman</span><h2 id="communication-title">Komunikasi</h2></div></div>
+                    <form class="famdi-inline-form" data-message-form>
+                        <label>Murid penerima<select name="recipient_id" data-message-student required><option value="">Pilih murid</option></select></label>
+                        <label>Pesan<textarea name="body" minlength="2" maxlength="2000" required></textarea></label>
+                        <button class="button button-primary" type="submit">Kirim pesan</button>
+                    </form>
+                    <div class="request-list" data-message-list></div>
                 </section>
 
                 <section class="dashboard-panel" data-dashboard-panel="schedule" aria-labelledby="schedule-title">

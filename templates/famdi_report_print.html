@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Laporan {{ report.student_name }} | Ustad Online</title>
+    <style>
+        :root { --blue:#153d63; --yellow:#f3c623; --ink:#17253a; --line:#dbe4ef; }
+        body { margin:0; background:#fff; color:var(--ink); font:14px/1.55 Arial,sans-serif; }
+        .sheet { max-width:800px; margin:28px auto; border:1px solid var(--line); padding:42px; }
+        header { border-bottom:5px solid var(--yellow); margin-bottom:24px; padding-bottom:16px; }
+        h1 { margin:0 0 6px; color:var(--blue); }
+        .meta,.metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 20px; }
+        .metrics { grid-template-columns:repeat(4,minmax(0,1fr)); margin:18px 0; }
+        .metric { border:1px solid var(--line); border-radius:8px; padding:12px; }
+        .metric strong { display:block; color:var(--blue); font-size:22px; }
+        section { margin:18px 0; }
+        h2 { margin:0 0 8px; color:var(--blue); font-size:16px; }
+        .block { min-height:50px; border:1px solid var(--line); border-radius:8px; padding:12px; white-space:pre-wrap; }
+        .actions { text-align:right; }
+        button { border:0; border-radius:8px; background:var(--blue); padding:10px 16px; color:#fff; font-weight:bold; cursor:pointer; }
+        @media print { body{font-size:11px}.sheet{margin:0;border:0;max-width:none;padding:18px}.actions{display:none} }
+        @media(max-width:600px){.sheet{margin:0;padding:18px}.meta,.metrics{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    </style>
+</head>
+<body>
+    <main class="sheet">
+        <div class="actions"><button type="button" onclick="window.print()">Cetak / Unduh PDF</button></div>
+        <header>
+            <h1>Laporan Perkembangan Murid</h1>
+            <div>Ustad Online | FAMDI Afisku</div>
+        </header>
+        <div class="meta">
+            <div><strong>Murid</strong><br>{{ report.student_name }}</div>
+            <div><strong>Ustad pembimbing</strong><br>{{ report.teacher_name }}</div>
+            <div><strong>Jenis laporan</strong><br>{{ report.report_type|capitalize }}</div>
+            <div><strong>Periode</strong><br>{{ report.period_start }} s/d {{ report.period_end }}</div>
+        </div>
+        <div class="metrics">
+            <div class="metric"><strong>{{ report.data.submissions }}</strong>Setoran</div>
+            <div class="metric"><strong>{{ report.data.approved_submissions }}</strong>Disetujui</div>
+            <div class="metric"><strong>{{ report.data.average_score }}</strong>Nilai rata-rata</div>
+            <div class="metric"><strong>{{ report.data.completed_assignments }}</strong>Tugas selesai</div>
+        </div>
+        <section><h2>Target Pembelajaran</h2><div class="block">{{ report.data.learning_target or 'Belum ditetapkan' }}</div></section>
+        <section><h2>Kehadiran</h2><div class="block">Hadir: {{ report.data.attendance.present|default(0) }} | Izin: {{ report.data.attendance.permit|default(0) }} | Sakit: {{ report.data.attendance.sick|default(0) }} | Tidak hadir: {{ report.data.attendance.absent|default(0) }}</div></section>
+        <section><h2>Kelebihan</h2><div class="block">{{ report.strengths or 'Belum dicatat' }}</div></section>
+        <section><h2>Hal yang perlu diperbaiki</h2><div class="block">{{ report.weaknesses or 'Belum dicatat' }}</div></section>
+        <section><h2>Rekomendasi pembelajaran</h2><div class="block">{{ report.recommendation or 'Belum dicatat' }}</div></section>
+        <section><h2>Catatan ustad</h2><div class="block">{{ report.note or 'Belum ada catatan' }}</div></section>
+    </main>
+</body>
+</html>

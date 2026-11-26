@@ -1,4 +1,4 @@
-const cacheName = 'ustad-online-v15';
+const cacheName = 'ustad-online-v16';
 const appShell = [
     '/',
     '/connect',
@@ -19,6 +19,7 @@ const appShell = [
     '/static/page_transitions.js',
     '/static/ustad_dashboard.css',
     '/static/ustad_dashboard.js',
+    '/static/afisku-brand.css',
     '/static/connect.css',
     '/static/connect.js',
     '/fitur',

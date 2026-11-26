@@ -13,6 +13,7 @@ from extensions import socketio
 from quran_battle import quran_battle_api
 from community import community_api, init_community_db
 from connect import connect_api, init_connect_db
+from famdi import famdi_api, init_famdi_db
 
 
 def _load_admin_password(instance_path):
@@ -46,9 +47,11 @@ app.register_blueprint(auth_api)
 app.register_blueprint(quran_battle_api)
 app.register_blueprint(community_api)
 app.register_blueprint(connect_api)
+app.register_blueprint(famdi_api)
 init_auth_db(app.config['AUTH_DATABASE'])
 init_connect_db(app.config['AUTH_DATABASE'])
 init_community_db(app.config['AUTH_DATABASE'])
+init_famdi_db(app.config['AUTH_DATABASE'])
 
 
 def init_tahfidz_db():

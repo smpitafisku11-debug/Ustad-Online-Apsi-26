@@ -162,7 +162,6 @@
             }
 
             updateTargetDate();
-            document.addEventListener('DOMContentLoaded', updateTargetDate, { once: true });
 
             function updateProgress() {
                 const completed = targets.filter((target) => target.checked).length;
@@ -173,7 +172,6 @@
                 progress.setAttribute('aria-valuetext', label);
                 progressCount.textContent = label;
             }
-
             window.addEventListener('ustadonline:languagechange', () => {
                 updateTargetDate();
                 updateProgress();

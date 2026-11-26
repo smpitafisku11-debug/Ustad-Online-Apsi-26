@@ -1,15 +1,25 @@
 import hmac
+import hashlib
+import html
 import os
 import re
 import secrets
 import sqlite3
+import smtplib
+import ssl
+import time
+from email.message import EmailMessage
+from email.utils import formataddr
 from functools import wraps
+from urllib.parse import urljoin, urlsplit
 
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
 auth_api = Blueprint("auth_api", __name__)
+PASSWORD_RESET_TTL_SECONDS = 15 * 60
+PASSWORD_RESET_MAX_REQUESTS = 3
 
 
 def _database():
@@ -67,6 +77,19 @@ def init_auth_db(path):
             FROM users WHERE role = 'teacher';
             UPDATE users SET role = 'student', status = 'approved'
             WHERE role = 'teacher' AND status = 'rejected';
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                token_hash TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                created_at INTEGER NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS password_reset_tokens_user
+                ON password_reset_tokens(user_id);
+            CREATE TABLE IF NOT EXISTS password_reset_requests (
+                email_key TEXT NOT NULL,
+                requested_at INTEGER NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS password_reset_requests_window
+                ON password_reset_requests(email_key, requested_at);
             """
         )
         connection.commit()
@@ -100,10 +123,128 @@ def init_admin_account(path, username, password):
         connection.close()
 
 
+def _password_reset_response(template, **context):
+    response = current_app.make_response(render_template(template, **context))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+def _password_reset_email_key(email):
+    secret = current_app.config["SECRET_KEY"]
+    key = secret if isinstance(secret, bytes) else str(secret).encode("utf-8")
+    return hmac.new(key, email.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def _password_reset_public_url(token):
+    base_url = current_app.config.get("PUBLIC_BASE_URL", "").strip()
+    parsed = urlsplit(base_url)
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.hostname in ("localhost", "127.0.0.1", "::1")
+        or parsed.username
+        or parsed.password
+    ):
+        return None
+    reset_path = url_for("auth_api.reset_password")
+    return f"{urljoin(base_url.rstrip('/') + '/', reset_path.lstrip('/'))}#{token}"
+
+
+def _send_password_reset_email(user, reset_url):
+    smtp_username = current_app.config.get("SMTP_USERNAME", "").strip()
+    smtp_password = current_app.config.get("SMTP_APP_PASSWORD", "")
+    sender = current_app.config.get("SMTP_FROM_EMAIL", "").strip() or smtp_username
+    if not smtp_username or not smtp_password or not sender:
+        current_app.logger.error("Password reset email is not configured.")
+        return False
+
+    name = html.escape(user["name"])
+    message = EmailMessage()
+    message["Subject"] = "Reset password akun Ustad Online"
+    message["From"] = formataddr(("Ustad Online", sender))
+    message["To"] = user["email"]
+    message.set_content(
+        f"Halo {user['name']},\n\n"
+        "Kami menerima permintaan untuk mengatur ulang password akun Ustad Online Anda. "
+        "Gunakan tautan berikut dalam 15 menit:\n"
+        f"{reset_url}\n\n"
+        "Jika Anda tidak meminta reset password, abaikan email ini."
+    )
+    message.add_alternative(
+        f"""\
+<!doctype html>
+<html lang="id">
+  <body style="margin:0;background:#f4f7f3;font-family:Arial,sans-serif;color:#243b32">
+    <div style="max-width:560px;margin:32px auto;background:#fff;border:1px solid #e1e9df;border-radius:16px;overflow:hidden">
+      <div style="padding:24px 30px;background:#123b37;color:#fff;font-size:18px;font-weight:bold">Ustad Online</div>
+      <div style="padding:30px">
+        <p>Halo {name},</p>
+        <p>Kami menerima permintaan untuk mengatur ulang password akun Ustad Online Anda.</p>
+        <p style="margin:28px 0"><a href="{html.escape(reset_url, quote=True)}" style="display:inline-block;background:#17684f;color:#fff;text-decoration:none;padding:13px 22px;border-radius:9px;font-weight:bold">Reset Password</a></p>
+        <p>Link ini hanya berlaku selama <strong>15 menit</strong> dan hanya dapat digunakan satu kali.</p>
+        <p>Jika Anda tidak meminta reset password, email ini dapat diabaikan. Password Anda tidak akan berubah.</p>
+        <p style="margin-top:24px;color:#68776d;font-size:13px">Jika tombol tidak berfungsi, salin link berikut ke browser:<br><a href="{html.escape(reset_url, quote=True)}" style="color:#17684f;word-break:break-all">{html.escape(reset_url)}</a></p>
+      </div>
+    </div>
+  </body>
+</html>""",
+        subtype="html",
+    )
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as smtp:
+            smtp.ehlo()
+            smtp.starttls(context=ssl.create_default_context())
+            smtp.ehlo()
+            smtp.login(smtp_username, smtp_password)
+            smtp.send_message(message)
+    except (OSError, smtplib.SMTPException) as error:
+        current_app.logger.error(
+            "Password reset email delivery failed (%s).",
+            type(error).__name__,
+        )
+        return False
+    return True
+
+
+def _password_reset_token_state(connection, token, now):
+    if not isinstance(token, str) or not token or len(token) > 200:
+        return "invalid", None
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    row = connection.execute(
+        "SELECT user_id, created_at FROM password_reset_tokens WHERE token_hash = ?",
+        (token_hash,),
+    ).fetchone()
+    if not row:
+        return "invalid", None
+    age = now - row["created_at"]
+    if age < 0 or age >= PASSWORD_RESET_TTL_SECONDS:
+        return "expired", row["user_id"]
+    return "valid", row["user_id"]
+
+
+def _reset_page(token="", state="check", feedback=""):
+    return _password_reset_response(
+        "reset_password.html",
+        csrf_token=_csrf_token(),
+        reset_token=token,
+        reset_state=state,
+        feedback=feedback,
+    )
+
+
 def _csrf_token():
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_urlsafe(32)
     return session["csrf_token"]
+
+
+def _clear_auth_session():
+    language = session.get("ui_language")
+    session.clear()
+    if language in ("id", "en", "ar"):
+        session["ui_language"] = language
 
 
 def _valid_csrf():
@@ -219,6 +360,207 @@ def auth_session():
     return jsonify(user=user, csrf_token=_csrf_token(), application_notification=notification)
 
 
+@auth_api.route("/api/preferences/language", methods=["GET", "POST"])
+def language_preference():
+    if request.method == "GET":
+        language = session.get("ui_language", "id")
+        if language not in ("id", "en", "ar"):
+            language = "id"
+        return jsonify(language=language, csrf_token=_csrf_token())
+    if not _valid_csrf():
+        return jsonify(error="Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi."), 400
+    data = request.get_json(silent=True)
+    language = data.get("language") if isinstance(data, dict) else None
+    if language not in ("id", "en", "ar"):
+        return jsonify(error="Pilihan bahasa tidak valid."), 400
+    session["ui_language"] = language
+    return jsonify(language=language)
+
+
+@auth_api.route("/auth/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "GET":
+        return _password_reset_response(
+            "forgot_password.html",
+            csrf_token=_csrf_token(),
+            feedback="",
+        )
+    if not _valid_csrf():
+        return _password_reset_response(
+            "forgot_password.html",
+            csrf_token=_csrf_token(),
+            feedback="Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.",
+        ), 400
+
+    email = request.form.get("email", "")
+    email = email.strip().lower() if isinstance(email, str) else ""
+    email_key = _password_reset_email_key(email)
+    now = int(time.time())
+    token = None
+    token_hash = None
+    user = None
+
+    connection = _database()
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute(
+            "DELETE FROM password_reset_requests WHERE requested_at < ?",
+            (now - PASSWORD_RESET_TTL_SECONDS,),
+        )
+        request_count = connection.execute(
+            """
+            SELECT COUNT(*) FROM password_reset_requests
+            WHERE email_key = ? AND requested_at >= ?
+            """,
+            (email_key, now - PASSWORD_RESET_TTL_SECONDS),
+        ).fetchone()[0]
+        if request_count < PASSWORD_RESET_MAX_REQUESTS:
+            connection.execute(
+                "INSERT INTO password_reset_requests (email_key, requested_at) VALUES (?, ?)",
+                (email_key, now),
+            )
+            if (
+                len(email) <= 254
+                and re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email)
+            ):
+                user = connection.execute(
+                    "SELECT id, name, email FROM users WHERE email = ?",
+                    (email,),
+                ).fetchone()
+                if user:
+                    token = secrets.token_urlsafe(32)
+                    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+                    connection.execute(
+                        "DELETE FROM password_reset_tokens WHERE user_id = ?",
+                        (user["id"],),
+                    )
+                    connection.execute(
+                        """
+                        INSERT INTO password_reset_tokens (token_hash, user_id, created_at)
+                        VALUES (?, ?, ?)
+                        """,
+                        (token_hash, user["id"], now),
+                    )
+        connection.commit()
+    finally:
+        connection.close()
+
+    if user and token:
+        reset_url = _password_reset_public_url(token)
+        if reset_url:
+            sent = _send_password_reset_email(user, reset_url)
+        else:
+            current_app.logger.error("Password reset public URL is not configured.")
+            sent = False
+        if not sent:
+            connection = _database()
+            try:
+                connection.execute(
+                    "DELETE FROM password_reset_tokens WHERE token_hash = ?",
+                    (token_hash,),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+
+    return _password_reset_response(
+        "forgot_password.html",
+        csrf_token=_csrf_token(),
+        feedback="Jika alamat email terdaftar, kami akan mengirimkan tautan reset password.",
+    )
+
+
+@auth_api.post("/auth/reset-password/check")
+def check_password_reset_token():
+    if not _valid_csrf():
+        response = jsonify(error="Sesi formulir tidak valid.")
+        response.headers["Cache-Control"] = "no-store"
+        return response, 400
+    data = request.get_json(silent=True)
+    token = data.get("token") if isinstance(data, dict) else None
+    connection = _database()
+    try:
+        state, _ = _password_reset_token_state(connection, token, int(time.time()))
+    finally:
+        connection.close()
+    response = jsonify(state=state)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@auth_api.route("/auth/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if request.method == "GET":
+        return _reset_page()
+    token = request.form.get("token", "")
+    if not _valid_csrf():
+        return _reset_page(
+            token=token,
+            state="valid",
+            feedback="Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.",
+        ), 400
+
+    now = int(time.time())
+    connection = _database()
+    try:
+        state, _ = _password_reset_token_state(connection, token, now)
+    finally:
+        connection.close()
+    if state != "valid":
+        feedback = (
+            "Tautan reset sudah kedaluwarsa. Minta tautan baru untuk melanjutkan."
+            if state == "expired"
+            else "Tautan reset tidak valid atau sudah pernah digunakan. Minta tautan baru untuk melanjutkan."
+        )
+        return _reset_page(state=state, feedback=feedback)
+
+    password = request.form.get("password", "")
+    confirmation = request.form.get("password_confirmation", "")
+    if not 8 <= len(password) <= 128:
+        return _reset_page(
+            token=token,
+            state="valid",
+            feedback="Password baru harus terdiri dari 8 sampai 128 karakter.",
+        )
+    if password != confirmation:
+        return _reset_page(
+            token=token,
+            state="valid",
+            feedback="Konfirmasi password tidak sama.",
+        )
+
+    connection = _database()
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        state, user_id = _password_reset_token_state(connection, token, int(time.time()))
+        if state != "valid":
+            connection.rollback()
+            feedback = (
+                "Tautan reset sudah kedaluwarsa. Minta tautan baru untuk melanjutkan."
+                if state == "expired"
+                else "Tautan reset tidak valid atau sudah pernah digunakan. Minta tautan baru untuk melanjutkan."
+            )
+            return _reset_page(state=state, feedback=feedback)
+        connection.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (generate_password_hash(password), user_id),
+        )
+        connection.execute(
+            "DELETE FROM password_reset_tokens WHERE user_id = ?",
+            (user_id,),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    _clear_auth_session()
+    return _reset_page(
+        state="done",
+        feedback="Password berhasil diubah. Silakan masuk dengan password baru.",
+    )
+
+
 @auth_api.post("/api/auth/register")
 def register():
     if not _valid_csrf():
@@ -286,7 +628,7 @@ def register():
             message="Pengajuan ustad terkirim. Akun akan aktif setelah admin meninjau dan menghubungi Anda melalui email atau WhatsApp.",
         ), 202
 
-    session.clear()
+    _clear_auth_session()
     session["user_id"] = user_id
     token = _csrf_token()
     return jsonify(user=_user_dict(row), csrf_token=token), 201
@@ -323,7 +665,7 @@ def login():
             or not check_password_hash(admin["password_hash"], password)
         ):
             return jsonify(error="Kata sandi admin tidak cocok."), 401
-        session.clear()
+        _clear_auth_session()
         session["admin_authenticated"] = True
         session["admin_username"] = admin["username"]
         return jsonify(user=_admin_user(), csrf_token=_csrf_token())
@@ -356,7 +698,7 @@ def login():
             status="rejected",
         ), 403
 
-    session.clear()
+    _clear_auth_session()
     session["user_id"] = row["id"]
     token = _csrf_token()
     return jsonify(user=_user_dict(row), csrf_token=token)
@@ -366,7 +708,7 @@ def login():
 def logout():
     if not _valid_csrf():
         return _csrf_error()
-    session.clear()
+    _clear_auth_session()
     return jsonify(user=None, csrf_token=_csrf_token())
 
 
@@ -485,7 +827,7 @@ def review_login():
             csrf_token=_csrf_token(),
             login_error="Username atau kata sandi admin tidak cocok.",
         ), 401
-    session.clear()
+    _clear_auth_session()
     session["admin_authenticated"] = True
     session["admin_username"] = admin["username"]
     _csrf_token()
@@ -592,7 +934,7 @@ def review_logout():
     if not _valid_csrf():
         return _csrf_error()
     switch_account = request.form.get("switch_account") == "1"
-    session.clear()
+    _clear_auth_session()
     if switch_account:
         return redirect(url_for("home"))
     return redirect(url_for("auth_api.admin_dashboard"))

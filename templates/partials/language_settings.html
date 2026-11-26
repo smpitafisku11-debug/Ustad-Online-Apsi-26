@@ -1,0 +1,8 @@
+{% include "partials/account_storage.html" %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
+<script>window.UstadOnlineSessionLanguage = {{ session.get('ui_language', 'id')|tojson }};</script>
+<script src="{{ url_for('static', filename='translations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>

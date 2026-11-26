@@ -559,6 +559,8 @@
         const usernameInput = document.getElementById('login-username');
         if (usernameInput) usernameInput.required = isAdminLogin;
         if (authModeSwitch) authModeSwitch.hidden = isAdminLogin;
+        const passwordResetLink = document.querySelector('[data-password-reset-link]');
+        if (passwordResetLink) passwordResetLink.hidden = registering || isAdminLogin;
         if (nameInput) nameInput.required = registering;
         if (phoneInput) phoneInput.required = teacherRegistration;
         if (experienceInput) experienceInput.required = teacherRegistration;

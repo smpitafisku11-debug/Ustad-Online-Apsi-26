@@ -162,7 +162,6 @@
     const search = document.getElementById('prayer-search');
     let activeCategory = 'all';
     let progress = {};
-
     function translate(key, fallback) {
         return window.UstadOnlineI18n
             ? window.UstadOnlineI18n.translateKey(key) || fallback

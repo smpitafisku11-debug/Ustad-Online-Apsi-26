@@ -991,6 +991,69 @@
         }
     }
 
+    const sharedI18n = window.UstadOnlineI18n;
+    if (sharedI18n && sharedI18n.catalog && typeof sharedI18n.apply === 'function') {
+        Object.entries(catalog).forEach(([key, values]) => {
+            sharedI18n.catalog[key] = [values.id, values.en, values.ar];
+        });
+
+        const setSharedLanguage = sharedI18n.setLanguage.bind(sharedI18n);
+        const applySharedTranslations = sharedI18n.apply.bind(sharedI18n);
+        language = sharedI18n.getLanguage();
+        sharedI18n.apply = function (scope) {
+            applySharedTranslations(scope);
+            translateSubtree(scope || document.body);
+        };
+        sharedI18n.hasSavedLanguage = function () {
+            try {
+                return ['id', 'en', 'ar'].includes(window.localStorage.getItem(languageStorageKey))
+                    || ['id', 'en', 'ar'].includes(window.localStorage.getItem('ustadOnline.language.v1'));
+            } catch (error) {
+                return false;
+            }
+        };
+        sharedI18n.translateKey = function (key) {
+            return sharedI18n.translate(key, sharedI18n.getLanguage());
+        };
+        sharedI18n.translateText = function (value) {
+            const key = phraseCatalog.get(normalise(value));
+            return key ? sharedI18n.translate(key, sharedI18n.getLanguage()) : value;
+        };
+        sharedI18n.setLanguage = function (value) {
+            language = normalise(value);
+            try {
+                window.localStorage.setItem(languageStorageKey, language);
+                window.localStorage.setItem('ustadOnline.language.v1', language);
+            } catch (error) {
+                console.error('Preferensi bahasa tidak dapat disimpan:', error);
+            }
+            setSharedLanguage(language);
+            translateSubtree(document.body);
+            syncControls();
+            window.dispatchEvent(new CustomEvent('ustadonline:languagechange', {
+                detail: { language }
+            }));
+        };
+        sharedI18n.apply(document.documentElement);
+        observer = new MutationObserver((records) => {
+            records.forEach((record) => {
+                if (record.type === 'characterData') translateTextNode(record.target);
+                else if (record.type === 'attributes') translateAttributes(record.target);
+                else record.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE) translateSubtree(node);
+                });
+            });
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['aria-label', 'placeholder', 'title'],
+            childList: true,
+            characterData: true,
+            subtree: true
+        });
+        return;
+    }
+
     window.UstadOnlineI18n = {
         catalog,
         getLanguage() { return language; },

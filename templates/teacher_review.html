@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Verifikasi Ustad | Ustad Online</title>
+    {% include "partials/language_settings.html" %}
     <link rel="stylesheet" href="{{ url_for('static', filename='i18n.css') }}">
     <script src="{{ url_for('static', filename='i18n.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; background: #f3f5ef; color: #23352c; font: 15px/1.6 "Segoe UI", sans-serif; }
@@ -47,7 +47,7 @@
         <section class="card">
             <h2>Admin belum dikonfigurasi</h2>
             <p>Untuk membuka mode Admin, atur <code>USTAD_ADMIN_PASSWORD</code> pada environment server. Simpan sebagai environment variable/secret di dashboard hosting, lalu restart atau deploy ulang aplikasi agar konfigurasi terbaca.</p>
-            <p class="notice">Akun FAMDI_Admin dibuat saat bootstrap pertama dengan password dari konfigurasi server. Password hanya disimpan sebagai hash di database.</p>
+            <p class="notice">Akun FAMDI_Admin dibuat saat bootstrap pertama setelah kata sandi tersedia dalam konfigurasi server. Kata sandi tidak dibuat otomatis, dan hanya disimpan sebagai hash di database.</p>
         </section>
     {% elif not authenticated %}
         <section class="card">

@@ -40,6 +40,14 @@
 .settings-status { min-height: 18px; margin: 13px 0 0; color: #63728b; font-size: .7rem; }
 .settings-status.error { color: #a33838; }
 .settings-status.success { color: #07805b; }
+.global-settings-launcher { position: fixed; right: max(18px,env(safe-area-inset-right)); bottom: max(18px,env(safe-area-inset-bottom)); z-index: 80; width: 46px; height: 46px; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,35,29,.2); }
+.global-settings-launcher svg { width: 20px; height: 20px; }
+html[dir="rtl"] body { direction: rtl; }
+html[dir="rtl"] .global-settings-launcher { right: auto; left: max(18px,env(safe-area-inset-left)); }
+body[data-language="ar"] { font-family: "Noto Naskh Arabic","Noto Sans Arabic",Arial,sans-serif; }
+body[data-language="ar"] input,body[data-language="ar"] select,body[data-language="ar"] textarea,body[data-language="ar"] button { font-family: inherit; }
+body[data-language="ar"] .settings-header { direction: rtl; }
+body[data-language="ar"] .settings-save-note { text-align: right; }
 body[data-effects="off"] *, body[data-effects="off"] *::before, body[data-effects="off"] *::after { animation: none !important; scroll-behavior: auto !important; transition: none !important; }
 body[data-arabic-size="large"] [lang="ar"]:not(.question-arabic), body[data-arabic-size="large"] [dir="rtl"]:not(.question-arabic) { font-size: 1.25em !important; }
 body[data-arabic-size="xlarge"] [lang="ar"]:not(.question-arabic), body[data-arabic-size="xlarge"] [dir="rtl"]:not(.question-arabic) { font-size: 1.5em !important; }

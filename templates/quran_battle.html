@@ -230,13 +230,13 @@
         @media (max-width: 560px) { .settings-button { width: 41px; padding: 0; } .settings-button span { display: none; } .settings-header, .settings-content { padding-right: 15px; padding-left: 15px; } .theme-option { padding: 8px 6px; font-size: .64rem; } .setting-actions { align-items: flex-start; flex-direction: column; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
+
     {% include "partials/page_transitions.html" %}
 </head>
 <body>
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark" aria-hidden="true"><img src="{{ url_for('static', filename='brand-logo.svg') }}" alt=""></span><span>Ustad <span style="color:#2563a6">Online</span></span></a>
+            <a class="brand" href="{{ url_for('home') }}" data-i18n-ignore><span class="brand-mark" aria-hidden="true"><img src="{{ url_for('static', filename='brand-logo.svg') }}" alt=""></span><span>Ustad <span style="color:#2563a6">Online</span></span></a>
             <div class="topbar-actions">
                 <button class="settings-button" type="button" data-open-ui-customization aria-label="Pengaturan belajar" data-language-aria="settings.open" aria-haspopup="dialog" aria-controls="ui-customization-dialog">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>

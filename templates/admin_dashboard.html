@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard Admin | Ustad Online</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='i18n.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <script src="{{ url_for('static', filename='i18n.js') }}" defer></script>
+</head>
+<body class="admin-page">
+<div class="admin-layout">
+    {% set active_page = 'dashboard' %}
+    {% include "partials/admin_nav.html" %}
+    <main class="admin-content">
+        <header class="admin-topline">
+            <div>
+                <p class="admin-eyebrow">RUANG KENDALI FAMDI</p>
+                <h1>Dashboard Admin</h1>
+                <p class="admin-intro">Ringkasan komunitas dan jalur cepat untuk pemeriksaan aplikasi.</p>
+            </div>
+            <div class="admin-user-mark"><span>F</span> FAMDI Admin</div>
+        </header>
+        <section class="admin-stats" aria-label="Statistik akun dan pengajuan" data-language-aria="admin.statsAria">
+            <article class="admin-stat"><span>Akun siswa</span><strong>{{ counts.students }}</strong><small>Pengguna aktif</small></article>
+            <article class="admin-stat"><span>Akun ustad/ustadzah</span><strong>{{ counts.teachers }}</strong><small>Pengajar aktif</small></article>
+            <article class="admin-stat"><span>Menunggu tinjauan</span><strong>{{ counts.pending }}</strong><small>Perlu ditindaklanjuti</small></article>
+            <article class="admin-stat"><span>Pengajuan diterima</span><strong>{{ counts.accepted }}</strong><small>Sepanjang waktu</small></article>
+            <article class="admin-stat"><span>Pengajuan ditolak</span><strong>{{ counts.rejected }}</strong><small>Sepanjang waktu</small></article>
+        </section>
+        <section class="admin-panel">
+            <h2>Mode Ustad Online</h2>
+            <p>Buka tampilan siswa atau ustad untuk review UI. Pratinjau tidak memakai akun pengguna dan tidak mengubah role atau data akun.</p>
+            <div class="admin-shortcuts">
+                <a class="admin-shortcut" href="{{ url_for('auth_api.admin_preview', mode='student') }}"><strong>Masuk ke Mode Siswa</strong><small>Pratinjau halaman dan fitur belajar · hanya tampilan</small></a>
+                <a class="admin-shortcut" href="{{ url_for('auth_api.admin_preview', mode='teacher') }}"><strong>Masuk ke Mode Ustad</strong><small>Pratinjau dashboard ustad tanpa akses data pengguna</small></a>
+                <a class="admin-shortcut" href="{{ url_for('auth_api.admin_applications') }}"><strong>Kelola pengajuan</strong><small>Lihat status dan proses calon ustad/ustadzah</small></a>
+            </div>
+        </section>
+        <section class="admin-panel">
+            <h2>Perlu ditinjau</h2>
+            <p>Pengajuan yang masih menunggu persetujuan admin.</p>
+            <div class="admin-shortcuts">
+                <a class="admin-shortcut" href="{{ url_for('auth_api.admin_applications') }}"><strong>{{ counts.pending }} <span>pengajuan pending</span></strong><small>Buka daftar lengkap beserta profil pemohon</small></a>
+                <a class="admin-shortcut" href="{{ url_for('auth_api.admin_users') }}"><strong>Manajemen pengguna</strong><small>Lihat akun siswa dan pengajar terdaftar</small></a>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

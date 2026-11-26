@@ -9,6 +9,7 @@ from quran_battle import MODES, _rooms, _rooms_lock
 class QuranBattleTests(unittest.TestCase):
     def setUp(self):
         app.testing = True
+        app.config["SESSION_COOKIE_SECURE"] = False
         self.client = app.test_client()
         with _rooms_lock:
             _rooms.clear()

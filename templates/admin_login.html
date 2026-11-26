@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Masuk Admin | Ustad Online</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='i18n.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <script src="{{ url_for('static', filename='i18n.js') }}" defer></script>
+    <style>
+        .admin-login-wrap { display: grid; min-height: 100vh; place-items: center; padding: 22px; }
+        .admin-login-card { width: min(440px, 100%); border: 1px solid var(--admin-line); border-radius: 20px; background: #fff; padding: clamp(22px, 5vw, 36px); box-shadow: 0 20px 60px rgba(31, 57, 41, .09); }
+        .admin-login-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; color: var(--admin-ink); font-weight: 750; }
+        .admin-login-brand .admin-brand-mark { width: 43px; height: 43px; }
+        .admin-login-card h1 { margin: 0; color: #1d332b; font-size: 27px; letter-spacing: -.04em; }
+        .admin-login-card p { color: var(--admin-muted); font-size: 13px; }
+        .admin-login-card form { display: grid; gap: 8px; margin-top: 21px; }
+        .admin-login-card label { margin-top: 7px; color: #435248; font-size: 12px; font-weight: 700; }
+        .admin-login-card input { width: 100%; min-height: 46px; border: 1px solid #dfe6dc; border-radius: 10px; padding: 10px 12px; color: #263b30; font: inherit; outline: none; }
+        .admin-login-card input:focus { border-color: #6b9b7d; box-shadow: 0 0 0 3px rgba(71, 145, 107, .12); }
+        .admin-login-card button { min-height: 46px; border: 0; border-radius: 10px; margin-top: 10px; background: var(--admin-green); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+        .admin-login-card button:hover { background: #10583f; }
+        .admin-login-error { border: 1px solid #f0d7d4; border-radius: 9px; background: #fff7f6; padding: 10px 12px; color: #9a514a !important; }
+        .admin-login-note { margin-top: 20px; border-top: 1px solid #edf0ea; padding-top: 13px; font-size: 11px !important; }
+        .admin-login-back { display: inline-block; margin-top: 20px; color: #327557; font-size: 12px; font-weight: 700; text-decoration: none; }
+    </style>
+</head>
+<body class="admin-page">
+<main class="admin-login-wrap">
+    <section class="admin-login-card" aria-labelledby="admin-login-title">
+        <div class="admin-login-brand"><span class="admin-brand-mark">✦</span><span>USTAD ONLINE<small style="display:block;color:#748278;font-size:10px;letter-spacing:.12em">FAMDI · ADMIN</small></span></div>
+        {% if setup_required %}
+            <p class="admin-eyebrow" data-language-key="admin.setupTitle">PENYIAPAN SERVER</p>
+            <h1 id="admin-login-title">Akun admin belum aktif</h1>
+            <p data-language-key="admin.setupInstructions">Tambahkan USTAD_ADMIN_PASSWORD sebagai environment variable di konfigurasi Web app PythonAnywhere, lalu tekan Reload. Saat aplikasi mulai, akun admin dibuat otomatis dan password disimpan sebagai hash di database.</p>
+            <a class="admin-login-back" href="{{ url_for('home') }}" data-language-key="app.backHome">← Kembali ke beranda</a>
+        {% else %}
+            <p class="admin-eyebrow" data-language-key="admin.kicker">RUANG KENDALI FAMDI</p>
+            <h1 id="admin-login-title">Masuk sebagai Admin</h1>
+            <p data-language-key="admin.loginIntro">Gunakan akun admin yang disiapkan otomatis dari konfigurasi server.</p>
+            {% if login_error %}<p class="admin-login-error" role="alert">{{ login_error }}</p>{% endif %}
+            <form method="post" action="{{ url_for('auth_api.review_login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label for="admin-username">Username</label>
+                <input id="admin-username" name="username" type="text" autocomplete="username" maxlength="64" required>
+                <label for="admin-password" data-language-key="app.password">Kata sandi</label>
+                <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+                <button type="submit">Masuk ke Dashboard Admin</button>
+            </form>
+            <p class="admin-login-note">Akun admin tidak didaftarkan secara publik. Kredensial dikelola melalui konfigurasi rahasia server.</p>
+            <a class="admin-login-back" href="{{ url_for('home') }}" data-language-key="app.backHome">← Kembali ke beranda</a>
+        {% endif %}
+    </section>
+</main>
+</body>
+</html>

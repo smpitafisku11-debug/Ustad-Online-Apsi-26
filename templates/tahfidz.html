@@ -75,7 +75,7 @@
         <section class="panel" aria-labelledby="targets-title">
             <h2 id="targets-title">Target belajar hari ini</h2>
             <p class="date" id="target-date"></p>
-            <div class="progress" id="target-progress" role="progressbar" aria-label="Progres target hafalan hari ini" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3">
+            <div class="progress" id="target-progress" role="progressbar" aria-label="Progres target hafalan hari ini" data-language-aria="tahfidz.progressAria" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3">
                 <div class="progress-fill" id="target-progress-fill"></div>
             </div>
             <p class="date" id="progress-count">0 dari 3 target selesai</p>
@@ -127,6 +127,9 @@
             const progressFill = document.getElementById('target-progress-fill');
             const progressCount = document.getElementById('progress-count');
             const status = document.getElementById('storage-status');
+            const localize = (message) => window.UstadOnlineI18n
+                ? window.UstadOnlineI18n.translateText(message)
+                : message;
             const date = new Date();
             const dateKey = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
             const storageKey = `ustad-online-tahfidz-targets:${dateKey}`;
@@ -138,35 +141,39 @@
             let approvedTargetKeys = new Set();
             let csrfToken = '';
 
-            function localized(key, values) {
-                const language = document.documentElement.lang || 'id';
-                const text = window.UstadOnlineI18n.translate(key, language);
-                const numberFormat = new Intl.NumberFormat(language);
-                return text.replace(/\{(\w+)\}/g, (match, name) => {
-                    const value = values && values[name];
-                    return value === undefined ? match : numberFormat.format(value);
-                });
+            function updateTargetDate() {
+                document.getElementById('target-date').textContent = new Intl.DateTimeFormat(document.documentElement.lang || 'id', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                }).format(date);
             }
 
-            function updateDate() {
-                document.getElementById('target-date').textContent = new Intl.DateTimeFormat(
-                    document.documentElement.lang || 'id',
-                    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
-                ).format(date);
+            function targetProgressLabel(completed) {
+                const fallback = '{completed} dari {total} target selesai';
+                const template = window.UstadOnlineI18n
+                    ? window.UstadOnlineI18n.translateKey('tahfidz.progressCountTemplate')
+                    : fallback;
+                const formatNumber = (value) => new Intl.NumberFormat(document.documentElement.lang || 'id').format(value);
+                return template
+                    .replace('{completed}', formatNumber(completed))
+                    .replace('{total}', formatNumber(targets.length));
             }
-            updateDate();
+
+            updateTargetDate();
 
             function updateProgress() {
                 const completed = targets.filter((target) => target.checked).length;
                 const percent = Math.round((completed / targets.length) * 100);
                 progressFill.style.width = `${percent}%`;
                 progress.setAttribute('aria-valuenow', String(completed));
-                const progressText = localized('tahfidz.progress', { completed, total: targets.length });
-                progress.setAttribute('aria-valuetext', progressText);
-                progressCount.textContent = progressText;
+                const label = targetProgressLabel(completed);
+                progress.setAttribute('aria-valuetext', label);
+                progressCount.textContent = label;
             }
-            document.addEventListener('ustadonline:languagechange', () => {
-                updateDate();
+            window.addEventListener('ustadonline:languagechange', () => {
+                updateTargetDate();
                 updateProgress();
             });
 
@@ -183,7 +190,7 @@
                 storageAvailable = false;
                 console.error('Target tahfidz tidak dapat dibaca:', error);
                 status.className = 'status error';
-                status.textContent = 'Target tersimpan tidak dapat dibaca; perubahan hanya berlaku selama halaman terbuka.';
+                status.textContent = localize('Target tersimpan tidak dapat dibaca; perubahan hanya berlaku selama halaman terbuka.');
             }
 
             function saveTargets() {
@@ -192,12 +199,12 @@
                 try {
                     window.UstadOnlineStorage.setItem(storageKey, JSON.stringify(targets.map((target) => target.checked)));
                     status.className = 'status';
-                    status.textContent = 'Progres target tersimpan di browser ini.';
+                    status.textContent = localize('Progres target tersimpan di browser ini.');
                 } catch (error) {
                     storageAvailable = false;
                     console.error('Target tahfidz tidak dapat disimpan:', error);
                     status.className = 'status error';
-                    status.textContent = 'Penyimpanan browser tidak tersedia; perubahan hanya berlaku selama halaman terbuka.';
+                    status.textContent = localize('Penyimpanan browser tidak tersedia; perubahan hanya berlaku selama halaman terbuka.');
                 }
             }
 
@@ -228,7 +235,7 @@
 
             function setSubmissionStatus(message, kind) {
                 submissionStatus.className = `status${kind ? ` ${kind}` : ''}`;
-                submissionStatus.textContent = message;
+                submissionStatus.textContent = localize(message);
             }
 
             async function loadSubmissionState() {

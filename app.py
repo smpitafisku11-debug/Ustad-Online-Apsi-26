@@ -8,7 +8,7 @@ import eventlet
 eventlet.monkey_patch()
 
 from flask import Flask, jsonify, redirect, render_template, request, send_file, session, url_for
-from auth import auth_api, init_auth_db
+from auth import auth_api, init_admin_account, init_auth_db
 from extensions import socketio
 from quran_battle import quran_battle_api
 from community import community_api, init_community_db
@@ -33,6 +33,7 @@ app.config['AUTH_DATABASE'] = os.environ.get(
     'AUTH_DATABASE',
     os.path.join(app.instance_path, 'ustad_online.sqlite3'),
 )
+app.config['USTAD_ADMIN_USERNAME'] = os.environ.get('USTAD_ADMIN_USERNAME', 'FAMDI_Admin')
 app.config['USTAD_ADMIN_PASSWORD'] = _load_admin_password(app.instance_path)
 app.config['PUBLIC_BASE_URL'] = os.environ.get('PUBLIC_BASE_URL', '').strip()
 app.config['SMTP_USERNAME'] = os.environ.get('SMTP_USERNAME', '').strip()
@@ -40,13 +41,18 @@ app.config['SMTP_APP_PASSWORD'] = os.environ.get('SMTP_APP_PASSWORD', '')
 app.config['SMTP_FROM_EMAIL'] = os.environ.get('SMTP_FROM_EMAIL', '').strip()
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE') == '1'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', '1') != '0'
 socketio.init_app(app, async_mode='eventlet')
 app.register_blueprint(auth_api)
 app.register_blueprint(quran_battle_api)
 app.register_blueprint(community_api)
 app.register_blueprint(connect_api)
 init_auth_db(app.config['AUTH_DATABASE'])
+init_admin_account(
+    app.config['AUTH_DATABASE'],
+    app.config['USTAD_ADMIN_USERNAME'],
+    app.config['USTAD_ADMIN_PASSWORD'],
+)
 init_connect_db(app.config['AUTH_DATABASE'])
 init_community_db(app.config['AUTH_DATABASE'])
 
@@ -254,7 +260,11 @@ def review_tahfidz(submission_id):
 
 @app.route('/')
 def home():
-    return render_template('index.html', active_learning_endpoint='akademi_tilawah')
+    return render_template(
+        'index.html',
+        active_learning_endpoint='akademi_tilawah',
+        admin_preview_mode=session.get('admin_preview_mode') if session.get('admin_authenticated') else None,
+    )
 
 @app.route('/akademi')
 def akademi():

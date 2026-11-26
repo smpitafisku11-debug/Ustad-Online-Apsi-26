@@ -26,12 +26,12 @@
                 <h3>Selamat datang.</h3>
                 <p id="auth-intro">Masuk atau buat akun untuk mulai belajar.</p>
             </div>
-            <div class="auth-role-switch" role="tablist" aria-label="Pilih jenis akun">
+            <div class="auth-role-switch" role="tablist" aria-label="Pilih jenis akun" data-language-aria="profile.chooseAccount">
                 <button class="auth-role-option" type="button" role="tab" data-account-role="student" aria-selected="true"><span aria-hidden="true">◉</span><span><strong>Siswa</strong><small>Belajar &amp; berkembang</small></span></button>
                 <button class="auth-role-option" type="button" role="tab" data-account-role="teacher" aria-selected="false"><span aria-hidden="true">✦</span><span><strong>Ustad</strong><small>Ajukan sebagai pengajar</small></span></button>
                 <button class="auth-role-option" type="button" role="tab" data-account-role="admin" aria-selected="false"><span aria-hidden="true">⌘</span><span><strong>Admin</strong><small>Review &amp; pratinjau</small></span></button>
             </div>
-            <div class="auth-mode-switch" role="group" aria-label="Pilih proses akun">
+            <div class="auth-mode-switch" role="group" aria-label="Pilih proses akun" data-language-aria="profile.chooseProcess">
                 <button type="button" data-auth-mode="login" aria-pressed="true">Masuk</button>
                 <button type="button" data-auth-mode="register" aria-pressed="false">Daftar</button>
             </div>
@@ -49,6 +49,13 @@
                     <div class="profile-input-wrap">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="m5 7 7 5.5L19 7"/></svg>
                         <input id="login-email" name="email" type="email" maxlength="120" autocomplete="email" placeholder="nama@email.com" required>
+                    </div>
+                </div>
+                <div data-account-username hidden>
+                    <label for="login-username">Username admin</label>
+                    <div class="profile-input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.3"/><path d="M5.5 20c.5-3.1 2.8-5 6.5-5s6 1.9 6.5 5"/></svg>
+                        <input id="login-username" name="username" type="text" maxlength="64" autocomplete="username" placeholder="Username admin">
                     </div>
                 </div>
                 <div data-register-only data-teacher-only>

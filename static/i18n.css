@@ -1,0 +1,67 @@
+.uo-language-switcher {
+    position: fixed;
+    z-index: 8990;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    font: 600 12px/1.4 "DM Sans", "Segoe UI", sans-serif;
+}
+.uo-language-switcher summary {
+    display: flex;
+    min-width: 76px;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid #dce5dc;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0 11px;
+    color: #285d46;
+    box-shadow: 0 5px 16px rgba(30, 55, 39, .12);
+    cursor: pointer;
+    list-style: none;
+}
+.uo-language-switcher summary::-webkit-details-marker { display: none; }
+.uo-language-switcher summary::marker { content: ""; }
+.uo-language-switcher summary:hover { border-color: #9fbea8; }
+.uo-language-options {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 7px);
+    display: grid;
+    width: 168px;
+    gap: 3px;
+    border: 1px solid #e1e8df;
+    border-radius: 13px;
+    background: #fff;
+    padding: 6px;
+    box-shadow: 0 12px 32px rgba(30, 55, 39, .16);
+}
+.uo-language-options button {
+    min-height: 38px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    padding: 0 10px;
+    color: #35483c;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+.uo-language-options button:hover,
+.uo-language-options button:focus-visible { background: #edf5ee; color: #17684d; outline: none; }
+html[dir="rtl"] .uo-language-switcher { right: auto; left: max(14px, env(safe-area-inset-left)); }
+html[dir="rtl"] .uo-language-options { right: auto; left: 0; }
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="url"],
+html[dir="rtl"] input[type="tel"],
+html[dir="rtl"] input[type="password"] { direction: ltr; text-align: left; }
+html[dir="rtl"] .uo-language-switcher { direction: ltr; }
+@media (max-width: 700px) {
+    .uo-language-switcher { bottom: max(76px, calc(env(safe-area-inset-bottom) + 72px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .uo-language-switcher *,
+    .uo-language-switcher *::before,
+    .uo-language-switcher *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

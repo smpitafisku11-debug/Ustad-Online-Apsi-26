@@ -88,12 +88,16 @@
         });
 
     function message(key) {
-        return i18n ? i18n.translate(key, preferences.language) : key;
+        if (!i18n) return key;
+        if (typeof i18n.translateKey === 'function') return i18n.translateKey(key) || key;
+        return typeof i18n.translate === 'function' ? i18n.translate(key, preferences.language) : key;
     }
 
     function setStatus(message, kind) {
         if (!status) return;
-        status.textContent = message;
+        status.textContent = window.UstadOnlineI18n.translateKey
+            ? window.UstadOnlineI18n.translateKey(message) || message
+            : window.UstadOnlineI18n.translate(message, preferences.language);
         status.className = `settings-status${kind ? ` ${kind}` : ''}`;
     }
 
@@ -120,22 +124,13 @@
         try {
             let deviceLanguage = null;
             try {
-                deviceLanguage = window.localStorage.getItem(languageStorageKey);
+                deviceLanguage = window.localStorage.getItem(languageStorageKey)
+                    || window.localStorage.getItem('ustadOnline.interface.language.v1');
             } catch (error) {
                 console.error('Preferensi bahasa perangkat tidak dapat dibaca:', error);
             }
             const serialized = window.UstadOnlineStorage.getItem(storageKey);
-            if (!serialized) {
-                return {
-                    ...defaults,
-                    language: ['id', 'en', 'ar'].includes(deviceLanguage)
-                        ? deviceLanguage
-                        : ['id', 'en', 'ar'].includes(window.UstadOnlineSessionLanguage)
-                            ? window.UstadOnlineSessionLanguage
-                            : defaults.language
-                };
-            }
-            const saved = JSON.parse(serialized);
+            const saved = serialized ? JSON.parse(serialized) : {};
             if (!saved || typeof saved !== 'object' || Array.isArray(saved)) {
                 throw new Error('Format preferensi tidak dikenali.');
             }
@@ -143,20 +138,28 @@
             const sessionLanguage = ['id', 'en', 'ar'].includes(window.UstadOnlineSessionLanguage)
                 ? window.UstadOnlineSessionLanguage
                 : defaults.language;
+            const hasSavedLanguage = Boolean(i18n && typeof i18n.hasSavedLanguage === 'function' && i18n.hasSavedLanguage());
+            const activeLanguage = i18n && typeof i18n.getLanguage === 'function' ? i18n.getLanguage() : defaults.language;
+            const language = ['id', 'en', 'ar'].includes(deviceLanguage)
+                ? deviceLanguage
+                : ['id', 'en', 'ar'].includes(window.UstadOnlineSessionLanguage)
+                    ? sessionLanguage
+                    : hasSavedLanguage
+                        ? activeLanguage
+                        : savedLanguage;
             return {
                 arabicSize: ['normal', 'large', 'xlarge'].includes(saved.arabicSize) ? saved.arabicSize : defaults.arabicSize,
                 buzzerSound: typeof saved.buzzerSound === 'boolean' ? saved.buzzerSound : defaults.buzzerSound,
                 animations: typeof saved.animations === 'boolean' ? saved.animations : defaults.animations,
-                language: ['id', 'en', 'ar'].includes(deviceLanguage)
-                    ? deviceLanguage
-                    : ['id', 'en', 'ar'].includes(window.UstadOnlineSessionLanguage)
-                        ? sessionLanguage
-                        : savedLanguage
+                language
             };
         } catch (error) {
             console.error('Preferensi tampilan tidak dapat dibaca:', error);
             setStatus(message('status.storageError'), 'error');
-            return { ...defaults };
+            return {
+                ...defaults,
+                language: i18n && typeof i18n.getLanguage === 'function' ? i18n.getLanguage() : defaults.language
+            };
         }
     }
 
@@ -164,7 +167,7 @@
         const language = preferences.language;
         if (i18n) {
             i18n.setLanguage(language);
-            i18n.apply(dialog);
+            if (typeof i18n.apply === 'function') i18n.apply(dialog);
         }
         if (languageSelect) languageSelect.value = language;
     }
@@ -186,6 +189,7 @@
         try {
             window.UstadOnlineStorage.setItem(storageKey, JSON.stringify(preferences));
             window.localStorage.setItem(languageStorageKey, preferences.language);
+            window.localStorage.setItem('ustadOnline.interface.language.v1', preferences.language);
             persistLanguageInSession(preferences.language);
             setStatus(message('status.saved'), 'success');
         } catch (error) {
@@ -250,6 +254,12 @@
         preferences = loadPreferences();
         applyPreferences();
     });
+    window.addEventListener('ustadonline:languagechange', (event) => {
+        if (event.detail.language === preferences.language) return;
+        preferences = { ...preferences, language: event.detail.language };
+        if (languageSelect) languageSelect.value = preferences.language;
+        savePreferences();
+    });
 
     window.UstadOnlineUI = {
         getPreference(name) {
@@ -263,7 +273,7 @@
             const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
             if (!AudioContextConstructor) {
                 if (statusElement) {
-                    statusElement.textContent = 'Browser ini tidak mendukung efek suara; buzzer tetap berfungsi.';
+                    statusElement.textContent = message('status.audioUnsupported');
                     statusElement.className = 'status-message error';
                 }
                 return;
@@ -289,7 +299,7 @@
                 console.error('Efek suara buzzer tidak dapat diputar:', error);
                 if (audioContext && audioContext.state !== 'closed') await audioContext.close();
                 if (statusElement) {
-                    statusElement.textContent = 'Efek suara gagal diputar; buzzer tetap berfungsi.';
+                    statusElement.textContent = message('status.audioFailed');
                     statusElement.className = 'status-message error';
                 }
             }

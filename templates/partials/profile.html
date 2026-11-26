@@ -10,11 +10,11 @@
                 <span class="profile-orbit profile-orbit-two"></span>
                 <span class="profile-orbit-star">✦</span>
                 <span class="profile-orbit-dot"></span>
-                <span class="profile-orbit-caption">ILMU · ADAB · AMAL</span>
+                <span class="profile-orbit-caption" data-language-key="common.footerMotto">ILMU · ADAB · AMAL</span>
             </div>
             <div class="profile-brand-copy">
                 <p class="profile-kicker">RUANG BELAJAR PERSONAL</p>
-                <h2 id="account-login-title">Dekat dengan Qur'an, tumbuh setiap hari.</h2>
+                <h2 id="account-login-title" data-language-key="home.loginDialogTitle">Dekat dengan Qur'an, tumbuh setiap hari.</h2>
                 <p>Ruang kecilmu untuk membaca, menghafal, dan memperbaiki tilawah—dimulai dari sini.</p>
                 <span class="profile-brand-tag"><span aria-hidden="true">✦</span> Belajar dengan hati</span>
             </div>
@@ -67,8 +67,9 @@
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10m-4 4v2"/></svg>
                     <input id="login-password" name="password" type="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Minimal 8 karakter" required>
                 </div>
+                <p class="auth-password-options" data-password-reset-link><a href="{{ url_for('auth_api.forgot_password') }}">Lupa Password?</a></p>
                 <p class="profile-status" id="login-status" role="status" aria-live="polite"></p>
-                <button class="profile-primary-button" id="auth-submit" type="submit">Masuk sebagai Siswa <span aria-hidden="true">↗</span></button>
+                <button class="profile-primary-button" id="auth-submit" type="submit"><span data-language-key="home.loginAsStudent">Masuk sebagai Siswa</span> <span aria-hidden="true">↗</span></button>
             </form>
             <p class="profile-local-note"><span aria-hidden="true">⌑</span> Siswa langsung aktif. Akun ustad perlu verifikasi admin.</p>
             <button class="profile-install-button" id="profile-install-button" type="button" hidden>Pasang aplikasi Ustad Online</button>

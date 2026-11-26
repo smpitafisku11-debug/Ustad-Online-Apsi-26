@@ -148,11 +148,6 @@
         }
     ];
 
-    const categoryLabels = {
-        'pagi-petang': 'Pagi & petang · pilihan Al-Ma’tsurat',
-        'setelah-salat': 'Dzikir setelah salat',
-        harian: 'Doa sehari-hari'
-    };
     const date = new Date();
     const dateKey = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
     const storageKey = `ustadOnline.dzikirDoa.progress:${dateKey}`;
@@ -162,6 +157,41 @@
     const search = document.getElementById('prayer-search');
     let activeCategory = 'all';
     let progress = {};
+    const prayerTitleKeys = {
+        'morning-name-protection': 'dhikr.title.protection',
+        'morning-contentment': 'dhikr.title.contentment',
+        'morning-day-cycle': 'dhikr.title.morning',
+        'morning-ikhlas': 'dhikr.title.ikhlas',
+        'morning-falaq': 'dhikr.title.falaq',
+        'morning-nas': 'dhikr.title.nas',
+        'after-prayer-istighfar': 'dhikr.title.istighfar',
+        'after-prayer-peace': 'dhikr.title.afterPrayer',
+        'after-prayer-tasbih': 'dhikr.title.tasbih',
+        'after-prayer-tahmid': 'dhikr.title.tahmid',
+        'after-prayer-takbir': 'dhikr.title.takbir',
+        'after-prayer-tahlil': 'dhikr.title.tahlil',
+        'daily-parents': 'dhikr.title.parents',
+        'daily-knowledge': 'dhikr.title.knowledge',
+        'daily-eating': 'dhikr.title.eating',
+        'daily-after-eating': 'dhikr.title.afterEating',
+        'daily-sleep': 'dhikr.title.sleep',
+        'daily-home': 'dhikr.title.home'
+    };
+    const categoryKeys = {
+        'pagi-petang': 'dhikr.category.morning',
+        'setelah-salat': 'dhikr.category.afterPrayer',
+        harian: 'dhikr.category.daily'
+    };
+
+    function localized(key, values) {
+        const language = document.documentElement.lang || 'id';
+        const text = window.UstadOnlineI18n.translate(key, language);
+        const numberFormat = new Intl.NumberFormat(language);
+        return text.replace(/\{(\w+)\}/g, (match, name) => {
+            const value = values && values[name];
+            return value === undefined ? match : numberFormat.format(value);
+        });
+    }
 
     function loadProgress() {
         try {
@@ -215,8 +245,8 @@
             top.className = 'prayer-card-top';
             const titleGroup = document.createElement('div');
             titleGroup.append(
-                createText('h3', '', prayer.title),
-                createText('span', 'prayer-category', categoryLabels[prayer.category])
+                createText('h3', '', localized(prayerTitleKeys[prayer.id])),
+                createText('span', 'prayer-category', localized(categoryKeys[prayer.category]))
             );
             top.append(titleGroup, createText('span', 'prayer-repeat', `${prayer.repeat}×`));
 
@@ -235,8 +265,8 @@
             const actions = document.createElement('div');
             actions.className = 'prayer-card-actions';
             const counter = createText('span', 'prayer-counter', `${count}/${prayer.repeat}`);
-            counter.setAttribute('aria-label', `${count} dari ${prayer.repeat} bacaan`);
-            const increment = createText('button', '', '+1 bacaan');
+            counter.setAttribute('aria-label', localized('dhikr.repeatCount', { count, total: prayer.repeat }));
+            const increment = createText('button', '', localized('dhikr.increment'));
             increment.type = 'button';
             increment.dataset.action = 'increment';
             increment.disabled = complete;
@@ -245,7 +275,7 @@
                 saveProgress();
                 render();
             });
-            const markComplete = createText('button', '', complete ? 'Selesai ✓' : 'Tandai selesai');
+            const markComplete = createText('button', '', complete ? localized('dhikr.completed') : localized('dhikr.markDone'));
             markComplete.type = 'button';
             markComplete.dataset.action = 'complete';
             markComplete.disabled = complete;
@@ -259,7 +289,10 @@
             list.append(card);
         });
 
-        progressLabel.textContent = `${completedCount()} dari ${prayers.length} dzikir/doa selesai`;
+        progressLabel.textContent = localized('dhikr.progress', {
+            completed: completedCount(),
+            total: prayers.length
+        });
     }
 
     document.querySelectorAll('[data-prayer-filter]').forEach((button) => {
@@ -275,6 +308,7 @@
     });
 
     search.addEventListener('input', render);
+    document.addEventListener('ustadonline:languagechange', render);
     document.getElementById('reset-progress').addEventListener('click', () => {
         progress = {};
         saveProgress();

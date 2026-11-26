@@ -34,6 +34,10 @@ app.config['AUTH_DATABASE'] = os.environ.get(
     os.path.join(app.instance_path, 'ustad_online.sqlite3'),
 )
 app.config['USTAD_ADMIN_PASSWORD'] = _load_admin_password(app.instance_path)
+app.config['PUBLIC_BASE_URL'] = os.environ.get('PUBLIC_BASE_URL', '').strip()
+app.config['SMTP_USERNAME'] = os.environ.get('SMTP_USERNAME', '').strip()
+app.config['SMTP_APP_PASSWORD'] = os.environ.get('SMTP_APP_PASSWORD', '')
+app.config['SMTP_FROM_EMAIL'] = os.environ.get('SMTP_FROM_EMAIL', '').strip()
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE') == '1'

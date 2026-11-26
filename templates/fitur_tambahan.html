@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0A192F">
     <title>Fitur Tambahan | Ustad Online</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='ui_customization.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='page_transitions.css') }}">
     {% include "partials/page_transitions.html" %}
@@ -78,16 +77,16 @@
 <body data-open-help="{{ 'true' if open_help|default(false) else 'false' }}">
     <header class="topbar">
         <div class="shell topbar-inner">
-            <a class="brand" href="{{ url_for('home') }}">Ustad Online · Fitur</a>
+            <a class="brand" href="{{ url_for('home') }}"><span data-i18n-ignore>Ustad Online</span> · <span data-language-key="features.sectionName">Fitur</span></a>
             <a class="back-link" href="{{ url_for('home') }}">← Beranda</a>
         </div>
     </header>
     <main class="shell">
         <section class="hero">
-            <span class="eyebrow">PENGALAMAN BELAJAR LEBIH FLEKSIBEL</span>
+            <span class="eyebrow" data-language-key="features.kicker">PENGALAMAN BELAJAR LEBIH FLEKSIBEL</span>
             <h1>Fitur Tambahan</h1>
             <p>Atur pengingat, kebutuhan perangkat, penyimpanan materi, pendampingan, dan aksesibilitas sesuai rutinitas Anda.</p>
-            <input class="search" id="feature-search" type="search" placeholder="Cari tajwid, hijaiyah, hafalan, sertifikat, bantuan..." aria-label="Cari fitur dan materi">
+            <input class="search" id="feature-search" type="search" placeholder="Cari tajwid, hijaiyah, hafalan, sertifikat, bantuan..." aria-label="Cari fitur dan materi" data-language-placeholder="features.searchPlaceholder" data-language-aria="features.searchAria">
         </section>
 
         <section class="feature-grid" id="feature-grid" aria-label="Daftar fitur tambahan">
@@ -112,7 +111,7 @@
             <article class="feature-card" data-feature-search="bookmark catatan ayat materi simpan">
                 <div class="feature-head"><span class="feature-icon">♡</span><div><h2>Bookmark &amp; Catatan</h2><p>Simpan ayat atau materi penting.</p></div></div>
                 <div class="feature-body">
-                    <div class="field-row"><label class="field">Judul/ayat<input id="bookmark-title" placeholder="Contoh: Al-Mulk 1"></label><label class="field">Catatan<textarea id="bookmark-note" placeholder="Catatan belajar"></textarea></label></div>
+                    <div class="field-row"><label class="field">Judul/ayat<input id="bookmark-title" placeholder="Contoh: Al-Mulk 1"></label><label class="field">Catatan<textarea id="bookmark-note" placeholder="Catatan belajar" data-language-placeholder="features.notePlaceholder"></textarea></label></div>
                     <div class="actions"><button class="button primary" id="save-bookmark" type="button">Simpan</button></div>
                     <div class="saved-list" id="bookmark-list"></div>
                     <p class="status" id="bookmark-status" role="status"></p>
@@ -132,7 +131,7 @@
             <article class="feature-card" data-feature-search="jadwal kelas notifikasi kegiatan program">
                 <div class="feature-head"><span class="feature-icon">▦</span><div><h2>Pengingat Jadwal Kelas</h2><p>Catat kegiatan yang akan diikuti.</p></div></div>
                 <div class="feature-body">
-                    <div class="field-row"><label class="field">Nama kegiatan<input id="class-name" placeholder="Kelas Tahsin Pekanan"></label><label class="field">Waktu<input id="class-time" type="datetime-local"></label></div>
+                    <div class="field-row"><label class="field">Nama kegiatan<input id="class-name" placeholder="Kelas Tahsin Pekanan" data-language-placeholder="features.classPlaceholder"></label><label class="field">Waktu<input id="class-time" type="datetime-local"></label></div>
                     <div class="actions"><button class="button primary" id="save-class" type="button">Simpan Jadwal</button></div>
                     <div class="saved-list" id="class-list"></div>
                     <p class="status" id="class-status" role="status"></p>
@@ -150,7 +149,7 @@
             <article class="feature-card" data-feature-search="lapor konten kesalahan perilaku tidak pantas report">
                 <div class="feature-head"><span class="feature-icon">!</span><div><h2>Pelaporan Konten</h2><p>Kirim laporan kesalahan atau pelanggaran.</p></div></div>
                 <div class="feature-body">
-                    <div class="field-row"><label class="field">Jenis laporan<select id="report-type"><option>Kesalahan materi</option><option>Konten tidak pantas</option><option>Perilaku pengguna</option><option>Masalah teknis</option></select></label><label class="field">Detail<textarea id="report-detail" maxlength="1000" placeholder="Tulis informasi yang dapat ditinjau (maks. 1000 karakter)"></textarea></label></div>
+                    <div class="field-row"><label class="field">Jenis laporan<select id="report-type"><option>Kesalahan materi</option><option>Konten tidak pantas</option><option>Perilaku pengguna</option><option>Masalah teknis</option></select></label><label class="field">Detail<textarea id="report-detail" maxlength="1000" placeholder="Tulis informasi yang dapat ditinjau (maks. 1000 karakter)" data-language-placeholder="features.reportPlaceholder"></textarea></label></div>
                     <div class="actions"><button class="button primary" id="send-report" type="button">Buat Laporan</button></div>
                     <p class="status" id="report-status" role="status"></p>
                 </div>
@@ -167,7 +166,7 @@
             <article class="feature-card wide" data-feature-search="hafalan planner jadwal target harian mingguan bulanan hafalan surah">
                 <div class="feature-head"><span class="feature-icon">✓</span><div><h2>Hafalan Planner</h2><p>Susun target harian, mingguan, dan bulanan sesuai kemampuan.</p></div></div>
                 <div class="feature-body">
-                    <div class="field-row"><label class="field">Periode<select id="planner-period"><option value="harian">Harian</option><option value="mingguan">Mingguan</option><option value="bulanan">Bulanan</option></select></label><label class="field">Target hafalan<input id="planner-target" placeholder="Contoh: 5 ayat atau Surah Al-Mulk"></label></div>
+                    <div class="field-row"><label class="field">Periode<select id="planner-period"><option value="harian">Harian</option><option value="mingguan">Mingguan</option><option value="bulanan">Bulanan</option></select></label><label class="field">Target hafalan<input id="planner-target" placeholder="Contoh: 5 ayat atau Surah Al-Mulk" data-language-placeholder="features.goalPlaceholder"></label></div>
                     <div class="actions"><button class="button primary" id="save-planner" type="button">Simpan Target</button></div>
                     <div class="saved-list" id="planner-list"></div>
                     <p class="status" id="planner-status" role="status"></p>

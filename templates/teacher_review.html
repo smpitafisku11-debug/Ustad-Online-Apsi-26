@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Verifikasi Ustad | Ustad Online</title>
-    <script src="{{ url_for('static', filename='ui_customization.js') }}" defer></script>
+    {% include "partials/language_settings.html" %}
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; background: #f3f5ef; color: #23352c; font: 15px/1.6 "Segoe UI", sans-serif; }
@@ -44,8 +44,8 @@
     {% if setup_required %}
         <section class="card">
             <h2>Admin belum dikonfigurasi</h2>
-            <p>Untuk membuka mode Admin, atur <code>USTAD_ADMIN_PASSWORD</code> pada environment server. Simpan sebagai environment variable/secret di dashboard hosting, lalu restart atau deploy ulang aplikasi agar konfigurasi terbaca.</p>
-            <p class="notice">Di server, kata sandi admin tidak dibuat otomatis. Aplikasi hanya mengizinkan login setelah nilai <code>USTAD_ADMIN_PASSWORD</code> tersedia saat server mulai.</p>
+            <p data-language-key="admin.passwordRequired">Untuk membuka mode Admin, atur <code>USTAD_ADMIN_PASSWORD</code> pada environment server. Simpan sebagai environment variable/secret di dashboard hosting, lalu restart atau deploy ulang aplikasi agar konfigurasi terbaca.</p>
+            <p class="notice" data-language-key="admin.passwordNotAuto">Di server, kata sandi admin tidak dibuat otomatis. Aplikasi hanya mengizinkan login setelah nilai <code>USTAD_ADMIN_PASSWORD</code> tersedia saat server mulai.</p>
         </section>
     {% elif not authenticated %}
         <section class="card">

@@ -138,21 +138,37 @@
             let approvedTargetKeys = new Set();
             let csrfToken = '';
 
-            document.getElementById('target-date').textContent = new Intl.DateTimeFormat('id-ID', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            }).format(date);
+            function localized(key, values) {
+                const language = document.documentElement.lang || 'id';
+                const text = window.UstadOnlineI18n.translate(key, language);
+                const numberFormat = new Intl.NumberFormat(language);
+                return text.replace(/\{(\w+)\}/g, (match, name) => {
+                    const value = values && values[name];
+                    return value === undefined ? match : numberFormat.format(value);
+                });
+            }
+
+            function updateDate() {
+                document.getElementById('target-date').textContent = new Intl.DateTimeFormat(
+                    document.documentElement.lang || 'id',
+                    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+                ).format(date);
+            }
+            updateDate();
 
             function updateProgress() {
                 const completed = targets.filter((target) => target.checked).length;
                 const percent = Math.round((completed / targets.length) * 100);
                 progressFill.style.width = `${percent}%`;
                 progress.setAttribute('aria-valuenow', String(completed));
-                progress.setAttribute('aria-valuetext', `${completed} dari ${targets.length} target selesai`);
-                progressCount.textContent = `${completed} dari ${targets.length} target selesai`;
+                const progressText = localized('tahfidz.progress', { completed, total: targets.length });
+                progress.setAttribute('aria-valuetext', progressText);
+                progressCount.textContent = progressText;
             }
+            document.addEventListener('ustadonline:languagechange', () => {
+                updateDate();
+                updateProgress();
+            });
 
             try {
                 const saved = window.UstadOnlineStorage.getItem(storageKey);

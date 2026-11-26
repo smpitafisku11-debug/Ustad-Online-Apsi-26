@@ -48,6 +48,7 @@ class ModulePageTests(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'id="account-login-dialog"', response.data)
+        self.assertIn(b"Lupa Password?", response.data)
         self.assertIn(b'id="profile-dialog"', response.data)
         self.assertIn(b'data-profile-open', response.data)
         self.assertIn(b'data-account-role="student"', response.data)
@@ -58,9 +59,9 @@ class ModulePageTests(unittest.TestCase):
         self.assertNotIn(b"Masuk Demo Ustad", response.data)
         self.assertIn(b'id="ui-language-select"', response.data)
         for language in (
-            b'value="id" lang="id">Bahasa Indonesia',
-            b'value="en" lang="en">English',
-            b'value="ar" lang="ar" dir="rtl">\xd8\xa7\xd9\x84\xd8\xb9\xd8\xb1\xd8\xa8\xd9\x8a\xd8\xa9',
+            b'value="id" lang="id" data-language-key="settings.option.id">Bahasa Indonesia',
+            b'value="en" lang="en" data-language-key="settings.option.en">English',
+            b'value="ar" lang="ar" dir="rtl" data-language-key="settings.option.ar">\xd8\xa7\xd9\x84\xd8\xb9\xd8\xb1\xd8\xa8\xd9\x8a\xd8\xa9',
         ):
             self.assertIn(language, response.data)
         for expected in (

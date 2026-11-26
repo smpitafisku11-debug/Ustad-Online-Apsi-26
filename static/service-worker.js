@@ -1,4 +1,4 @@
-const cacheName = 'ustad-online-v13';
+const cacheName = 'ustad-online-v15';
 const appShell = [
     '/',
     '/connect',
@@ -8,6 +8,7 @@ const appShell = [
     '/static/icon-512.png',
     '/static/ui_customization.css',
     '/static/ui_customization.js',
+    '/static/translations.js',
     '/static/profile.css',
     '/static/profile.js',
     '/static/qibla.css',
